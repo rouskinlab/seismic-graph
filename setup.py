@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 requirements = []
-with open('dreem/requirements.txt', 'r') as fh:
+with open('draw/requirements.txt', 'r') as fh:
     for line in fh:
         requirements.append(line.strip())
 
@@ -14,20 +14,16 @@ with open('dreem/requirements.txt', 'r') as fh:
 readme = open('README.md').read()
 
 setup(
-    name="dreem",
-    version='0.1.15',
-    description="DREEM solves RNA structure ensembles using chemical probing data",
+    name="draw",
+    version='0.0.0',
+    description="Draw is a plotting library for DREEM and SEISMIC",
     long_description=readme,
     author="Silvi Rouskin Lab",
     author_email="silvi@hms.harvard.edu",
-    url="https://github.com/rouskinlab/dreem",
+    url="https://github.com/rouskinlab/draw",
     packages=find_packages(),
-    package_dir={'dreem': 'dreem'},
+    package_dir={'draw': 'draw'},
     include_package_data=True,
-    package_data={
-        "dreem": ["test-data/vector-test-data/vectorize-read-test-data.csv"]
-    },
     install_requires=requirements,
-    entry_points={'console_scripts': ['dreem = dreem.main : cli']},
     python_requires=">=3.10",
 )
