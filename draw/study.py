@@ -1,12 +1,12 @@
-from ..nap import manipulator, util, plotter
+from . import manipulator, util, plotter
 import pandas as pd
 import numpy as np
-from ..util.dump import sort_dict, flatten_json
+from .util.dump import sort_dict, flatten_json
 import plotly.graph_objects as go
 from custom_inherit import doc_inherit
-from ..util.docstring import style_child_takes_over_parent
+from .util.docstring import style_child_takes_over_parent
 import os
-from .util import save_plot, extract_args
+from .util.misc import save_plot, extract_args
 import inspect 
 import tqdm
 
@@ -22,6 +22,14 @@ class Study(object):
     """
 
     attr_list = ['name','samples']
+    
+    @classmethod
+    def from_dreem(cls, data, min_cov=0, filter_by='sample'):
+        pass
+    
+    @classmethod
+    def from_seismic(cls, data, min_cov=0, filter_by='sample'):
+        pass
 
     def __init__(self, data=None, min_cov=0, filter_by='sample') -> None:
         """Creates a Study object.
