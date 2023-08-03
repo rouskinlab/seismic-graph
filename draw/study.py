@@ -7,7 +7,8 @@ from custom_inherit import doc_inherit
 from .util.docstring import style_child_takes_over_parent
 import os
 from .util.misc import save_plot, extract_args
-import inspect 
+import inspect
+import json
 import tqdm
 
 class Study(object):
@@ -29,6 +30,10 @@ class Study(object):
     
     @classmethod
     def from_seismic(cls, data, min_cov=0, filter_by='sample'):
+        pass
+
+    @classmethod
+    def verbose_init(cls, data, min_cov=0, filter_by='sample'):
         pass
 
     def __init__(self, data=None, min_cov=0, filter_by='sample') -> None:
@@ -119,6 +124,23 @@ class Study(object):
                                 **{k:v for k,v in kwargs.items() if k in extract_args(func)})
 
     
+    def plot_info(name, display_name):
+        def decorator(func):
+            func.plot_info = {
+                'value': name,
+                'label': display_name,
+                'description': func.__doc__,
+            }
+            return func
+        return decorator
+    
+    def get_plot_info(self):
+        methods_info = []
+        for name, func in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(func, 'plot_info'):
+                methods_info.append(func.plot_info)
+        return json.dumps(methods_info, indent=4)
+
     def default_arguments_per_base(self):
         """Default arguments for the plot functions.
         
@@ -168,6 +190,7 @@ class Study(object):
     # Plot functions                                                                                           #
     ############################################################################################################
     
+    @plot_info('mutation_fraction', 'Mutation Fraction')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -184,7 +207,7 @@ class Study(object):
             kwargs
         )
         
-    
+    @plot_info('mutation_fraction_identity', 'Mutation Fraction Identity')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -201,6 +224,7 @@ class Study(object):
             kwargs
         )
 
+    @plot_info('deltaG_vs_sub_rate', 'Delta G vs Substitution Rate')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -218,6 +242,7 @@ class Study(object):
             kwargs
         )
 
+    @plot_info('experimental_variable_across_samples', 'Experimental Variable Across Samples')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -250,6 +275,7 @@ class Study(object):
     #         kwargs
     #     )
 
+    @plot_info('mutations_in_barcodes', 'Mutations in Barcodes')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -262,7 +288,8 @@ class Study(object):
             locals(),
             kwargs
         )
-                    
+
+    @plot_info('num_aligned_reads_per_reference_frequency_distribution', '# Aligned Reads / Reference as Freq. Dist.')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)  
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -277,6 +304,7 @@ class Study(object):
             kwargs
         )        
 
+    @plot_info('mutation_fraction_delta', 'Mutation Fraction Delta')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     def mutation_fraction_delta(self, **kwargs)->dict:
@@ -290,6 +318,7 @@ class Study(object):
         assert len(df)<=2, 'More than two row found for the mutation profiles.'
         return plotter.mutation_fraction_delta(df.reset_index(drop=True), **{k:v for k,v in kwargs.items() if k in plotter.mutation_fraction_delta.__code__.co_varnames})
 
+    @plot_info('mutations_per_read_per_sample', 'Mutations per Read per Sample')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -303,6 +332,7 @@ class Study(object):
             kwargs
         )
 
+    @plot_info('base_coverage', 'Base Coverage')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -316,7 +346,7 @@ class Study(object):
             kwargs
         )
 
-    
+    @plot_info('mutation_per_read_per_reference', 'Mutation per Read per Reference')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -330,6 +360,7 @@ class Study(object):
             kwargs
         )
 
+    @plot_info('compare_mutation_profiles', 'Compare Mutation Profiles')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
