@@ -1,4 +1,4 @@
-# docker build -t draw-base-image:0.1 .
+# docker build -t draw-base-image:0.2 .
 
 FROM python:3.10-bullseye
 
