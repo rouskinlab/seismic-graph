@@ -135,12 +135,13 @@ class Study(object):
             return func
         return decorator
     
-    def get_plot_info(self):
+    def get_plots_list(self):
         methods_info = []
         for name, func in inspect.getmembers(self, predicate=inspect.ismethod):
             if hasattr(func, 'plot_info'):
                 methods_info.append(func.plot_info)
-        return json.dumps(methods_info, indent=4)
+        # return json.dumps(methods_info, indent=4)
+        return methods_info
 
     def default_arguments_per_base(self):
         """Default arguments for the plot functions.
