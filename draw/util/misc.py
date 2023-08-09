@@ -97,8 +97,7 @@ def define_figure(title:str, xlabel:str, ylabel:str, figsize:Tuple[float, float]
     plt.ylabel(ylabel)
     return fig
 
-import yaml, os, subprocess
-import pandas as pd
+import os
 
 
 class Fit(object):
