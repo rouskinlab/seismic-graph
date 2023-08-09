@@ -4,10 +4,7 @@ from os.path import exists
 import os
 import matplotlib.pyplot as plt
 from typing import Tuple, List
-import shutil
 from plotly.validators.scatter.marker import SymbolValidator
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
 from scipy.optimize import curve_fit
 import scipy
 import inspect
