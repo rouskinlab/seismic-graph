@@ -1,6 +1,7 @@
 plotly
 numpy 
 pandas
+scikit-learn
 scipy
 matplotlib
 dms_ci
