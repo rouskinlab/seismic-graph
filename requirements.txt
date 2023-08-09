@@ -1,9 +1,14 @@
 plotly
 numpy 
 pandas
-scikit-learn
 scipy
 matplotlib
+ipykernel
+scikit-learn
 dms_ci
 custom_inherit
 tqdm
+svglib
+pyyaml
+pyarrow
+nbformat>= 4.2.0
