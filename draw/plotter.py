@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 
-from  .util import *
+from .util import *
+# from .util import assert_only_one_row, Fit
+from .util.misc import assert_only_one_row, Fit
 
 import plotly.graph_objects as go
 from plotly.offline import plot, iplot
@@ -203,7 +205,7 @@ def deltaG_vs_sub_rate(df:pd.DataFrame, models:List[str]=[],  savefile=None, aut
         
         for m in models:
             if len(y) > 0:
-                fit = util.Fit()
+                fit = Fit()
                 x_sorted, pred_y_sorted = fit.predict(x,y,m, prefix)
                 tra[fit.get_legend()] = go.Scatter(
                     x=x_sorted,
