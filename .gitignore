@@ -76,7 +76,10 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+<<<<<<< HEAD
 .ipynb
+=======
+>>>>>>> d8e2469 (removes *.ipynb from gitignore)
 
 # IPython
 profile_default/
