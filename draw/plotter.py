@@ -22,7 +22,7 @@ LIST_COLORS = ['red','green','blue','orange','purple','black','yellow','pink','b
 
 def mutation_fraction(df, show_ci:bool=True)->dict:
     assert len(df) == 1, "df must have only one row"
-    mh = df.iloc[0]
+    mh = df.iloc[0].copy()
     cmap = {"A": "red", "T": "green", "G": "orange", "C": "blue"}  # Color map
     
     traces, layouts = [], []
