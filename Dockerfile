@@ -1,5 +1,3 @@
-# docker build -t draw-base-image:0.3 .
-
 FROM python:3.10-bullseye
 
 WORKDIR /app
