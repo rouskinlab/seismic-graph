@@ -280,36 +280,15 @@ class Study(object):
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     def mutation_fraction_delta(self, **kwargs)->dict:
-        """Plot the Mutation fraction difference between two mutation profiles.
-        
-        Args:
-            sample1: sample of the first mutation profile.
-            sample2: sample of the second mutation profile.
-            reference1: reference of the first mutation profile.
-            reference2: reference of the second mutation profile.
-            section1: section of the first mutation profile.
-            section2: section of the second mutation profile.
-            cluster1: cluster of the first mutation profile.
-            cluster2: cluster of the second mutation profile.
-            base_index1: base index of the first mutation profile.
-            base_index2: base index of the second mutation profile.
-            base_type1: base type of the first mutation profile.
-            base_type2: base type of the second mutation profile.
-            base_pairing1: base pairing of the first mutation profile.
-            base_pairing2: base pairing of the second mutation profile. 
-        
+        """Plot the Mutation fraction difference between two mutation profiles.        
         Returns:
             dict: {'fig': a plotly figure, 'data': a pandas dataframe}
         
         """
-        
-        df1 = manipulator.get_df(self.df, **{k[:-1]:v for k,v in kwargs.items() if k.endswith('1') and k[:-1] in list(self.df.columns)+ list(manipulator.get_df.__code__.co_varnames)})
-        assert len(df1)>0, 'No rows found for the first mutation profile.'
-        assert len(df1)==1, 'More than one row found for the first mutation profile.'
-        df2 = manipulator.get_df(self.df, **{k[:-1]:v for k,v in kwargs.items() if k.endswith('2') and k[:-1] in list(self.df.columns)+ list(manipulator.get_df.__code__.co_varnames)})
-        assert len(df2)>0, 'No rows found for the second mutation profile.'
-        assert len(df2)==1, 'Only one row should be selected for the second mutation profile.'
-        return plotter.mutation_fraction_delta(pd.concat([df1, df2]).reset_index(drop=True), **{k:v for k,v in kwargs.items() if k in plotter.mutation_fraction_delta.__code__.co_varnames})
+        df = manipulator.get_df(self.df, **{k:v for k,v in kwargs.items() if k in list(self.df.columns)+ list(manipulator.get_df.__code__.co_varnames)})
+        assert len(df)>1, 'None or one row found for the mutation profiles.'
+        assert len(df)<=2, 'More than two row found for the mutation profiles.'
+        return plotter.mutation_fraction_delta(df.reset_index(drop=True), **{k:v for k,v in kwargs.items() if k in plotter.mutation_fraction_delta.__code__.co_varnames})
 
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
