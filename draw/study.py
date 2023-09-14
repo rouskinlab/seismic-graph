@@ -32,7 +32,7 @@ class Study(object):
         pass
 
     def __init__(self, data=None, min_cov=0, filter_by='sample') -> None:
-        """Creates a Study object.
+        """ Creates a Study object.
 
         Args:
             data (dict or list[dict] or pandas.DataFrame, optional): Data to use. Can be a dictionary or list of dictionaries containing DREEM-output jsons, or directly a pandas dataframe. Defaults to None.
@@ -48,8 +48,7 @@ class Study(object):
                                         {'sample':'mysample2',{'reference1': {'section1': {'cluster1': {'sub_N': [99], 'cov': [1000]}}}}},
                                         ),
                               min_cov=1000, 
-                              filter_by='sample')      
-        """
+                              filter_by='sample') """
         if data is not None:
             
             df = pd.DataFrame()              
@@ -156,7 +155,6 @@ class Study(object):
             reference (list, str, optional): Filter rows by reference (a list of references or just a reference). Defaults to None.
             section (list, str, optional): Filter rows by section (a list of sections or just a section). Defaults to None.
             cluster (list, str, optional): Filter rows by cluster (a list of clusters or just a cluster). Defaults to None.
-            
         """
         
     @doc_inherit(default_arguments_per_base, style=style_child_takes_over_parent)
@@ -213,6 +211,7 @@ class Study(object):
             models (List[str], optional): Models to fit on the data using scipy.optimize.curve_fit. Under the form ``'lambda x, a, b: a*x+b'`` where ``x`` is the variable. Defaults to [].
 
         """
+        index_selected = True
         return self.wrap_to_plotter(
             plotter.deltaG_vs_sub_rate,
             locals(),
