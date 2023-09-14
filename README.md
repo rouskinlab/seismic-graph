@@ -10,12 +10,12 @@ A pipeline for the analysis of DREEM and SEISMIC data.
 ## Docker Build
 
 Local Build:
-docker build -t draw-base-image:0.3 .
+docker build -t draw-base-image:0.5 .
 
 Push to Google Cloud:
 gcloud builds submit --config=cloudbuild.yaml
-docker tag draw-base-image:0.3 gcr.io/draw-385021/draw-base-image:0.3
-docker push gcr.io/draw-385021/draw-base-image:0.3
+docker tag draw-base-image:0.5 gcr.io/draw-385021/draw-base-image:0.5
+docker push gcr.io/draw-385021/draw-base-image:0.5
 
 ## Documentation
 
