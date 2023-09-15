@@ -91,14 +91,22 @@ def mutation_fraction_identity(data, show_ci:bool=True)->dict:
 
     assert len(data) > 0, "The combination of sample, reference and section does not exist in the dataframe"
     assert len(data) == 1, "The combination of sample, reference and section is not unique in the dataframe"
+    print(f"data @ plotter.mutation_fraction_identity.\ntype: {type(data)}\ncontents:\n{data}\n\n")
     data = data.iloc[0].copy()
-    
+    print(f"data.iloc[0] @ plotter.mutation_fraction_identity.\ntype: {type(data)}\ncontents:\n{data}\n\n")
     df = pd.DataFrame(index = list(data['sequence']))
+    print(f"df @ plotter.mutation_fraction_identity.\ntype: {type(df)}\ncontents:\n{df}\n\n")
     fig = go.Figure()
     color_map={'A':'red','C':'blue','G':'orange','T':'green'}
 
-    data['err_min'] = [dms_ci(p, data['num_aligned'])[0] for p in data['sub_rate']]
-    data['err_max'] = [dms_ci(p, data['num_aligned'])[1] for p in data['sub_rate']]
+    a = [dms_ci(p, data['num_aligned'])[0] for p in data['sub_rate']]
+    b = [dms_ci(p, data['num_aligned'])[1] for p in data['sub_rate']]
+    print(f"a @ plotter.mutation_fraction_identity:\ntype: {type(a)}\ncontents:\n{a}\n\n")
+    data.loc['err_min'] = a
+    # data['err_min'] = [dms_ci(p, data['num_aligned'])[0] for p in data['sub_rate']]
+    print(f"data['err_min'] @ plotter.mutation_fraction_identity:\ntype: {type(data['err_min'])}\ncontents:\n{data['err_min']}\n\n")
+    data.loc['err_max'] = b
+    # data['err_max'] = [dms_ci(p, data['num_aligned'])[1] for p in data['sub_rate']]
 
     for base in ['A','C','G','T']:
         df[base] = np.array(data['sub_'+base])/np.array(data['info'])
@@ -489,7 +497,6 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
     for idx1, row1 in data.iloc[:-1].iterrows():
         for _, row2 in data.iloc[idx1+1:].iterrows():
             x, y = row1['sub_rate'], row2['sub_rate']
-            x, y = np.array(x), np.array(y)
             xlabel, ylabel = row1['unique_id'], row2['unique_id']
             plotLabel = makePlotLabel(xlabel, ylabel)
             
