@@ -92,6 +92,11 @@ class Study(object):
                 self.df[attr] = 0
         
         self.df['deltaG'] = self.df['deltaG'].apply(lambda x: 0.0 if x == 'void' else float(x))
+        
+        # convert every cell that's a list into a numpy array
+        for attr in self.df.columns:
+            if type(self.df[attr].values[0]) is list:
+                self.df[attr] = self.df[attr].apply(lambda x: np.array(x))
     
     
     def filter_by_study(self):
