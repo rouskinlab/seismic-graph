@@ -133,50 +133,6 @@ def mutation_fraction_identity(data, show_ci:bool=True)->dict:
     return {'fig':fig, 'df':df}
 
 
-def mutations_in_barcodes(data):
-    
-    fig = go.Figure()
-
-    len_barcode = len(data['sequence'].iloc[2])
-    for sample in data['sample'].unique():
-        hist = np.sum(np.stack(data[data['sample']==sample]['sub_hist'].values), axis=0)
-        bin_edges = np.arange(0, len_barcode, 1)
-        
-        fig.add_trace(
-            go.Bar(
-                x=bin_edges[:-1],
-                y=hist,
-                name=sample,
-                visible=False,
-                hovertemplate='Number of mutations: %{x}<br>Number of reads: %{y}<extra></extra>',
-                ))
-        
-    fig.data[0].visible = True
-    
-    fig.update_layout(barmode='stack', title='Number of mutations in barcodes - {}'.format(data['sample'].unique()[0]))
-    fig.update_layout(
-        updatemenus=[
-            dict(
-                active=0,
-                buttons=list([
-                    dict(label = sample,
-                            method = "update",
-                            args = [{"visible": [sample == s for s in data['sample'].unique()]},
-                                    {"title": 'Number of mutations in barcodes - {}'.format(sample)}])
-                    for sample in data['sample'].unique()
-                ]), 
-                x = 0.7,
-                xanchor = 'left',
-                y = 1.1,
-                yanchor = 'top'
-                )
-            ])
-
-    fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
-    
-    return {'fig': fig, 'data': data[['sample','reference','sub_hist']]}
-
-
 def deltaG_vs_sub_rate(df:pd.DataFrame, models:List[str]=[],  savefile=None, auto_open=False, use_iplot=True, title=None)->dict:
 
     df_temp = pd.DataFrame()

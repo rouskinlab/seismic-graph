@@ -281,20 +281,6 @@ class Study(object):
     #         kwargs
     #     )
 
-    @plot_info('mutations_in_barcodes', 'Mutations in Barcodes')
-    @save_plot
-    @doc_inherit(save_plot, style=style_child_takes_over_parent)
-    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
-    def mutations_in_barcodes(self, sample, section='barcode', **kwargs)->dict:
-        """Plot the number of mutations in the barcode per read of a sample as an histogram.
-
-        """
-        return self.wrap_to_plotter(
-            plotter.mutations_in_barcodes,
-            locals(),
-            kwargs
-        )
-
     @plot_info('num_aligned_reads_per_reference_frequency_distribution', '# Aligned Reads / Reference as Freq. Dist.')
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)  
