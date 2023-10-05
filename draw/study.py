@@ -91,7 +91,8 @@ class Study(object):
             if attr not in self.df.columns:
                 self.df[attr] = 0
         
-        self.df['deltaG'] = self.df['deltaG'].apply(lambda x: 0.0 if x == 'void' else float(x))
+        if hasattr(self.df, 'deltaG'):
+            self.df['deltaG'] = self.df['deltaG'].apply(lambda x: 0.0 if x == 'void' else float(x))
         
         # convert every cell that's a list into a numpy array
         for attr in self.df.columns:
