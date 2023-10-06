@@ -15,8 +15,6 @@ docker build -t draw-base-image:0.8 .
 Push to Google Cloud:
 make sure cloudbuild.yaml has correct name and docker tag
 gcloud builds submit --config=cloudbuild.yaml
-<!-- docker tag draw-base-image:0.8 gcr.io/draw-385021/draw-base-image:0.8
-docker push gcr.io/draw-385021/draw-base-image:0.8 -->
 
 ## Documentation
 
