@@ -17,17 +17,19 @@ import plotly.express as px
 from dms_ci import dms_ci
 
 
+cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
+                    N="#f0f0f0")
+
 
 LIST_COLORS = ['red','green','blue','orange','purple','black','yellow','pink','brown','grey','cyan','magenta']
 
 def mutation_fraction(df, show_ci:bool=True)->dict:
     assert len(df) == 1, "df must have only one row"
     mh = df.iloc[0].copy()
-    cmap = {"A": "red", "T": "green", "G": "orange", "C": "blue"}  # Color map
     
     traces, layouts = [], []
     mh['index_selected'] = [i+1 for i in range(len(mh['sequence']))] #TODO[i + 1 for i in mh.index_selected] # index starts at 1
-    mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(len(mh.index_selected))),'index_selected':mh.index_selected, 'paired':list(mh.structure)})
+    mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(1, 1+len(mh.index_selected))),'index_selected':mh.index_selected, 'paired':list(mh.structure)})
 
     for bt in set(mh['sequence']):
         df_loc = mh_unrolled[mh_unrolled['base'] == bt]
@@ -71,14 +73,7 @@ def mutation_fraction(df, show_ci:bool=True)->dict:
             linewidth=1,
             linecolor='black',
             mirror=True,
-            autorange=True
-    )
-
-    fig.update_xaxes(
-            tickvals=mh_unrolled['index_reset'],
-            ticktext=["%s %s" % ({'.':'(U)','(':'(P)',')':'(P)'}[x], str(y)) for (x,y) in zip(mh['structure'],mh['index_selected'])],
-            tickangle=90,
-            autorange=True
+            autorange=True,
     )
     
     # make the background white 
@@ -87,7 +82,7 @@ def mutation_fraction(df, show_ci:bool=True)->dict:
     return {'fig':fig, 'df':mh}
 
 
-def mutation_fraction_identity(data, show_ci:bool=True)->dict:
+def mutation_fraction_identity(data, show_ci:bool=False)->dict:
 
     assert len(data) > 0, "The combination of sample, reference and section does not exist in the dataframe"
     assert len(data) == 1, "The combination of sample, reference and section is not unique in the dataframe"
@@ -95,14 +90,13 @@ def mutation_fraction_identity(data, show_ci:bool=True)->dict:
     
     df = pd.DataFrame(index = list(data['sequence']))
     fig = go.Figure()
-    color_map={'A':'red','C':'blue','G':'orange','T':'green'}
 
     data['err_min'] = [dms_ci(p, data['num_aligned'])[0] for p in data['sub_rate']]
     data['err_max'] = [dms_ci(p, data['num_aligned'])[1] for p in data['sub_rate']]
 
     for base in ['A','C','G','T']:
         df[base] = np.array(data['sub_'+base])/np.array(data['info'])
-        fig.add_trace( go.Bar(x=np.arange(len(data['sequence'])), y=list(df[base]), marker_color=color_map[base], showlegend=True, name=base) )
+        fig.add_trace( go.Bar(x=np.arange(1, 1+len(data['sequence'])), y=list(df[base]), marker_color=cmap[base], showlegend=True, name=base) )
     
     # add error bars to stacked_bar[-1]
     if show_ci:
@@ -123,8 +117,8 @@ def mutation_fraction_identity(data, show_ci:bool=True)->dict:
         yaxis_title='Mutation fraction',
         )
 
-    fig.update_xaxes(tickangle=0, 
-            tickvals=np.arange(len(df.index)), ticktext=list(df.index), tickfont={'size':8})
+    # fig.update_xaxes(tickangle=0, 
+    #         tickvals=np.arange(len(df.index)), ticktext=list(df.index), tickfont={'size':8})
     
 
     fig.update_layout(barmode='stack')
@@ -267,10 +261,9 @@ def mutation_fraction_delta(df, savefile=None, auto_open=False, use_iplot=True, 
             'title': "{} - {} reads vs {} - {} reads".format(df['unique_id'].values[0], df['num_aligned'].values[0], df['unique_id'].values[1], df['num_aligned'].values[1])
         }
     )
-    cmap = {"A": "red", "T": "green", "G": "orange", "C": "blue", '-':'grey'}  # Color map
     
     traces, layouts = [], []
-    mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(len(mh.sequence)))})
+    mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(1, 1+len(mh.sequence)))})
 
     for bt in set(mh['sequence']):
         df_loc = mh_unrolled[mh_unrolled['base'] == bt]
