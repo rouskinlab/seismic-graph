@@ -29,7 +29,7 @@ def mutation_fraction(df, show_ci:bool=True)->dict:
     
     traces, layouts = [], []
     mh['index_selected'] = [i+1 for i in range(len(mh['sequence']))] #TODO[i + 1 for i in mh.index_selected] # index starts at 1
-    mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(1, 1+len(mh.index_selected))),'index_selected':mh.index_selected, 'paired':list(mh.structure)})
+    mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(1, 1+len(mh.index_selected))),'index_selected':mh.index_selected})
 
     for bt in set(mh['sequence']):
         df_loc = mh_unrolled[mh_unrolled['base'] == bt]
@@ -38,8 +38,7 @@ def mutation_fraction(df, show_ci:bool=True)->dict:
 
         hover_attr = pd.DataFrame({'mut_rate':list(df_loc.mut_rate),
                                         'base':list(df_loc.base), 
-                                        'index': df_loc['index_selected'],
-                                        'paired':[{'.':False, '(':True,')':True}[s] for s in df_loc.paired]})
+                                        'index': df_loc['index_selected']})
         traces.append(go.Bar(
             x= np.array(df_loc['index_reset']),
             y= np.array(df_loc['mut_rate']),
