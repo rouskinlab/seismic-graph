@@ -60,3 +60,12 @@ def flatten_json(data):
                                 row[k4] = v4
                             out.append(row.copy())
     return out
+
+def add_min_cov_field(df):
+    df["min_cov"] = df["cov"].apply(lambda x: min(x) if len(x) > 0 else 0)
+    return df
+
+
+def remove_leading_pound(df):
+    df.columns = df.columns.str.lstrip('#')
+    return df

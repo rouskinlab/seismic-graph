@@ -1,7 +1,7 @@
 from . import manipulator, util, plotter
 import pandas as pd
 import numpy as np
-from .util.dump import sort_dict, flatten_json
+from .util.dump import sort_dict, flatten_json, add_min_cov_field, remove_leading_pound
 import plotly.graph_objects as go
 from custom_inherit import doc_inherit
 from .util.docstring import style_child_takes_over_parent
@@ -56,8 +56,8 @@ class Study(object):
                               filter_by='sample') """
         if data is not None:
             
-            df = pd.DataFrame()              
-            
+            df = pd.DataFrame()
+
             # If data is a list of json, concatenate them into a single dataframe
             if type(data) is not pd.DataFrame:
                                 
@@ -67,14 +67,16 @@ class Study(object):
                 
                 for sample in data:
                     df = pd.concat([df, pd.DataFrame(flatten_json(sort_dict(sample)))], axis=0)
-                            
+            
+            df = remove_leading_pound(df)
+            if "min_cov" not in df.columns:
+                df = add_min_cov_field(df)
             # Use the dataframe (loaded or created from json)
             self.set_df(df, min_cov=min_cov, filter_by=filter_by)
             
         else:
             self.df = None
 
-    
     def set_df(self, df, min_cov=0, filter_by='sample'):
         
         self.df = df.reset_index(drop=True)
