@@ -1,5 +1,6 @@
 import numpy as np
 import json
+import pandas as pd
 
 def cast_to_json_compat(obj):
     if isinstance(obj, np.integer):
@@ -62,7 +63,9 @@ def flatten_json(data):
     return out
 
 def add_min_cov_field(df):
-    df["min_cov"] = df["cov"].apply(lambda x: min(x) if len(x) > 0 else 0)
+    # df["min_cov"] = df["cov"].apply(lambda x: min(x) if len(x) > 0 else 0)
+    df["min_cov"] = df["cov"].apply(lambda x: pd.Series(x).min() if pd.Series(x).count() > 0 else 0)
+    print(f"min cov: {df['min_cov']}")
     return df
 
 
