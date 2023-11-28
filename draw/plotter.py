@@ -118,6 +118,19 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
 
     # fig.update_xaxes(tickangle=0, 
     #         tickvals=np.arange(len(df.index)), ticktext=list(df.index), tickfont={'size':8})
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True,
+    )
     
 
     fig.update_layout(barmode='stack')
@@ -169,6 +182,19 @@ def deltaG_vs_sub_rate(df:pd.DataFrame, models:List[str]=[],  savefile=None, aut
             yaxis= dict(title= 'Mutation fraction ',ticklen= 5,zeroline= False),
             )
 
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True,
+    )
+
     fig = go.Figure(data=list(tra.values()), layout=layout)
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
 
@@ -207,7 +233,21 @@ def experimental_variable_across_samples(data:pd.DataFrame, experimental_variabl
         title='Mutation rates across experimental variable - {}'.format(experimental_variable),
         xaxis_title=experimental_variable,
         yaxis_title='Mutation fraction',
-        )
+    )
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True,
+    )
+
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
 
     return {'fig':fig, 'data':df}
@@ -324,10 +364,26 @@ def mutations_per_read_per_sample(data):
         
         fig.add_trace(_mutations_per_read_subplot(data[data['sample']==sample]['sub_hist'].reset_index(drop=True)),
                       row=i_s+1, col=1 )
-        fig.update_yaxes(title='Count')
-        fig.update_xaxes(dtick=10)
+        # fig.update_yaxes(title='Count')
+        # fig.update_xaxes(dtick=10)
+        fig.update_yaxes(
+            title='Count',
+            gridcolor='lightgray',
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+        )
+        fig.update_xaxes(
+            dtick=10,
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+            autorange=True,
+        )
 
     fig.update_layout(autosize=True, height=len(unique_samples)*500, title='Number of mutation per read across samples')
+
+    
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
 
     return {
@@ -335,27 +391,67 @@ def mutations_per_read_per_sample(data):
         'data':data
         }
     
+
 def num_aligned_reads_per_reference_frequency_distribution(data):
     assert len(samples:=data['sample'].unique()) == 1, "data must have 1 sample"
     data = data['num_aligned'].values
-    return {
-            'fig':go.Figure(
-                go.Histogram(
-                    x=data, 
-                    showlegend=False, 
-                    marker_color='indianred',
-                    hovertemplate="Number of aligned reads: %{x}<br>Count: %{y}<extra></extra>"
-                    ),
-                layout=go.Layout(
-                    title=go.layout.Title(text='{} - Reads per reference count'.format(samples[0])),
-                    xaxis=dict(title="Number of aligned reads"),
-                    yaxis=dict(title="Count"),
-                    plot_bgcolor='white',
-                    paper_bgcolor='white'
-                    )          
+    fig = go.Figure(
+            go.Histogram(
+                x=data, 
+                showlegend=False, 
+                marker_color='indianred',
+                hovertemplate="Number of aligned reads: %{x}<br>Count: %{y}<extra></extra>"
                 ),
-            'data':data
-            }
+            layout=go.Layout(
+                title=go.layout.Title(text='{} - Reads per reference count'.format(samples[0])),
+                xaxis=dict(title="Number of aligned reads"),
+                yaxis=dict(title="Count"),
+                plot_bgcolor='white',
+                paper_bgcolor='white'
+                )          
+            )
+    
+    fig.update_yaxes(
+        title='Count',
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        dtick=10,
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True,
+    )
+    return {
+        'fig' : fig,
+        'data' : data
+    }
+    
+
+# def num_aligned_reads_per_reference_frequency_distribution(data):
+#     assert len(samples:=data['sample'].unique()) == 1, "data must have 1 sample"
+#     data = data['num_aligned'].values
+#     return {
+#             'fig':go.Figure(
+#                 go.Histogram(
+#                     x=data, 
+#                     showlegend=False, 
+#                     marker_color='indianred',
+#                     hovertemplate="Number of aligned reads: %{x}<br>Count: %{y}<extra></extra>"
+#                     ),
+#                 layout=go.Layout(
+#                     title=go.layout.Title(text='{} - Reads per reference count'.format(samples[0])),
+#                     xaxis=dict(title="Number of aligned reads"),
+#                     yaxis=dict(title="Count"),
+#                     plot_bgcolor='white',
+#                     paper_bgcolor='white'
+#                     )          
+#                 ),
+#             'data':data
+#             }
     
     
 def mutation_per_read_per_reference(data):
@@ -369,8 +465,22 @@ def mutation_per_read_per_reference(data):
 
     fig.update_layout(barmode='stack')
     fig.update_layout(title='Number of mutations per read - {} - {} (N={})'.format(sample, reference, np.sum(data)))
-    fig.update_yaxes(title='Count')
-    fig.update_xaxes(title='Number of mutations per read')
+    # fig.update_yaxes(title='Count')
+    # fig.update_xaxes(title='Number of mutations per read')
+    fig.update_yaxes(
+        title='Count',
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        title='Number of mutations per read',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True,
+    )
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
 
     return {
@@ -399,6 +509,19 @@ def base_coverage(data):
             )
         )
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True,
+    )
     
     return {'fig':fig, 'data':data}
 
@@ -447,9 +570,6 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
             else:
                 maxValue = max(x.max(), y.max(), 0.14) + 0.01
             
-            fig.update_xaxes(range=[0, maxValue], constrain='domain')
-            fig.update_yaxes(range=[0, maxValue], constrain='domain')
-            
             # plot x vs y then the linear regression line, then the 1:1 line, then the R2 and RMSE values
             fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='mutation fraction', text=plotLabel, visible=False),)
             traceTrack.append(plotLabel)
@@ -462,7 +582,7 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
             traceTrack.append(plotLabel)
             
             # 1:1 line
-            fig.add_trace(go.Scatter(x=[0, maxValue], y=[0, maxValue], mode='lines', name='1:1 line', visible=False))
+            fig.add_trace(go.Scatter(x=[0, maxValue], y=[0, maxValue], mode='lines', name='Line of Identity', visible=False))
             traceTrack.append(plotLabel)
             
             # R2, RMSE and linear regression line
