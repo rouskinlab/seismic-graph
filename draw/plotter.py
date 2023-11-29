@@ -556,26 +556,33 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
     
     traceTrack = []
     annotationTrack = []
-    
+
+    if max_axis is not None:
+        maxValue = max_axis
+    else:
+        maxValue = 0
+        for idx1, row1 in data.iloc[:-1].iterrows():
+            for _, row2 in data.iloc[idx1+1:].iterrows():
+                x, y = row1['sub_rate'], row2['sub_rate']
+                x, y = np.array(x), np.array(y)
+                x, y = x[~np.isnan(x)], y[~np.isnan(y)]
+                maxValue = max(x.max(), y.max(), 0.14, maxValue)
+    maxValue += 0.01
+
     for idx1, row1 in data.iloc[:-1].iterrows():
         for _, row2 in data.iloc[idx1+1:].iterrows():
             x, y = row1['sub_rate'], row2['sub_rate']
             x, y = np.array(x), np.array(y)
+            x, y = x[~np.isnan(x)], y[~np.isnan(y)]
             xlabel, ylabel = row1['unique_id'], row2['unique_id']
             plotLabel = makePlotLabel(xlabel, ylabel)
-            
-            # make the plot squared 
-            if max_axis is not None:
-                maxValue = max_axis
-            else:
-                maxValue = max(x.max(), y.max(), 0.14) + 0.01
             
             # plot x vs y then the linear regression line, then the 1:1 line, then the R2 and RMSE values
             fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='mutation fraction', text=plotLabel, visible=False),)
             traceTrack.append(plotLabel)
             
             # linear regression line
-            model = LinearRegression()
+            model = LinearRegression()            
             model.fit(x.reshape(-1,1), y)
             slope, intercept, r_value = model.coef_[0], model.intercept_, model.score(x.reshape(-1,1), y)
             fig.add_trace(go.Scatter(x=x, y=slope*x+intercept, mode='lines', name='linear regression: y = {}x + {}'.format(round(slope,4), round(intercept,4)), visible=False))
@@ -590,27 +597,6 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
             fig.add_annotation(visible = False, y=0.13,text=annot, showarrow=False)
             annotationTrack.append(annot)
             
-            # make the axis equal
-            fig.update_layout(
-                xaxis=dict(
-                    scaleanchor="y",
-                    scaleratio=1,
-                ))
-            
-            # add labels
-            fig.update_layout(
-                xaxis_title="{} sub rate".format(xlabel),
-                yaxis_title="{} sub rate".format(ylabel),
-                margin=dict(
-                    l=0,
-                    r=0,
-                    b=50,
-                    t=50,
-                    pad=4
-                ),
-                title = plotLabel + ' mutation fraction correlation',
-            )
-            
     # add button to select a specific plot using the traceTrack and a dropdown menu
     fig.update_layout(
         updatemenus=[
@@ -619,20 +605,79 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
                 buttons=list([
                     # make the annotation visible and the plot visible
                     dict(label=plot,
-                            method="update",
-                            args=[{"visible": [True if traceTrack[j] == plot else False for j in range(len(traceTrack))]},
-                                    {"annotations": [dict(visible = True if np.unique(traceTrack)[j] == plot else False, y=0.13,text=annotationTrack[idx], showarrow=False) for j in range(len(annotationTrack))]}
-                                  ])
+                         method="update",
+                         args=[
+                            {
+                                "visible": [
+                                    True if traceTrack[j] == plot else False for j in range(len(traceTrack))
+                                ]                                
+                            },
+                            {   
+                                "annotations": [dict(visible=True if np.unique(traceTrack)[j] == plot else False, y=0.13, text=annotationTrack[idx], showarrow=False) for j in range(len(annotationTrack))],
+                                "xaxis.title": "{} sub rate".format(plot.split(' vs ')[0]),
+                                "yaxis.title": "{} sub rate".format(plot.split(' vs ')[1]),
+                                "title": "{} mutation fraction correlation".format(plot)
+                            }
+                        ]
+                    )
                     for idx, plot in enumerate(np.unique(traceTrack))
                 ]),
-                x = 1,
-                y = 0.4,
-                xanchor = 'left',
-                yanchor = 'top',
+                x=1,
+                y=0.4,
+                xanchor='left',
+                yanchor='top',
             )
-        ]
+        ],
+    )
+
+    fig.update_layout(
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        xaxis=dict(
+            range=[0, maxValue],
+            scaleanchor="y",
+            scaleratio=1,
+            linecolor='lightgray',
+            linewidth=1,
+        ),
+        yaxis=dict(
+            linecolor='lightgray',
+            linewidth=1,
+        ),
+        xaxis_title="{} sub rate".format(xlabel),
+        yaxis_title="{} sub rate".format(ylabel),
+        margin=dict(
+            l=0,
+            r=0,
+            b=50,
+            t=50,
+            pad=4
+        ),
+        title = plotLabel + ' mutation fraction correlation',
     )
     
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        showgrid=True,
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor='lightgray',
+    )
+    fig.update_xaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        showgrid=True,
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor='lightgray',
+        # autorange=True,
+    )
     # make the first plot visible
     fig.data[0].visible = True
     fig.data[1].visible = True
