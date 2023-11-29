@@ -15,6 +15,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from plotly.subplots import make_subplots
 import plotly.express as px
 from dms_ci import dms_ci
+from scipy.stats import pearsonr
 
 
 cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
@@ -53,8 +54,6 @@ def mutation_fraction(df, show_ci:bool=True)->dict:
                         type='data',
                         symmetric=False,
                         ))
-
-    
 
     fig = go.Figure(data=traces)
 
@@ -522,3 +521,41 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
     fig.layout.annotations[0].visible = True
     
     return {'fig': fig, 'data': data}
+
+
+
+def correlation_by_refs_between_samples(df:pd.DataFrame)->dict:
+    assert len(df['sample'].unique()) == 2, "only two samples are allowed"
+    s1, s2 = df['sample'].unique()
+
+    # only keep the references that are shared by both samples
+    refs = df.groupby('sample')['reference'].unique()
+    refs = list(set(refs.iloc[0]).intersection(set(refs.iloc[1])))
+    df = df[df['reference'].isin(refs)]
+    
+    # calculate correlation
+    scores = {}
+    for ref in refs:
+        df_ref = df[df['reference'] == ref]
+        v1, v2 = df_ref[df_ref['sample'] == s1]['sub_rate'].values[0], df_ref[df_ref['sample'] == s2]['sub_rate'].values[0]
+        if len(v1) <= 1 or len(v2) <= 1:
+            continue
+        corr, _ = pearsonr(v1, v2)
+        scores[ref] = corr
+    
+    # sort by correlation
+    scores = pd.DataFrame.from_dict(scores, orient='index', columns=['correlation']).reset_index().rename(columns={'index':'reference'})
+    scores = scores.sort_values(by='correlation', ascending=True).reset_index(drop=True)
+
+    # plot
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=scores.index, y=scores['correlation'], text = scores['reference'], mode='markers', hovertemplate='reference: %{text}<br>correlation: %{y:.2f}'))
+
+    # set layout
+    fig.update_layout(
+        title = f"correlation between samples {s1} and {s2}",
+        xaxis_title = "reference",
+        yaxis_title = "correlation",
+    )
+
+    return {'fig':fig, 'scores':scores}
