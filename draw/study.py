@@ -1,7 +1,7 @@
 from . import manipulator, util, plotter
 import pandas as pd
 import numpy as np
-from .util.dump import sort_dict, flatten_json
+from .util.dump import sort_dict, flatten_json, add_min_cov_field, remove_leading_pound
 import plotly.graph_objects as go
 from custom_inherit import doc_inherit
 from .util.docstring import style_child_takes_over_parent
