@@ -719,7 +719,7 @@ def correlation_by_refs_between_samples(df:pd.DataFrame)->dict:
     # set layout
     fig.update_layout(
         title = f"correlation between samples {s1} and {s2}",
-        xaxis_title = "reference",
+        xaxis_title = "reference rank",
         yaxis_title = "correlation",
     )
 
