@@ -17,3 +17,4 @@ recommonmark
 blockdiag
 sphinx_rtd_theme
 sphinxcontrib-blockdiag
+sphinx_panels
