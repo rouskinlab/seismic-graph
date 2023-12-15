@@ -18,3 +18,4 @@ blockdiag
 sphinx_rtd_theme
 sphinxcontrib-blockdiag
 sphinx_panels
+sphinx_click
