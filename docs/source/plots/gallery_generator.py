@@ -1,9 +1,9 @@
 import os, sys
 import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(__file__,'../../../..')))
-import dreem
 
 gallery_path = os.path.join(os.path.dirname(__file__), 'gallery.rst')
+import seismograph
 
 def beautify_title(title):
     title = title.replace('_', ' ')
@@ -23,14 +23,14 @@ def write_plot(plot):
 {beautify_title(name)}
 {"-"*len(name)}
 
-{docstring_header(getattr(dreem.draw.Study, name))}
+{docstring_header(getattr(seismograph.Study, name))}
                 
 .. raw:: html
     :file: plots_figs/{plot}
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: {name}
 
-    .. autofunction:: dreem.draw.study.Study.{name}
+    .. autofunction:: dreem.seismograph.study.Study.{name}
     
 
     """
@@ -58,9 +58,9 @@ def generate_rst():
 
 def generate_html():
 
-    data = dreem.draw.load_dataset()
+    data = seismograph.load_dataset()
 
-    study = dreem.draw.Study()
+    study = seismograph.Study()
     study.df = data
     sample, reference, section, family = study.df.iloc[0][['sample', 'reference', 'section', 'family']]
 
@@ -114,10 +114,6 @@ def generate_html():
     #     to_html = os.path.join(path_figs, 'auc.html')
     # )
   
-    study.mutations_in_barcodes(
-        sample = sample,
-        to_html = os.path.join(path_figs, 'mutations_in_barcodes.html')
-    )
     
     study.num_aligned_reads_per_reference_frequency_distribution(
         sample = sample,
@@ -126,12 +122,9 @@ def generate_html():
     )
     
     study.mutation_fraction_delta(
-        sample1 = study.df['sample'].unique()[0],
-        sample2 = study.df['sample'].unique()[1],
-        reference1 = reference,
-        reference2 = reference,
-        section1 = 'ROI',
-        section2 = 'ROI',
+        sample = study.df['sample'].unique()[0:2],
+        reference = reference,
+        section = 'ROI',
         to_html = os.path.join(path_figs, 'mutation_fraction_delta.html')
     )
 

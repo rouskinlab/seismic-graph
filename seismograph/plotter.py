@@ -180,6 +180,7 @@ def deltaG_vs_sub_rate(df:pd.DataFrame, models:List[str]=[],  savefile=None, aut
             xaxis= dict(title= 'DeltaG',ticklen= 5,zeroline= False),
             yaxis= dict(title= 'Mutation fraction ',ticklen= 5,zeroline= False),
             )
+    fig = go.Figure(data=list(tra.values()), layout=layout)
 
     fig.update_yaxes(
         gridcolor='lightgray',
@@ -194,7 +195,6 @@ def deltaG_vs_sub_rate(df:pd.DataFrame, models:List[str]=[],  savefile=None, aut
         autorange=True,
     )
 
-    fig = go.Figure(data=list(tra.values()), layout=layout)
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
 
     return {'fig':fig, 'df':df}

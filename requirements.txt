@@ -12,3 +12,8 @@ svglib
 pyyaml
 pyarrow
 nbformat>= 4.2.0
+sphinx 
+recommonmark
+blockdiag
+sphinx_rtd_theme
+sphinxcontrib-blockdiag

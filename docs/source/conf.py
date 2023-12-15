@@ -24,9 +24,9 @@ sys.path.insert(0, os.path.abspath("../../"))
  
 # Fix matplotlib non import
 MOCK_MODULES = ['yaml']
-with open('../../dreem/requirements.txt') as f:
-    for line in f:
-        MOCK_MODULES.append(line.strip().split('=')[0])
+# with open('../../dreem/requirements.txt') as f:
+#     for line in f:
+#         MOCK_MODULES.append(line.strip().split('=')[0])
         
 #for mod_name in MOCK_MODULES:
 #    sys.modules[mod_name] = MagicMock()
@@ -62,7 +62,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
-    'sphinxcontrib.blockdiag',
+    # 'sphinxcontrib.blockdiag',
     'sphinx.ext.autosectionlabel',
     'recommonmark',
     'sphinx_panels',

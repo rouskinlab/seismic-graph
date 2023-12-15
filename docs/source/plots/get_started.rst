@@ -13,32 +13,11 @@ Install DREEM (if not already done)
     You don't need any non-pythonic dependency to use DREEM for plotting only. If you want to process your data with DREEM, you will need to install the :ref:`Dependencies`.
 
 
-Install DREEM with pip. **Use Python = 3.10 ONLY**
+Install SEISMOGRAPH with pip. **Use Python >= 3.10**
 
 .. code::
 
-    pip install dreem
-
-
-.. note::
-    
-        We recommend that you create a virtual environment with Python 3.10 to avoid any conflict with other packages.
-        
-        Example with virtualenv:
-
-        .. code::
-
-            python3.10 -m venv dreem_env
-            source dreem_env/bin/activate
-            pip install dreem
-
-        Example with conda:
-
-        .. code::
-
-            conda create -n dreem_env python=3.10
-            conda activate dreem_env
-            pip install dreem
+    pip install seismic-graph
 
 
 Import your data into a study object
@@ -46,7 +25,7 @@ Import your data into a study object
 
 .. code::
 
-    from dreem.draw import study
+    from seismograph import study
     import json
 
     # Define the list of samples you want to load

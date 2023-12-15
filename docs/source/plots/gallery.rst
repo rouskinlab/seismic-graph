@@ -16,7 +16,7 @@ Plot the base coverage of a single row of your dataframe.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: base_coverage
 
-    .. autofunction:: dreem.draw.study.Study.base_coverage
+    .. autofunction:: dreem.seismograph.study.Study.base_coverage
     
 
     
@@ -32,7 +32,7 @@ Plot the mutation fraction of multiple mutation profiles.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: compare_mutation_profiles
 
-    .. autofunction:: dreem.draw.study.Study.compare_mutation_profiles
+    .. autofunction:: dreem.seismograph.study.Study.compare_mutation_profiles
     
 
     
@@ -48,7 +48,7 @@ Plot the Mutation fraction of each paired-expected base of the ROI for each refe
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: deltaG_vs_sub_rate
 
-    .. autofunction:: dreem.draw.study.Study.deltaG_vs_sub_rate
+    .. autofunction:: dreem.seismograph.study.Study.deltaG_vs_sub_rate
     
 
     
@@ -64,7 +64,7 @@ Plot a given experimental variable vs Mutation fraction across samples for a giv
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: experimental_variable_across_samples
 
-    .. autofunction:: dreem.draw.study.Study.experimental_variable_across_samples
+    .. autofunction:: dreem.seismograph.study.Study.experimental_variable_across_samples
     
 
     
@@ -80,7 +80,7 @@ Plot the mutation rates as histograms.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_fraction
 
-    .. autofunction:: dreem.draw.study.Study.mutation_fraction
+    .. autofunction:: dreem.seismograph.study.Study.mutation_fraction
     
 
     
@@ -96,7 +96,7 @@ Plot the Mutation fraction difference between two mutation profiles.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_fraction_delta
 
-    .. autofunction:: dreem.draw.study.Study.mutation_fraction_delta
+    .. autofunction:: dreem.seismograph.study.Study.mutation_fraction_delta
     
 
     
@@ -112,7 +112,7 @@ Plot the mutation rates as histograms.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_fraction_identity
 
-    .. autofunction:: dreem.draw.study.Study.mutation_fraction_identity
+    .. autofunction:: dreem.seismograph.study.Study.mutation_fraction_identity
     
 
     
@@ -128,23 +128,7 @@ Plot the number of mutations per read per reference as an histogram.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_per_read_per_reference
 
-    .. autofunction:: dreem.draw.study.Study.mutation_per_read_per_reference
-    
-
-    
-.. _mutations_in_barcodes:
-
-Mutations in barcodes
----------------------
-
-Plot the number of mutations in the barcode per read of a sample as an histogram.
-                
-.. raw:: html
-    :file: plots_figs/mutations_in_barcodes.html
-    
-.. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutations_in_barcodes
-
-    .. autofunction:: dreem.draw.study.Study.mutations_in_barcodes
+    .. autofunction:: dreem.seismograph.study.Study.mutation_per_read_per_reference
     
 
     
@@ -160,7 +144,7 @@ Plot the number of mutations per read per sample as an histogram.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutations_per_read_per_sample
 
-    .. autofunction:: dreem.draw.study.Study.mutations_per_read_per_sample
+    .. autofunction:: dreem.seismograph.study.Study.mutations_per_read_per_sample
     
 
     
@@ -176,7 +160,7 @@ Plot the number of aligned reads per reference as a frequency distribution. x ax
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: num_aligned_reads_per_reference_frequency_distribution
 
-    .. autofunction:: dreem.draw.study.Study.num_aligned_reads_per_reference_frequency_distribution
+    .. autofunction:: dreem.seismograph.study.Study.num_aligned_reads_per_reference_frequency_distribution
     
 
     

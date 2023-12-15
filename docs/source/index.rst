@@ -46,7 +46,7 @@ Table of Contents
    module/align/main.rst
    module/vector/main.rst
    module/aggregate/main.rst
-   module/draw/main.rst
+   module/seismograph/main.rst
    module/cluster/main.rst
    module/demultiplex/main.rst
 

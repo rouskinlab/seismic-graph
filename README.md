@@ -1,5 +1,5 @@
 
-# Draw
+# seismograph
 
 A pipeline for the analysis of DREEM and SEISMIC data.
 
@@ -10,7 +10,7 @@ A pipeline for the analysis of DREEM and SEISMIC data.
 ## Docker Build
 
 Local Build:
-docker build -t draw-base-image:0.13 .
+docker build -t seismograph-base-image:0.13 .
 
 Push to Google Cloud:
 make sure cloudbuild.yaml has correct name and docker tag
@@ -18,7 +18,7 @@ gcloud builds submit --config=cloudbuild.yaml
 
 ## Documentation
 
-The documentation is available on [Github Pages](https://rouskinlab.github.io/draw).
+The documentation is available on [Github Pages](https://rouskinlab.github.io/seismograph).
 
 ## Contributors
 
