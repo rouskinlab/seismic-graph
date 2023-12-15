@@ -137,68 +137,6 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
 
     return {'fig':fig, 'df':df}
 
-
-def deltaG_vs_sub_rate(df:pd.DataFrame, models:List[str]=[],  savefile=None, auto_open=False, use_iplot=True, title=None)->dict:
-
-    df_temp = pd.DataFrame()
-    for _, row in df.iterrows():
-        df_temp = pd.concat([df_temp, pd.DataFrame({'reference':row.reference, 'index':row.index_selected, 'sub_rate':row.sub_rate, 'num_aligned':row.num_aligned, 'deltaG':row['deltaG'],'base':list(row.sequence), 'paired':[s !='.' for s in row.structure]}, index= [i+1 for i in range(len(row.sequence))])])
-    
-    assert len(df_temp) > 0, "No data to plot"
-    df = df_temp.reset_index()
-
-    hover_attr = ['num_aligned','sub_rate','base','index','reference','deltaG']
-    tra = {}
-    for is_paired, prefix in zip([True,False], ['Paired ','Unpaired ']):
-        markers = cycle(list(range(153)))
-        x=np.array(df[df.paired == is_paired]['deltaG'])
-        y=np.array(df[df.paired == is_paired]['sub_rate'])
-        tra[prefix] = go.Scatter(
-            x=x,
-            y=y,
-            text = df[df.paired == is_paired][hover_attr],
-            marker_size= df[df.paired == is_paired]['num_aligned']/200,
-            mode='markers',
-            name=prefix,
-            hovertemplate = ''.join(["<b>"+ha+": %{text["+str(i)+"]}<br>" for i, ha in enumerate(hover_attr)]),
-            line=dict(color='green' if is_paired else 'red'))
-            
-        
-        for m in models:
-            if len(y) > 0:
-                fit = Fit()
-                x_sorted, pred_y_sorted = fit.predict(x,y,m, prefix)
-                tra[fit.get_legend()] = go.Scatter(
-                    x=x_sorted,
-                    y=pred_y_sorted,
-                    mode='lines+markers',
-                    name=fit.get_legend(), 
-                    marker=dict(symbol=next(markers)),
-                    line=dict(color='darkseagreen' if is_paired else 'crimson', dash='dash'))
-
-    layout = dict(title = 'Mutation rates of paired / unpaired residues vs the expected energy of the molecule',
-            xaxis= dict(title= 'DeltaG',ticklen= 5,zeroline= False),
-            yaxis= dict(title= 'Mutation fraction ',ticklen= 5,zeroline= False),
-            )
-    fig = go.Figure(data=list(tra.values()), layout=layout)
-
-    fig.update_yaxes(
-        gridcolor='lightgray',
-        linewidth=1,
-        linecolor='black',
-        mirror=True,
-    )
-    fig.update_xaxes(
-        linewidth=1,
-        linecolor='black',
-        mirror=True,
-        autorange=True,
-    )
-
-    fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
-
-    return {'fig':fig, 'df':df}
-
     
 def experimental_variable_across_samples(data:pd.DataFrame, experimental_variable:str, models:List[str]=[])->dict:
 
@@ -645,6 +583,9 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
         ),
         xaxis_title="{} sub rate".format(xlabel),
         yaxis_title="{} sub rate".format(ylabel),
+        # font=dict(
+        #     size=15
+        # ),
         margin=dict(
             l=0,
             r=0,
