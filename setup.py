@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import sys, os
 
 requirements = []
-with open('/Users/yvesmartin/src/draw/requirements.txt', 'r') as fh:
+with open('requirements.txt', 'r') as fh:
     for line in fh:
         requirements.append(line.strip())
 
