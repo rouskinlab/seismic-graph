@@ -17,3 +17,8 @@ The documentation is available on [Github Pages](https://rouskinlab.github.io/se
 ## Contributors
 
 Yves Martin, Casper L'espérance-Kerckhoff
+
+### Todo
+- [ ] update gallery in the docs and the ipynb
+- [ ] add the input format to the docs
+- [ ] add a link to the webapp in the docs
