@@ -14,9 +14,6 @@ import os
 import sys
 #from unittest.mock import MagicMock
 
-sys.path.insert(0, os.path.abspath('../../dreem/dreem'))
-
-
 
 sys.path.append(os.path.abspath("..")+'/..')
 #sys.path.insert(os.path.abspath('../..')) 	
@@ -24,17 +21,11 @@ sys.path.insert(0, os.path.abspath("../../"))
  
 # Fix matplotlib non import
 MOCK_MODULES = ['yaml']
-# with open('../../dreem/requirements.txt') as f:
-#     for line in f:
-#         MOCK_MODULES.append(line.strip().split('=')[0])
-        
-#for mod_name in MOCK_MODULES:
-#    sys.modules[mod_name] = MagicMock()
     
 
 # -- Project information -----------------------------------------------------
 
-project = 'dreem'
+project = 'SEISMOGRAPH'
 copyright = '2023, Rouskin Lab'
 author = 'Yves Martin des Taillades, Scott Grote, Matthew Allan, Alberic de Lajarte'
 

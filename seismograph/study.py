@@ -26,10 +26,6 @@ class Study(object):
     attr_list = ["name", "samples"]
 
     @classmethod
-    def from_dreem(cls, data, min_cov=0, filter_by="sample"):
-        pass
-
-    @classmethod
     def from_seismic(cls, data, min_cov=0, filter_by="sample"):
         pass
 
@@ -41,7 +37,7 @@ class Study(object):
         """Creates a Study object.
 
         Args:
-            data (dict or list[dict] or pandas.DataFrame, optional): Data to use. Can be a dictionary or list of dictionaries containing DREEM-output jsons, or directly a pandas dataframe. Defaults to None.
+            data (dict or list[dict] or pandas.DataFrame, optional): Data to use. Can be a dictionary or list of dictionaries containing SEISMIC-output jsons, or directly a pandas dataframe. Defaults to None.
             min_cov (int, optional): Minimum number of base coverage for a row to be filtered-in. Defaults to 0.
             filter_by (str, optional): Filter rows by sample or study. When filtered by study, if a row passes the filter, rows with the same 'reference', 'section' and 'cluster' fields for all other samples have a sufficient base coverage. Defaults to 'sample'.
 

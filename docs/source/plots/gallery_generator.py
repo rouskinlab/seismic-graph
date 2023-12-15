@@ -30,7 +30,7 @@ def write_plot(plot):
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: {name}
 
-    .. autofunction:: dreem.seismograph.study.Study.{name}
+    .. autofunction:: seismograph.seismograph.study.Study.{name}
     
 
     """

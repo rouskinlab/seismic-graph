@@ -57,4 +57,4 @@ Make a plot
 
 .. note::
 
-    We regularly update the list of available plots. Make sure that you have the last version of DREEM.
+    We regularly update the list of available plots. Make sure that you have the last version of seismograph.
