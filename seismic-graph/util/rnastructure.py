@@ -5,7 +5,7 @@ class RNAstructure(object):
         object (_type_): _description_
 
     Examples:
-        rna = RNAstructure('/Users/ymdt/dreem/RNAstructure/exe')
+        rna = RNAstructure('/Users/ymdt/s/RNAstructure/exe')
         rna.fit(sequence='ACCTTTCAGAGCTACGATCGACTAGCTAGCATCGATACAGCGACACAAGCATTTGTAGCATTAGGTCA')
         print("DeltaG + structure:", rna.predict_reference_deltaG())
         print("Ensemble energy:", rna.predict_ensemble_energy())

@@ -19,7 +19,7 @@ Import your data into a study object
 
 .. code::
 
-    from seismograph import Study
+    from seismic_graph import Study
     import json
 
     # Define the list of samples you want to load

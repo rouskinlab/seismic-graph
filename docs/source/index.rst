@@ -1,8 +1,8 @@
 =========================================================================
-Welcome to SEISMOGRAPH's documentation! 
+Welcome to seismic-graph's documentation! 
 =========================================================================
 
-SEISMOGRAPH is a plotting library for SEISMIC output.
+seismic-graph is a plotting library for SEISMIC output.
 
 .. include:: plots/get_started.rst
 

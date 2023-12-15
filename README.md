@@ -1,18 +1,18 @@
-[![Docs](https://github.com/rouskinlab/seismograph/actions/workflows/documentation.yml/badge.svg)](https://github.com/rouskinlab/seismograph/actions/workflows/documentation.yml)
+[![Docs](https://github.com/rouskinlab/seismic-graph/actions/workflows/documentation.yml/badge.svg)](https://github.com/rouskinlab/seismic-graph/actions/workflows/documentation.yml)
 
-# Seismograph
+# seismic-graph
 
 A python library for the analysis of SEISMIC data.
 
 ## Installation
 
 ```
-pip install seismograph
+pip install seismic-graph
 ```
 
 ## Documentation
 
-The documentation is available on [Github Pages](https://rouskinlab.github.io/seismograph).
+The documentation is available on [Github Pages](https://rouskinlab.github.io/seismic-graph).
 
 ## Contributors
 

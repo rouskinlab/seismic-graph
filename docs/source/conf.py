@@ -25,7 +25,7 @@ MOCK_MODULES = ['yaml']
 
 # -- Project information -----------------------------------------------------
 
-project = 'SEISMOGRAPH'
+project = 'seismic-graph'
 copyright = '2023, Rouskin Lab'
 author = 'Yves Martin des Taillades, Scott Grote, Matthew Allan, Alberic de Lajarte'
 

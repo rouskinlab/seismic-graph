@@ -37,7 +37,7 @@ Take a look at the filtering options in the ``Study.get_df()`` method documentat
 
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: ``Study.get_df()``
 
-    .. autofunction:: seismograph.study.Study.get_df
+    .. autofunction:: seismic_graph.study.Study.get_df
     
 2. Plot your data
 ******************
@@ -99,8 +99,8 @@ This project is community-driven. If you want to add your plot to SEISMOGRAPH, p
     pip install -r requirements.txt
 
 6. In your favorite IDE, open:
-    - ``seismograph/study.py`` 
-    - ``seismograph/plotter.py`` 
+    - ``seismic-graph/study.py`` 
+    - ``seismic-graph/plotter.py`` 
     - ``docs/source/plots/gallery_generator.py``
     - A Jupyter notebook 
 
@@ -112,11 +112,11 @@ This project is community-driven. If you want to add your plot to SEISMOGRAPH, p
 In this example, we'll add the plot :ref:`base_coverage` to SEISMOGRAPH.
 You need to add your plot to the following files:
 
-In ``seismograph/study.py``:
+In ``seismic-graph/study.py``:
 
 .. code::
 
-    # In seismograph/study.py
+    # In seismic-graph/study.py
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -126,11 +126,11 @@ In ``seismograph/study.py``:
         """
         return self.wrap_to_plotter(plotter.base_coverage, locals(), kwargs)
 
-In ``seismograph/plotter.py``:
+In ``seismic-graph/plotter.py``:
 
 .. code::
 
-    # In seismograph/plotter.py
+    # In seismic-graph/plotter.py
     def base_coverage(data):
         fig = go.Figure()
         [...]
@@ -152,23 +152,23 @@ In ``docs/source/plots/gallery_generator.py``:
 3. Add your plot
 ^^^^^^^^^^^^^^^^^^
 
-1. Add your plot function to ``seismograph/plotter.py``.
+1. Add your plot function to ``seismic-graph/plotter.py``.
 
 .. code::
 
-    # In seismograph/plotter.py
+    # In seismic-graph/plotter.py
     def my_plot(data):
         fig = go.Figure()
         [...]
         return {'fig': fig, 'data': data}
     
 
-2. Add your plot to the ``Study`` class in ``seismograph/study.py``. 
+2. Add your plot to the ``Study`` class in ``seismic-graph/study.py``. 
 Use the wrapper: it loads the data for you while making sure that the inputs are valid.
 
 .. code::
 
-    # In seismograph/study.py
+    # In seismic-graph/study.py
     class Study:
         [...]
         def my_plot(self, **kwargs):
@@ -181,7 +181,7 @@ Use the wrapper: it loads the data for you while making sure that the inputs are
 
 .. code::
 
-    # In seismograph/study.py
+    # In seismic-graph/study.py
     class Study:
         [...]
         def my_plot(self, sample, reference, section='full', base_type=['A','C'], **kwargs):
@@ -203,7 +203,7 @@ When pushing the docs to GitHub Pages, this will add the docstring of the generi
 
 .. code::
 
-    # In seismograph/study.py
+    # In seismic-graph/study.py
     class Study:
         [...]
         # Use this decorator for plots that take one or multiple rows of the DataFrame (use by default).
@@ -220,7 +220,7 @@ Add also the documentation for these arguments. Keep the decorators in this orde
 
 .. code::
 
-    # In seismograph/study.py
+    # In seismic-graph/study.py
     class Study:
         [...]
         @save_plot
@@ -234,7 +234,7 @@ Add also the documentation for these arguments. Keep the decorators in this orde
 .. code::
 
     # In a Jupyter notebook
-    from seismograph import Study, load_dataset
+    from seismic_graph import Study, load_dataset
     study = Study()
     study.df = load_dataset()
     # Plot the first row of the DataFrame

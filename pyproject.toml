@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.poetry]
-name = "seismograph"
+name = "seismic-graph"
 description = "Implementation of Prof Silvi Rouskin's DREEM algorithm by Yves Martin, Scott Grote, Matty Allan and Alberic de Lajarte"
 authors = [
     "Yves Martin des Taillades <yves@martin.yt>",
@@ -16,6 +16,7 @@ repository = "https://github.com/rouskinlab/dreem"
 readme = "README.md"
 homepage = "https://github.com/rouskinlab/dreem"
 keywords = ["dreem", "Rouskin", "rnastructure"]
+
 
 [tool.poetry.dependencies]
 python = ">=3.9"

@@ -1,6 +1,6 @@
 DOCKER_IMAGE := ydmt/dreem
 VERSION := $(shell git describe --always --dirty --long)
-PYPI_PASSWORD := $(shell cat pypi_pass.txt)
+PYPI_PASSWORD := $(shell cat ~/.pypi_pass.txt)
 
 default: 
 	python setup.py install
@@ -20,7 +20,7 @@ push-image:
 	docker push $(DOCKER_IMAGE):$(VERSION)
 
 upgrade-dependencies:
-	pip uninstall -y dreem
+	pip uninstall -y seismic-graph
 	rm -f requirements.txt
 	pip freeze > requirements.txt
 	python setup.py install

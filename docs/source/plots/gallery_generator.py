@@ -3,7 +3,7 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(__file__,'../../../..')))
 
 gallery_path = os.path.join(os.path.dirname(__file__), 'gallery.rst')
-import seismograph
+import seismic_graph
 
 def beautify_title(title):
     title = title.replace('_', ' ')
@@ -23,14 +23,14 @@ def write_plot(plot):
 {beautify_title(name)}
 {"-"*len(name)}
 
-{docstring_header(getattr(seismograph.Study, name))}
+{docstring_header(getattr(seismic_graph.Study, name))}
                 
 .. raw:: html
     :file: plots_figs/{plot}
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: {name}
 
-    .. autofunction:: seismograph.seismograph.study.Study.{name}
+    .. autofunction:: seismic_graph.seismic_graph.study.Study.{name}
     
 
     """
@@ -58,9 +58,9 @@ def generate_rst():
 
 def generate_html():
 
-    data = seismograph.load_dataset()
+    data = seismic_graph.load_dataset()
 
-    study = seismograph.Study()
+    study = seismic_graph.Study()
     study.df = data
     sample, reference, section, family = study.df.iloc[0][['sample', 'reference', 'section', 'family']]
 
