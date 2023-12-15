@@ -1,20 +1,14 @@
+[![Docs](https://github.com/rouskinlab/seismograph/actions/workflows/documentation.yml/badge.svg)](https://github.com/rouskinlab/seismograph/actions/workflows/documentation.yml)
 
-# seismograph
+# Seismograph
 
-A pipeline for the analysis of DREEM and SEISMIC data.
+A python library for the analysis of SEISMIC data.
 
 ## Installation
 
-... TODO ...
-
-## Docker Build
-
-Local Build:
-docker build -t draw-base-image:0.14 .
-
-Push to Google Cloud:
-make sure cloudbuild.yaml has correct name and docker tag
-gcloud builds submit --config=cloudbuild.yaml
+```
+pip install seismograph
+```
 
 ## Documentation
 
