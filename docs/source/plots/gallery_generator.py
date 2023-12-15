@@ -1,6 +1,6 @@
 import os, sys
 import pandas as pd
-sys.path.append(os.path.abspath(os.path.join(__file__,'../../../..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),'../../..')))
 
 gallery_path = os.path.join(os.path.dirname(__file__), 'gallery.rst')
 import seismic_graph
@@ -30,7 +30,7 @@ def write_plot(plot):
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: {name}
 
-    .. autofunction:: seismic_graph.seismic_graph.study.Study.{name}
+    .. autofunction:: seismic_graph.study.Study.{name}
     
 
     """

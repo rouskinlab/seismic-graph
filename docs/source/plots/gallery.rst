@@ -16,7 +16,7 @@ Plot the base coverage of a single row of your dataframe.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: base_coverage
 
-    .. autofunction:: dreem.seismograph.study.Study.base_coverage
+    .. autofunction:: seismic_graph.study.Study.base_coverage
     
 
     
@@ -32,7 +32,7 @@ Plot the mutation fraction of multiple mutation profiles.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: compare_mutation_profiles
 
-    .. autofunction:: dreem.seismograph.study.Study.compare_mutation_profiles
+    .. autofunction:: seismic_graph.study.Study.compare_mutation_profiles
     
 
     
@@ -48,7 +48,7 @@ Plot a given experimental variable vs Mutation fraction across samples for a giv
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: experimental_variable_across_samples
 
-    .. autofunction:: dreem.seismograph.study.Study.experimental_variable_across_samples
+    .. autofunction:: seismic_graph.study.Study.experimental_variable_across_samples
     
 
     
@@ -64,7 +64,7 @@ Plot the mutation rates as histograms.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_fraction
 
-    .. autofunction:: dreem.seismograph.study.Study.mutation_fraction
+    .. autofunction:: seismic_graph.study.Study.mutation_fraction
     
 
     
@@ -80,7 +80,7 @@ Plot the Mutation fraction difference between two mutation profiles.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_fraction_delta
 
-    .. autofunction:: dreem.seismograph.study.Study.mutation_fraction_delta
+    .. autofunction:: seismic_graph.study.Study.mutation_fraction_delta
     
 
     
@@ -96,7 +96,7 @@ Plot the mutation rates as histograms.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_fraction_identity
 
-    .. autofunction:: dreem.seismograph.study.Study.mutation_fraction_identity
+    .. autofunction:: seismic_graph.study.Study.mutation_fraction_identity
     
 
     
@@ -112,7 +112,7 @@ Plot the number of mutations per read per reference as an histogram.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutation_per_read_per_reference
 
-    .. autofunction:: dreem.seismograph.study.Study.mutation_per_read_per_reference
+    .. autofunction:: seismic_graph.study.Study.mutation_per_read_per_reference
     
 
     
@@ -128,7 +128,7 @@ Plot the number of mutations per read per sample as an histogram.
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: mutations_per_read_per_sample
 
-    .. autofunction:: dreem.seismograph.study.Study.mutations_per_read_per_sample
+    .. autofunction:: seismic_graph.study.Study.mutations_per_read_per_sample
     
 
     
@@ -144,7 +144,7 @@ Plot the number of aligned reads per reference as a frequency distribution. x ax
     
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: num_aligned_reads_per_reference_frequency_distribution
 
-    .. autofunction:: dreem.seismograph.study.Study.num_aligned_reads_per_reference_frequency_distribution
+    .. autofunction:: seismic_graph.study.Study.num_aligned_reads_per_reference_frequency_distribution
     
 
     
