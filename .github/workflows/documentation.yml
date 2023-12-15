@@ -30,7 +30,7 @@ jobs:
       - name: Install requirements
         run: |
           pip install sphinx sphinx_rtd_theme
-          pip install -r dreem/requirements.txt
+          pip install -r seismograph/requirements.txt
           pip install .
 
       - name: Sphinx build
