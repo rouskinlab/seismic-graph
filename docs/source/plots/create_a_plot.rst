@@ -9,6 +9,10 @@ You can write your own plots following these steps.
 
 Use the ``study.get_df()`` method to get a filtered pandas DataFrame.
 
+.. note::
+
+    If you don't know how to get a study object, please read the :ref:`plots_get_started` section.
+
 .. code::
 
     data = study.get_df(
@@ -33,7 +37,7 @@ Take a look at the filtering options in the ``Study.get_df()`` method documentat
 
 .. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: ``Study.get_df()``
 
-    .. autofunction:: dreem.draw.study.Study.get_df
+    .. autofunction:: seismograph.study.Study.get_df
     
 2. Plot your data
 ******************
@@ -76,15 +80,15 @@ You'll get the following output:
     :file: my_figure.html
 
 
-3. Add your plot to DREEM
-**************************
+3. Add your plot to SEISMOGRAPH
+*******************************
 
-This project is community-driven. If you want to add your plot to DREEM, please follow these steps and send us `a pull request <https://github.com/rouskinlab/dreem/pulls>`_.
+This project is community-driven. If you want to add your plot to SEISMOGRAPH, please follow these steps and send us `a pull request <https://github.com/rouskinlab/seismograph/pulls>`_.
 
 1. Setup your development environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Fork the DREEM repository on GitHub.
+1. Fork the SEISMOGRAPH repository on GitHub.
 2. Clone your fork locally.
 3. Open your favorite terminal and navigate to the cloned repository.
 4. Create a new branch for your plot.
@@ -95,8 +99,8 @@ This project is community-driven. If you want to add your plot to DREEM, please 
     pip install -r requirements.txt
 
 6. In your favorite IDE, open:
-    - ``dreem/dreem/draw/study.py`` 
-    - ``dreem/dreem/draw/plotter.py`` 
+    - ``seismograph/study.py`` 
+    - ``seismograph/plotter.py`` 
     - ``docs/source/plots/gallery_generator.py``
     - A Jupyter notebook 
 
@@ -105,14 +109,14 @@ This project is community-driven. If you want to add your plot to DREEM, please 
 ^^^^^^^^^^^
 
 
-In this example, we'll add the plot :ref:`mutations_in_barcodes` to DREEM.
+In this example, we'll add the plot :ref:`base_coverage` to SEISMOGRAPH.
 You need to add your plot to the following files:
 
-In ``dreem/draw/study.py``:
+In ``seismograph/study.py``:
 
 .. code::
 
-    # In dreem/draw/study.py
+    # In seismograph/study.py
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -122,11 +126,11 @@ In ``dreem/draw/study.py``:
         """
         return self.wrap_to_plotter(plotter.base_coverage, locals(), kwargs)
 
-In ``dreem/draw/plotter.py``:
+In ``seismograph/plotter.py``:
 
 .. code::
 
-    # In dreem/draw/plotter.py
+    # In seismograph/plotter.py
     def base_coverage(data):
         fig = go.Figure()
         [...]
@@ -148,23 +152,23 @@ In ``docs/source/plots/gallery_generator.py``:
 3. Add your plot
 ^^^^^^^^^^^^^^^^^^
 
-1. Add your plot function to ``dreem/draw/plotter.py``.
+1. Add your plot function to ``seismograph/plotter.py``.
 
 .. code::
 
-    # In dreem/draw/plotter.py
+    # In seismograph/plotter.py
     def my_plot(data):
         fig = go.Figure()
         [...]
         return {'fig': fig, 'data': data}
     
 
-2. Add your plot to the ``Study`` class in ``dreem/draw/study.py``. 
+2. Add your plot to the ``Study`` class in ``seismograph/study.py``. 
 Use the wrapper: it loads the data for you while making sure that the inputs are valid.
 
 .. code::
 
-    # In dreem/draw/study.py
+    # In seismograph/study.py
     class Study:
         [...]
         def my_plot(self, **kwargs):
@@ -177,7 +181,7 @@ Use the wrapper: it loads the data for you while making sure that the inputs are
 
 .. code::
 
-    # In dreem/draw/study.py
+    # In seismograph/study.py
     class Study:
         [...]
         def my_plot(self, sample, reference, section='full', base_type=['A','C'], **kwargs):
@@ -199,7 +203,7 @@ When pushing the docs to GitHub Pages, this will add the docstring of the generi
 
 .. code::
 
-    # In dreem/draw/study.py
+    # In seismograph/study.py
     class Study:
         [...]
         # Use this decorator for plots that take one or multiple rows of the DataFrame (use by default).
@@ -216,7 +220,7 @@ Add also the documentation for these arguments. Keep the decorators in this orde
 
 .. code::
 
-    # In dreem/draw/study.py
+    # In seismograph/study.py
     class Study:
         [...]
         @save_plot
@@ -230,7 +234,7 @@ Add also the documentation for these arguments. Keep the decorators in this orde
 .. code::
 
     # In a Jupyter notebook
-    from dreem.draw import Study, load_dataset
+    from seismograph import Study, load_dataset
     study = Study()
     study.df = load_dataset()
     # Plot the first row of the DataFrame
@@ -270,4 +274,4 @@ Make sure that it looks good!
 
 11. Commit your changes and push them to GitHub. The docs will be automatically updated on GitHub Pages. Make sure that the docstrings are displayed and that the plot looks good.
 
-12. Send us a pull request to the DREEM repository!
+12. Send us a pull request to the SEISMOGRAPH repository!

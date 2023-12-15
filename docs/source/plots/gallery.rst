@@ -36,22 +36,6 @@ Plot the mutation fraction of multiple mutation profiles.
     
 
     
-.. _deltaG_vs_sub_rate:
-
-DeltaG vs sub rate
-------------------
-
-Plot the Mutation fraction of each paired-expected base of the ROI for each reference of a sample, w.r.t the deltaG estimation.
-                
-.. raw:: html
-    :file: plots_figs/deltaG_vs_sub_rate.html
-    
-.. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: deltaG_vs_sub_rate
-
-    .. autofunction:: dreem.seismograph.study.Study.deltaG_vs_sub_rate
-    
-
-    
 .. _experimental_variable_across_samples:
 
 Experimental variable across samples

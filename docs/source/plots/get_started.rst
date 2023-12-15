@@ -4,14 +4,8 @@
 Get started
 =================
 
-Install DREEM (if not already done)
----------------------------------------
-
-
-.. note::
-
-    You don't need any non-pythonic dependency to use DREEM for plotting only. If you want to process your data with DREEM, you will need to install the :ref:`Dependencies`.
-
+Install SEISMOGRAPH 
+-------------------
 
 Install SEISMOGRAPH with pip. **Use Python >= 3.10**
 
@@ -25,7 +19,7 @@ Import your data into a study object
 
 .. code::
 
-    from seismograph import study
+    from seismograph import Study
     import json
 
     # Define the list of samples you want to load
@@ -38,7 +32,7 @@ Import your data into a study object
             data.append(json.load(f))
 
     # Create a study object
-    my_study = study.Study(data)
+    my_study = Study(data)
 
     # Print the list of available samples
     print(my_study.get_samples())
@@ -55,6 +49,11 @@ Make a plot
         section = 'my_section_1',
         cluster = 'pop_avg'
     )
+
+
+.. raw:: html
+    :file: plots_figs/mutation_fraction.html
+
 
 .. note::
 
