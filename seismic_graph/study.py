@@ -1,7 +1,7 @@
 from . import manipulator, util, plotter
 import pandas as pd
 import numpy as np
-from .util.dump import sort_dict, flatten_json, add_min_cov_field, remove_leading_pound
+from .util.dump import sort_dict, flatten_json, add_min_cov_field, remove_leading_pound, all_pos
 import plotly.graph_objects as go
 from custom_inherit import doc_inherit
 from .util.docstring import style_child_takes_over_parent
@@ -64,7 +64,7 @@ class Study(object):
                     df = pd.concat(
                         [df, pd.DataFrame(flatten_json(sort_dict(sample)))], axis=0
                     )
-            
+            df = all_pos(df)
             df = remove_leading_pound(df)
             if "min_cov" not in df.columns:
                 df = add_min_cov_field(df)

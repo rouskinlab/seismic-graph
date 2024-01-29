@@ -72,3 +72,25 @@ def add_min_cov_field(df):
 def remove_leading_pound(df):
     df.columns = df.columns.str.lstrip('#')
     return df
+
+def all_pos(df):
+    condition = (df['#positions'].str.len() != df['#sequence'].str.len())
+    if condition.any():
+        return re_index(df)
+    return df
+
+def re_index(df):
+    for i, row in df.iterrows():
+        sequence_length = len(row['#sequence'])
+        positions = list(set(row['#positions']))
+        
+        default_dict = { key : [np.nan for _ in range(sequence_length)] for key in ['cov', 'info', 'del', 'sub_N', 'sub_A', 'sub_C', 'sub_G', 'sub_T', 'ins', 'sub_rate']}
+        
+        for pos in positions:
+            for key in default_dict.keys():
+                default_dict[key][pos-1] = row[key][positions.index(pos)-1]
+                
+        for key, value in default_dict.items():
+            df.at[i, key] = value
+            
+    return df
