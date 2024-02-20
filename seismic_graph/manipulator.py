@@ -32,7 +32,7 @@ def __index_selected(row, base_index, base_type, base_pairing, RNAstructure_use_
 
 
 def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=0, base_index=None, base_type=['A','C','G','T'], base_pairing=None, 
-           RNAstructure_use_DMS=False, RNAstructure_use_temp=False, unique_id = False, index_selected=False, **kwargs)->pd.DataFrame:
+           RNAstructure_use_DMS=False, RNAstructure_use_temp=False, unique_id=False, index_selected=False, **kwargs)->pd.DataFrame:
     """Get a dataframe with filtered data
 
     Args:
@@ -53,12 +53,15 @@ def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=
 
     Returns:
         pd.Dataframe: a filtered dataframe according to the given parameters
+        
+    Examples:
+        
     """
 
-    df = df.copy()
+    df = df.copy(deep=True)
     assert df.shape[0] > 0, "Empty dataframe"
     
-    if base_index != None:
+    if base_index is not None:
         if type(base_index) == int:
             base_index = [base_index]
         if hasattr(base_index, '__iter__') and not isinstance(base_index, str):
@@ -69,27 +72,27 @@ def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=
             assert all([b >= 0 for b in base_index]), f"base_index must be a list of positive integers. Got {base_index}"
 
     # filter mutation profiles
-    if min(df.min_cov) < min_cov:
+    if df['min_cov'].min() < min_cov:
         df = df.loc[df.min_cov >= min_cov,:]
     for key, value in kwargs.items():
         locals()[key] = value
     mp_attr = ['sample', 'reference', 'section', 'cluster'] + list(kwargs.keys())
     for attr in mp_attr:
         assert attr in df.columns, f"Attribute {attr} not found in dataframe"
-        if eval(attr) is not None:
-            if (isinstance(eval(attr), list) or isinstance(eval(attr), tuple)) or isinstance(eval(attr), np.ndarray):
-                df = df[df[attr].isin(eval(attr))]
+        if locals().get(attr) is not None:
+            if (isinstance(locals().get(attr), list) or isinstance(locals().get(attr), tuple)) or isinstance(locals().get(attr), np.ndarray):
+                df = df[df[attr].isin(locals().get(attr))]
             else:
-                df = df[df[attr] == eval(attr)]
+                df = df[df[attr] == locals().get(attr)]
     
-    if len(df) == 0:
+    if df.empty:
         return df
 
         
     # filter base profiles
-    if  base_index != None or \
+    if  base_index is not None or \
         base_type != ['A','C','G','T'] or \
-        base_pairing != None or \
+        base_pairing is not None or \
         index_selected:
             
         df['index_selected'] = pd.Series([[]]*df.shape[0], index=df.index)    
@@ -104,7 +107,7 @@ def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=
                 filtered_cells = df.apply(lambda row: [row[attr][i] for i in row['index_selected']], axis=1)
                 df.loc[:, attr] = filtered_cells.apply(lambda x: ''.join(x) if isinstance(x[0], str) else x)
 
-    if len(df) == 0:
+    if df.empty:
         return df
     if unique_id:
         try:
