@@ -64,10 +64,12 @@ class Study(object):
                     df = pd.concat(
                         [df, pd.DataFrame(flatten_json(sort_dict(sample)))], axis=0
                     )
+            df.to_csv('/Users/casper/Documents/output/initial_df.csv', index=False)
             df = all_pos(df)
             df = remove_leading_pound(df)
             if "min_cov" not in df.columns:
                 df = add_min_cov_field(df)
+            df.to_csv('/Users/casper/Documents/output/processed_df.csv', index=False)
             # Use the dataframe (loaded or created from json)
             self.set_df(df, min_cov=min_cov, filter_by=filter_by)
 

@@ -80,17 +80,22 @@ def all_pos(df):
     return df
 
 def re_index(df):
-    for i, row in df.iterrows():
+    def process_row(row):
         sequence_length = len(row['#sequence'])
-        positions = list(set(row['#positions']))
+        positions = row['#positions']
         
-        default_dict = { key : [np.nan for _ in range(sequence_length)] for key in ['cov', 'info', 'del', 'sub_N', 'sub_A', 'sub_C', 'sub_G', 'sub_T', 'ins', 'sub_rate']}
+        default_dict = { key : [np.nan for _ in range(sequence_length)] 
+                        for key in ['cov', 'info', 'del', 'sub_N', 
+                                    'sub_A', 'sub_C', 'sub_G', 'sub_T', 
+                                    'ins', 'sub_rate']}
         
         for pos in positions:
             for key in default_dict.keys():
-                default_dict[key][pos-1] = row[key][positions.index(pos)-1]
-                
+                default_dict[key][pos-1] = row[key][positions.index(pos)]
+
         for key, value in default_dict.items():
-            df.at[i, key] = value
-            
-    return df
+            row[key] = value
+        
+        return row
+
+    return df.apply(process_row, axis=1)
