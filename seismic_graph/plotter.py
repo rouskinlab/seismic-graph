@@ -24,13 +24,16 @@ cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
 
 LIST_COLORS = ['red','green','blue','orange','purple','black','yellow','pink','brown','grey','cyan','magenta']
 
-def mutation_fraction(df, show_ci:bool=True)->dict:
+def mutation_fraction(df, show_ci:bool=False)->dict:
     assert len(df) == 1, "df must have only one row"
     mh = df.iloc[0].copy()
     
     traces, layouts = [], []
     mh['index_selected'] = [i+1 for i in range(len(mh['sequence']))] #TODO[i + 1 for i in mh.index_selected] # index starts at 1
     mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(1, 1+len(mh.index_selected))),'index_selected':mh.index_selected})
+
+    err_min, err_max= dms_ci(mh['sub_rate'], len(mh['sub_rate'])*[mh['num_aligned']])
+    mr = np.array(mh['sub_rate'])
 
     for bt in set(mh['sequence']):
         df_loc = mh_unrolled[mh_unrolled['base'] == bt]
@@ -49,10 +52,17 @@ def mutation_fraction(df, show_ci:bool=True)->dict:
             hovertemplate = ''.join(["<b>"+ha+": %{text["+str(i)+"]}<br>" for i, ha in enumerate(hover_attr)]),
             ))
         if show_ci:
+            idx = [i for i, s in enumerate(mh['sequence']) if s == bt]
             traces[-1].update(
                         error_y=dict(
-                        type='data',
-                        symmetric=False,
+                            type='data',
+                            array= (err_max - mr)[idx],
+                            arrayminus = (mr - err_min)[idx],
+                            visible=True,
+                            symmetric=False,
+                            thickness=1.5,
+                            width=2,
+                            color='black'
                         ))
 
     fig = go.Figure(data=traces)
@@ -104,7 +114,6 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
                 arrayminus = [data['sub_rate'][i]-data['err_min'][i] for i in range(len(data['sequence']))],
                 visible=True,
                 symmetric=False,
-                thickness=1.5,
                 width=2,
                 color='black'
         )
@@ -219,7 +228,7 @@ def auc(df:pd.DataFrame,  savefile=None, auto_open=False, use_iplot=True, title=
         yaxis_title='True Positive Rate')
 
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
-    fig.update_xaxes(constrain='domain')
+    fig.update_xaxes(constrain='domain', autorange=True)
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
 
     return {'fig':fig, 'df':df}
@@ -356,7 +365,6 @@ def num_aligned_reads_per_reference_frequency_distribution(data):
         mirror=True,
     )
     fig.update_xaxes(
-        dtick=10,
         linewidth=1,
         linecolor='black',
         mirror=True,
@@ -630,7 +638,7 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
 
 
 
-def correlation_by_refs_between_samples(df:pd.DataFrame)->dict:
+def correlation_by_refs_between_samples(df:pd.DataFrame, pearson_filter_gap = None)->dict:
     assert len(df['sample'].unique()) == 2, "only two samples are allowed"
     s1, s2 = df['sample'].unique()
 
