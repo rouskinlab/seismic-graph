@@ -16,15 +16,6 @@ class FilteredPearson():
     Returns:
         score: list
             Pearson correlation coefficient between x and y.
-            
-    Example:
-    >>> x = np.array([1,2,3,4,5,2])
-    >>> y = np.array([1,2,3,4,5,10])
-    >>> print(FilteredPearson(x, y, 0.5))
-    FilteredPearson: [1.0]. Raw score: [0.178]. Filtered score: [1.0]
-    >>> x = np.array([1,2,3,4,5,2,1])
-    >>> y = np.array([1,2,3,4,5,10,3])
-    >>> print(FilteredPearson(x, y, 0.5))
     """
     # HYPERPARAMETERS
     SIGNIFICANT_DIGITS = 3
