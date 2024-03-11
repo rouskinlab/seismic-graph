@@ -4,6 +4,7 @@ import numpy as np
 from .util import *
 # from .util import assert_only_one_row, Fit
 from .util.misc import assert_only_one_row, Fit
+from .util.filtered_pearson import FilteredPearson
 
 import plotly.graph_objects as go
 from plotly.offline import plot, iplot
@@ -16,6 +17,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 from dms_ci import dms_ci
 from scipy.stats import pearsonr
+from sklearn.metrics import r2_score
 
 
 cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
@@ -327,10 +329,9 @@ def mutations_per_read_per_sample(data):
             autorange=True,
         )
 
-    fig.update_layout(autosize=True, height=len(unique_samples)*500, title='Number of mutation per read across samples')
-
-    
-    fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
+    fig.update_layout(autosize=True, height=len(unique_samples)*500, 
+                      title='Number of mutation per read across samples', 
+                      plot_bgcolor='white',paper_bgcolor='white')
 
     return {
         'fig':fig,
@@ -472,7 +473,7 @@ def base_coverage(data):
 
 
 
-def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
+def compare_mutation_profiles(data, max_plots = 100, max_axis=None, pearson_filter_gap = None):
 
     # total number of plots
     totNumPlots =  int((data.shape[0] *  (1+data.shape[0]))/2)
@@ -537,8 +538,10 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None):
             fig.add_trace(go.Scatter(x=[0, maxValue], y=[0, maxValue], mode='lines', name='Line of Identity', visible=False))
             traceTrack.append(plotLabel)
             
-            # R2, RMSE and linear regression line
-            annot = 'R2 = {} <br> RMSE = {} <br> Lin Reg: y = {}x + {}'.format(round(r_value**2,4), round(np.sqrt(np.mean((y - (slope*x+intercept))**2)),2), round(slope,4), round(intercept,4))
+            # Determination, RMSE, Pearson and linear regression line
+            coef_of_determination = np.round(r_value, 4)
+            pearson = FilteredPearson(x, y, pearson_filter_gap)[0]
+            annot = 'Pearson = {} <br> RMSE = {} <br> Lin Reg: y = {}x + {} <br> Coef. of determ. of y vs ax+b = {} '.format(pearson, round(np.sqrt(np.mean((y - (slope*x+intercept))**2)),4), round(slope,4), round(intercept,4), coef_of_determination)
             fig.add_annotation(visible = False, y=0.13,text=annot, showarrow=False)
             annotationTrack.append(annot)
             
@@ -654,8 +657,7 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, pearson_filter_gap = No
         v1, v2 = df_ref[df_ref['sample'] == s1]['sub_rate'].values[0], df_ref[df_ref['sample'] == s2]['sub_rate'].values[0]
         if len(v1) <= 1 or len(v2) <= 1:
             continue
-        corr, _ = pearsonr(v1, v2)
-        scores[ref] = corr
+        scores[ref] = FilteredPearson(v1, v2, pearson_filter_gap)[0]
     
     # sort by correlation
     scores = pd.DataFrame.from_dict(scores, orient='index', columns=['correlation']).reset_index().rename(columns={'index':'reference'})

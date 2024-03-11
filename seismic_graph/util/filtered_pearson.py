@@ -11,7 +11,7 @@ class FilteredPearson():
         y: array-like (1D or 2D)
             Second variable
         thresh: float
-            If when removing a pair of points the Pearson correlation coefficient increases by more than this value, the pair is removed.
+            If when removing a pair of points the Pearson correlation coefficient increases by more than this value, the pair is removed. No filtering if None.
             
     Returns:
         score: list
@@ -26,7 +26,7 @@ class FilteredPearson():
         return .1*x + 0.005 
     
     # Now the class
-    def __init__(self, x:np.ndarray, y:np.ndarray, thresh:float):
+    def __init__(self, x:np.ndarray, y:np.ndarray, thresh:float=None):
         """Calculate the Pearson correlation coefficient between two variables."""
         
         # process input arrays
@@ -45,13 +45,24 @@ class FilteredPearson():
         # set score
         self.score = []
         for i in range(x.shape[1]):
-            self.score.append(self.filtered_score[i] if (self.filtered_score[i] - self.raw_score[i]) > thresh else self.raw_score[i])
+            if thresh is not None and self.filtered_score[i] - self.raw_score[i] > thresh:
+                self.score.append(self.filtered_score[i])
+            else:
+                self.score.append(self.raw_score[i])
         
     def __str__(self):
         return f'FilteredPearson: {self.score}. Raw score: {self.raw_score}. Filtered score: {self.filtered_score}'
     
+    def __call__(self) -> list:
+        return self.score
+    
+    def __getitem__(self, i:int) -> float:
+        return self.score[i]
+    
     @staticmethod
     def _array_preprocess(v, mask):
+        if isinstance(v, list):
+            v = np.array(v)
         if not isinstance(v, np.ndarray):
             raise ValueError(f'Expected numpy.ndarray, got {type(v)}')
         if v.ndim == 1:
@@ -76,9 +87,10 @@ class FilteredPearson():
         return best_score 
         
 @pytest.mark.parametrize("x, y, thresh, expected", [
-    (np.array([1,2,3,4,5]),     np.array([1,2,3,4,5]),       0.5, [1.0]),   # no significant variations
-    (np.array([1,2,3,4,5,2]),   np.array([1,2,3,4,5,10]),    0.5, [1.0]),   # one significant variation
-    (np.array([1,2,3,4,5,2,1]), np.array([1,2,3,4,5,10,10]), 0.5, [-0.151]) # two significant variations -> should not be removed
+    (np.array([1,2,3,4,5]),     np.array([1,2,3,4,5]),       0.5,  [1.]),    # no significant variations
+    (np.array([1,2,3,4,5,2]),   np.array([1,2,3,4,5,10]),    0.5,  [1.]),    # one significant variation
+    (np.array([1,2,3,4,5,2,1]), np.array([1,2,3,4,5,10,10]), 0.5,  [-.151]), # two significant variations -> should not be removed
+    (np.array([1,2,3,4,5,2]),   np.array([1,2,3,4,5,10]),    None, [.178])   # one significant variation, but no threshold -> should not be removed
 ])
 def test_filtered_pearson(x, y, thresh, expected):
     assert FilteredPearson(x, y, thresh).score == expected
