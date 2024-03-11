@@ -519,19 +519,24 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None, pearson_filt
         for _, row2 in data.iloc[idx1+1:].iterrows():
             x, y = row1['sub_rate'], row2['sub_rate']
             x, y = np.array(x), np.array(y)
-            x, y = x[~np.isnan(x)], y[~np.isnan(y)]
+            mask = np.logical_and(np.logical_and(~np.isnan(x), ~np.isnan(y)), np.logical_and(x != -1000., y != -1000.))
+            x, y = np.round(x[mask], 4), np.round(y[mask], 4)
             xlabel, ylabel = row1['unique_id'], row2['unique_id']
             plotLabel = makePlotLabel(xlabel, ylabel)
             
+            text = []
+            for seq_idx in np.where(mask)[0]:
+                text.append(f"position: {seq_idx}<br>base: {data['sequence'].iloc[0][seq_idx]}") 
+            
             # plot x vs y then the linear regression line, then the 1:1 line, then the R2 and RMSE values
-            fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='mutation fraction', text=plotLabel, visible=False),)
+            fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='mutation fraction', visible=False, text=text, hovertemplate='%{text} <br>mut frac x: %{x} <br>mut frac y: %{y}'),)
             traceTrack.append(plotLabel)
             
             # linear regression line
             model = LinearRegression()            
             model.fit(x.reshape(-1,1), y)
             slope, intercept, r_value = model.coef_[0], model.intercept_, model.score(x.reshape(-1,1), y)
-            fig.add_trace(go.Scatter(x=x, y=slope*x+intercept, mode='lines', name='linear regression: y = {}x + {}'.format(round(slope,4), round(intercept,4)), visible=False))
+            fig.add_trace(go.Scatter(x=np.linspace(0, maxValue), y=slope*np.linspace(0, maxValue)+intercept, mode='lines', name='linear regression: y = {}x + {}'.format(round(slope,4), round(intercept,4)), visible=False))
             traceTrack.append(plotLabel)
             
             # 1:1 line
