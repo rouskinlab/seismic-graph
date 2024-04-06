@@ -148,7 +148,7 @@ def save_plot(func,  *args, **kwargs):
         out = func(*args, **kwargs)
         to_html, to_png = kwargs.pop('to_html', None), kwargs.pop('to_png', None)
         if to_html:
-            out['fig'].write_html(to_html)
+            out['fig'].write_html(to_html, include_plotlyjs='cdn')
         if to_png:
             out['fig'].write_image(to_png)
         return out

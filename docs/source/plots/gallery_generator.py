@@ -150,6 +150,13 @@ def generate_html():
         max_axis= 0.05,
     )
     
+    study.correlation_by_refs_between_samples(
+        sample = study.df['sample'].unique()[0:2],
+        reference = reference,
+        section = 'full',
+        to_html = os.path.join(path_figs, 'correlation_by_refs_between_samples.html')
+    )
+    
     ################################################################################################
         
     

@@ -36,6 +36,22 @@ Plot the mutation fraction of multiple mutation profiles.
     
 
     
+.. _correlation_by_refs_between_samples:
+
+Correlation by refs between samples
+-----------------------------------
+
+Plot the correlation between mutation profiles of multiple samples, for each reference.
+                
+.. raw:: html
+    :file: plots_figs/correlation_by_refs_between_samples.html
+    
+.. dropdown:: :fa:`eye,mr-1` **DOCSTRING**: correlation_by_refs_between_samples
+
+    .. autofunction:: seismic_graph.study.Study.correlation_by_refs_between_samples
+    
+
+    
 .. _experimental_variable_across_samples:
 
 Experimental variable across samples
