@@ -24,6 +24,7 @@ setup(
     packages=find_packages(),
     package_dir={'seismic-graph': 'seismic-graph'},
     include_package_data=True,
+    package_data={'seismic_graph': ['resources/*.feather']},
     install_requires=requirements,
     python_requires=">=3.10",
 )

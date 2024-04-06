@@ -4,20 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [tool.poetry]
 name = "seismic-graph"
-description = "Implementation of Prof Silvi Rouskin's DREEM algorithm by Yves Martin, Scott Grote, Matty Allan and Alberic de Lajarte"
+description = "A plotting library for SEISMIC-RNA"
 authors = [
     "Yves Martin des Taillades <yves@martin.yt>",
-    "Scott Grote",
-    "Matty Allan",
-    "Alberic de Lajarte"
+    "Casper l'Esperance Kerschoff",
+    "Scott Grote"
 ]
 license = "MIT"
-repository = "https://github.com/rouskinlab/dreem"
+repository = "https://github.com/rouskinlab/seismic-graph"
 readme = "README.md"
-homepage = "https://github.com/rouskinlab/dreem"
-keywords = ["dreem", "Rouskin", "rnastructure"]
-
+homepage = "https://github.com/rouskinlab/seismic-graph"
+keywords = ["seismic-rna", "Rouskin", "rnastructure"]
 
 [tool.poetry.dependencies]
 python = ">=3.9"
-dreem = {path = ".", develop = true}
+
+
