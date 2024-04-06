@@ -20,3 +20,4 @@ sphinxcontrib-blockdiag
 sphinx_panels
 sphinx_click
 xmltodict
+pytest
