@@ -10,7 +10,7 @@ from .util.misc import save_plot, extract_args
 import inspect
 import json
 import tqdm
-
+from .util.normalization import LinFitTable
 
 class Study(object):
     """A class to store information about a study, i.e a set of samples that are relevant to be studied together.
@@ -32,6 +32,15 @@ class Study(object):
     @classmethod
     def verbose_init(cls, data, min_cov=0, filter_by="sample"):
         pass
+    
+    @property
+    def df(self):
+        return self._df
+    
+    @df.setter
+    def df(self, new_df):
+        self._df = new_df
+        self.table = LinFitTable(new_df)
 
     def __init__(self, data=None, min_cov=0, filter_by="sample") -> None:
         """Creates a Study object.
@@ -198,6 +207,7 @@ class Study(object):
             reference (list, str, optional): Filter rows by reference (a list of references or just a reference). Defaults to None.
             section (list, str, optional): Filter rows by section (a list of sections or just a section). Defaults to None.
             cluster (list, str, optional): Filter rows by cluster (a list of clusters or just a cluster). Defaults to None.
+            normalize (bool, optional): Fit one sample to the other to normalize the mutation fractions. Defaults to False.
         """
 
     @doc_inherit(default_arguments_per_base, style=style_child_takes_over_parent)
@@ -260,6 +270,7 @@ class Study(object):
 
         """
         index_selected = True
+        kwargs['table'] = self.table
         return self.wrap_to_plotter(
             plotter.experimental_variable_across_samples, locals(), kwargs
         )
@@ -289,7 +300,6 @@ class Study(object):
         self, sample, section=None, **kwargs
     ) -> dict:
         """Plot the number of aligned reads per reference as a frequency distribution. x axis is the number of aligned reads per reference, y axis is the count of reference that have this number of aligned reads."""
-
         return self.wrap_to_plotter(
             plotter.num_aligned_reads_per_reference_frequency_distribution,
             locals(),
@@ -305,6 +315,7 @@ class Study(object):
             dict: {'fig': a plotly figure, 'data': a pandas dataframe}
 
         """
+        kwargs['table'] = self.table
         df = manipulator.get_df(
             self.df,
             **{
@@ -367,6 +378,7 @@ class Study(object):
             max_axis: maximum value of the x and y axis. If None, the maximum value of the data will be used if above 0.15, otherwise 0.15.
         """
         kwargs["unique_id"] = True
+        kwargs['table'] = self.table
 
         return self.wrap_to_plotter(plotter.compare_mutation_profiles, locals(), kwargs)
 
@@ -382,6 +394,7 @@ class Study(object):
         Args:
             sample (list, str, optional): Filter rows by sample (use exactly two samples). Defaults to None.
         """
+        kwargs['table'] = self.table
 
         return self.wrap_to_plotter(
             plotter.correlation_by_refs_between_samples, locals(), kwargs

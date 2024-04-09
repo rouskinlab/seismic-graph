@@ -18,7 +18,7 @@ import plotly.express as px
 from dms_ci import dms_ci
 from scipy.stats import pearsonr
 from sklearn.metrics import r2_score
-
+from .util.normalization import LinFitTable
 
 cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
                     N="#f0f0f0")
@@ -149,13 +149,17 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
     return {'fig':fig, 'df':df}
 
     
-def experimental_variable_across_samples(data:pd.DataFrame, experimental_variable:str, models:List[str]=[])->dict:
+    
+def experimental_variable_across_samples(data:pd.DataFrame, experimental_variable:str, table:LinFitTable, models:List[str]=None, normalize=False)->dict:
 
     fig = go.Figure()
     
     assert len(data) > 0, "No data to plot"
     assert experimental_variable in data.columns, "Experimental variable not found in data"
     assert len(data['sequence'].unique()) == 1, "More than one sequence found in data. CHeck that reference and section are unique"
+
+    if normalize:
+        data = table.normalize_df(data, data['sample'].iloc[0])
 
     df = pd.DataFrame(
         np.hstack([np.vstack(data['sub_rate'].values), np.vstack(data[experimental_variable].values)]),
@@ -236,9 +240,13 @@ def auc(df:pd.DataFrame,  savefile=None, auto_open=False, use_iplot=True, title=
     return {'fig':fig, 'df':df}
 
 
-def mutation_fraction_delta(df, savefile=None, auto_open=False, use_iplot=True, title=None)->dict:
+def mutation_fraction_delta(df, table:LinFitTable, normalize=False, savefile=None, auto_open=False, use_iplot=True, title=None)->dict:
     assert len(df) == 2, "df must have 2 row"
     mp_attr = ['sample', 'reference', 'section', 'cluster']
+    
+    if normalize and len(df['sample'].unique()) > 1:
+        df = table.normalize_df(df, df['sample'].iloc[0])
+    
     df['unique_id'] = df.apply(lambda row: ' - '.join([str(row[attr]) for attr in mp_attr]), axis=1)
 
     mh = pd.Series(
@@ -473,7 +481,9 @@ def base_coverage(data):
 
 
 
-def compare_mutation_profiles(data, max_plots = 100, max_axis=None, pearson_filter_gap = None):
+def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plots = 100, max_axis=None, pearson_filter_gap = None):
+    if normalize:
+        data = table.normalize_df(data, data['sample'].iloc[0])
 
     # total number of plots
     totNumPlots =  int((data.shape[0] *  (1+data.shape[0]))/2)
@@ -646,9 +656,12 @@ def compare_mutation_profiles(data, max_plots = 100, max_axis=None, pearson_filt
 
 
 
-def correlation_by_refs_between_samples(df:pd.DataFrame, pearson_filter_gap = None)->dict:
+def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, normalize=False, pearson_filter_gap = None)->dict:
+        
     assert len(df['sample'].unique()) == 2, "only two samples are allowed"
     s1, s2 = df['sample'].unique()
+    if normalize:
+        df = table.normalize_df(df, s1)
 
     # only keep the references that are shared by both samples
     refs = df.groupby('sample')['reference'].unique()
