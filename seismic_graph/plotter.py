@@ -693,3 +693,46 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
     )
 
     return {'fig':fig, 'scores':scores}
+
+
+from .one_pager_utils import one_pager_html_template, export_fig, make_table
+
+def one_pager(df, xrange=[0, 0.15], plot_height_cov=250, plot_height_count=200, plot_height_bar=225, 
+                  plot_width_first_col=500, margin=dict(l=0, r=0, t=25, b=10), plot_width_bar=850, **kwargs):
+    
+    html_figs = {}
+    assert len(df) == 1, "df must have only one row"
+    row = df.iloc[0]
+    # make html tables
+    html_figs['table'] = make_table(row)
+    fig = base_coverage(df)['fig']\
+        .update_layout(height=plot_height_cov, width=plot_width_first_col, title= 'Coverage')
+    fig.update_layout(margin=margin)
+    
+    html_figs['coverage'] = export_fig(fig, format='html', name='coverage')
+    
+    # make coverage plot
+    fig = mutation_per_read_per_reference(df)['fig']\
+        .update_layout(height=plot_height_count, width=plot_width_first_col)
+    fig.update_xaxes(range=[-0.5, max(10, np.argwhere(row['sub_hist'] > 0).max())])
+    fig.update_layout(title = 'Mutations per read')
+    fig.update_layout(margin=margin)
+    html_figs['mutations per read'] = export_fig(fig, format='html', name='mutations per read')
+    
+    # make mutation fraction plot
+    fig = mutation_fraction(df, show_ci=True)['fig']\
+        .update_layout(height=plot_height_bar, width=plot_width_bar, title = 'Mutation fraction with DMS')
+    fig.update_yaxes(range=xrange)
+    fig.update_layout(margin=margin)
+    html_figs['mutation fraction dms'] = export_fig(fig, format='html', name='mutation fraction dms')
+
+    # make mutation fraction identity plot
+    fig = mutation_fraction_identity(df, show_ci=0)['fig']\
+        .update_layout(height=plot_height_bar, width=plot_width_bar, title = 'Mutation fraction identity with DMS')
+    fig.update_yaxes(range=xrange)
+    fig.update_layout(margin=margin)
+
+    # use plotly_cdn to avoid downloading plotly.js
+    html_figs['mutation fraction dms identity'] = export_fig(fig, format='html', name='mutation fraction dms identity')
+    
+    return {'html': one_pager_html_template(html_figs, row), 'data': row}

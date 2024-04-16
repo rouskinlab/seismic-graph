@@ -399,6 +399,24 @@ class Study(object):
         return self.wrap_to_plotter(
             plotter.correlation_by_refs_between_samples, locals(), kwargs
         )
+        
+    @plot_info('one_pager', 'One Pager')
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
+    def one_pager(self, **kwargs):
+        """Plot a one pager of the sample/reference/section/cluster data.
+        
+        Args:
+            xrange (list, float, optional): Range of the x axis for the mutation fraction plot. Defaults to [0, 0.15].
+            plot_height_cov (int, optional): Height of the base coverage plot. Defaults to 250.
+            plot_height_count (int, optional): Height of the mutation count plot. Defaults to 200.
+            plot_height_bar (int, optional): Height of the mutation fraction bar plot. Defaults to 225.
+            plot_width_first_col (int, optional): Width of the first column. Defaults to 600.
+            margin (dict, optional): Plot margin. Defaults to dict(l=0, r=0, t=25, b=10).
+            plot_width_bar (int, optional): Width of the mutation fraction bar plot. Defaults to 900.
+        """
+        return self.wrap_to_plotter(plotter.one_pager, locals(), kwargs)
 
     def add_sections_from_library(self, library):
         """
