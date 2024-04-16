@@ -64,10 +64,21 @@ Pearson filter gap
 ------------------
 
 - **pearson_filter_gap**: float, default=1
-    Sometimes, a single outlier can lead to a very low Pearson correlation. 
-    This parameter allows to filter out the outliers by setting a minimal gap between the Pearson correlation 
-    of the data with the outlier and the Pearson correlation of the data without the outlier.
-    If the difference is higher than this value, the outlier is removed from the Pearson correlation calculation.
+    Outlier filtering
+    -----------------
+
+    - **outlier_filter_gap**: float, default=0.5
+        This parameter allows filtering out outliers by setting a minimal gap between the Pearson correlation of the data 
+        with the outlier and the Pearson correlation of the data without the outlier. If the difference is higher than 
+        this value, the outlier is removed from the Pearson correlation calculation.
+
+        Example:
+        Consider the following data:
+        reference_data = [1.1, 1.8, 2.9, 4.1, 5.2, 6.0]
+        data_with_outlier = [1., 2., 3., 4., 5., 100.]
+
+        If outlier_filter_gap is set to 0.5, the outlier (100.) will be removed from the Pearson correlation calculation 
+        because the difference between the correlation with and without the outlier is greater than 0.5.
 
 
 Normalize
