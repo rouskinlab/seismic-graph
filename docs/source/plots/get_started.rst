@@ -78,7 +78,7 @@ Outlier filtering
         data_with_outlier = [1., 2., 3., 4., 5., 100.]
 
 
-    If outlier_filter_gap is set to 0.5, the outlier (100.) will be removed from the Pearson correlation calculation 
+    If ``outlier_filter_gap`` is set to 0.5, the outlier (100.) will be removed from the Pearson correlation calculation 
     because the difference between the correlation with and without the outlier is greater than 0.5.
 
 
