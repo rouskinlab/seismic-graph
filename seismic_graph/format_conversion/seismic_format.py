@@ -118,7 +118,8 @@ class Sample:
             path (str): Path to the directory containing RNAF files. Must contrain a .txt file and one or more .xml files.
             name (str): Name of the sample. If None, the name will be the last part of the path.
         """
-        files, name = find_files_and_names(path, name, ['txt', 'xml'])
+        files, _ = find_files_and_names(path, name, ['txt', 'xml'])
+        name = name if name is not None else path.split('/')[-1].split('.')[0]
         refs = {}
         # parse the data
         for file in files:
@@ -136,12 +137,13 @@ class Sample:
                     if i%5 == 1:
                         sequence = line.strip()
                     if i%5 == 2:
-                        positions = line.split('\t')
+                        mutations = [int(m) for m in line.split(',')]
                     if i%5 == 3:
-                        cov = line.split('\t')
+                        cov = [int(c) for c in line.split(',')]
+                        sub_rate = [float(m)/float(c) if c else 0 for m,c in zip(mutations, cov)]
                         refs[reference_name] = Reference(reference_name, 
                                             [Section('full', 
-                                                    clusters=[Cluster('average', sequence=sequence, positions=positions, cov=cov)])
+                                                    clusters=[Cluster('average', sequence=sequence, positions=list(range(1, len(sequence) + 1)), cov=cov, sub_rate=sub_rate)])
                                             ])
                     if i%5 == 4:
                         assert line.strip() == '', f"Line {i} is not empty."
