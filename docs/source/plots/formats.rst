@@ -21,6 +21,7 @@ Levels
 Cluster level data
 ******************
 
+- ``positions``: An array giving the one indexed positions.
 - ``cov``: An array giving the number of valid reads per position, non-including deleted bases. 
 - ``del``: An array giving the number of deletions per position.
 - ``info``: An array giving the number of valid reads per position, including deleted bases.
@@ -43,6 +44,7 @@ Example:
             "#sequence": "TTAAACCGGCCAACATCAA",
             "average": { 
                 "name": "average",
+                "positions": ["one indexed positions"],
                 "cov": ["some values"],
                 "del": ["some values"],
                 "info": ["some values"],
@@ -70,7 +72,8 @@ SHAPE-MAPPER format
 A definition of the shape-mapper format can be found `here <https://github.com/Weeks-UNC/shapemapper2/blob/master/docs/file_formats.md#name_rna_profiletxt>`__.
 
 
-Example:
+Format example
+**************
 
 .. code-block:: text
   
@@ -82,6 +85,94 @@ Example:
   3	G	86	5874	4756	0.018082	129	0	5874	95	6087	4933	0.019258	76	0	6087	102	5996	4502	0.022657	166	0	5996	-0.051889	0.122631	-0.051889	0.122631	-0.023235	0.054913
   4	G	39	5926	5138	0.007591	129	0	5926	53	6168	5417	0.009784	77	0	6168	199	6048	5041	0.039476	167	0	6048	-0.055565	0.046071	-0.055565	0.046071	-0.024881	0.020630
   5	G	27	5970	5378	0.005020	129	0	5970	50	6215	5784	0.008645	77	0	6215	55	6087	5297	0.010383	168	0	6087	-0.349032	0.157278	-0.349032	0.157278	-0.156292	0.070427
+
+
+Conversion to SEISMIC format
+****************************
+
+Mapping:
+
+The shape-mapper files are converted map 3 samples, ``modified``, ``untreated`` and ``denatured``. 
+
+The columns are converted to a SEISMIC format as follows:
+
+- ``Nucleotide``: ``positions``
+- ``Sequence``: ``sequence``
+
+Then for each sample:
+
+- ``{sample}_read_depth``: ``cov`` 
+- ``{sample}_effective_depth``: ``info`` 
+- ``{sample}_mutations``: ``sub_N`` 
+- ``{sample}_rate``: ``sub_rate`` 
+
+Naming:
+
+The sample are named ``{sample_name}_{sample_type}`` where ``sample_name`` is the folder name and ``sample_type`` is ``modified``, ``untreated`` or ``denatured``.
+The reference is the file name. 
+The section is ``full`` by default. 
+The cluster is ``pop_avg`` by default. 
+
+
+Example:
+
+Using the shape-mapper file above, the SEISMIC format would be:
+
+.. code-block:: json
+
+  # sample: test_data
+  {
+  "#sample":"test_data",
+  "example2":{
+    "full":{
+      "#sequence":"TCGGG",
+      "#positions":[1,2,3,4,5],
+      "#num_aligned":5970,
+      "average":{
+        "cov":[5835,5852,5874,5926,5970],
+        "info":[4214,4264,4756,5138,5378],
+        "sub_N":[3,13,86,39,27],
+        "sub_rate":[0.000712,0.003049,0.018082,0.007591,0.00502]
+        }
+      }
+    }
+
+    # sample: test_data-untreated
+    {
+    "#sample":"test_data-untreated",
+    "example2":{
+      "full":{
+        "#sequence":"TCGGG",
+        "#positions":[1,2,3,4,5],
+        "#num_aligned":6168,
+        "average":{
+          "cov":[6037,6052,6087,6168,6215],
+          "info":[4225,4415,4933,5417,5784],
+          "sub_N":[3,16,95,53,50],
+          "sub_rate":[0.00071,0.003624,0.019258,0.009784,0.008645]
+          }
+        }
+      }
+    }
+
+    # sample: test_data-denatured
+    {
+    "#sample":"test_data-denatured",
+    "example2":{
+      "full":{
+        "#sequence":"TCGGG",
+        "#positions":[1,2,3,4,5],
+        "#num_aligned":6087,
+        "average":{
+          "cov":[5943,5957,5996,6048,6087],
+          "info":[4189,4266,4502,5041,5297],
+          "sub_N":[6,29,102,199,55],
+          "sub_rate":[0.001432,0.006798,0.022657,0.039476,0.010383]
+          }
+        }
+      }
+    }
+
 
 RNA framework format
 ++++++++++++++++++++
