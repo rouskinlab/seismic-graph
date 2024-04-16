@@ -60,8 +60,8 @@ Make a plot
     We regularly update the list of available plots. Make sure that you have the last version of seismograph.
 
 
-Special arguments
------------------
+Pearson filter gap
+------------------
 
 - **pearson_filter_gap**: float, default=1
     Sometimes, a single outlier can lead to a very low Pearson correlation. 
@@ -69,8 +69,17 @@ Special arguments
     of the data with the outlier and the Pearson correlation of the data without the outlier.
     If the difference is higher than this value, the outlier is removed from the Pearson correlation calculation.
 
-- **normalize**: bool, default=False
-    DMS-MaPseq has highly reproducible mutation rates, yet there is often a scale difference between samples.
-    This parameter allows to normalize the mutation rates of the samples to the same scale.
 
+Normalize
+---------
+
+- **normalize**: bool, default=False
+    If you have multiple samples and this parameter is set to True, the data of the samples are divided by the 
+    slope of the linear regression between the data of the first sample and the data of each other samples.
     
+    Ex: 
+    sample_1 = [1, 2, 3, 4, 5]
+    sample_2 = [2, 4, 6, 8, 10]
+
+    If normalize is set to True, the data of sample_2 will be divided by 2.
+
