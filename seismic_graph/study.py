@@ -107,8 +107,10 @@ class Study(object):
 
         # convert every cell that's a list into a numpy array
         for attr in self.df.columns:
-            if type(self.df[attr].values[0]) is list:
-                self.df[attr] = self.df[attr].apply(lambda x: np.array(x))
+            if not self.df[attr].empty:
+                if isinstance(self.df[attr].iloc[0], list):
+                    self.df[attr] = self.df[attr].apply(lambda x: np.array(x))
+
 
     def filter_by_study(self):
         df = self.df.groupby(["reference", "section", "cluster"]).filter(
