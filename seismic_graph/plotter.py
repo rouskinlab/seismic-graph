@@ -702,7 +702,7 @@ def one_pager(df, xrange=[0, 0.15], plot_height_cov=250, plot_height_count=200, 
     
     html_figs = {}
     assert len(df) == 1, "df must have only one row"
-    row = df.iloc[0]
+    row = df.iloc[0].copy()
     # make html tables
     html_figs['table'] = make_table(row)
     fig = base_coverage(df)['fig']\
