@@ -159,3 +159,7 @@ test_demulti_scott.py
 docker-data/*
 update_headers.py
 draw/data/
+draw/test5.ipynb
+draw/test6.ipynb
+tests/
+
