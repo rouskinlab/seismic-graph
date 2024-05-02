@@ -135,26 +135,52 @@ class Fit(object):
 
                 
 
-
-def save_plot(func,  *args, **kwargs):
-    """Default arguments for saving a plotly figure.
+def save_plot(func):
+    """Arguments for handling and saving a Plotly figure.
 
     Args:
-        to_html (str, optional): File name to save the figure as a html.
-        to_png (str, optional): File name to save the figure as a png.
+        to_html (str, optional): File name or 'return' to save the figure as HTML or return HTML as bytes.
+        to_png (str, optional): File name or 'return' to save the figure as PNG or return PNG as bytes.
+        to_svg (str, optional): File name or 'return' to save the figure as SVG or return SVG as bytes.
     """
-
     def wrapper(*args, **kwargs):
         out = func(*args, **kwargs)
-        to_html, to_png = kwargs.pop('to_html', None), kwargs.pop('to_png', None)
+        fig = out['fig']
+
+        # Handle HTML output
+        to_html = kwargs.pop('to_html', None)
         if to_html:
-            out['fig'].write_html(to_html, include_plotlyjs='cdn')
+            if to_html == 'return':
+                html_bytes = fig.to_html(include_plotlyjs='cdn', full_html=False).encode('utf-8')
+                out['html_bytes'] = html_bytes
+            else:
+                fig.write_html(to_html, include_plotlyjs='cdn')
+
+        # Handle PNG output
+        to_png = kwargs.pop('to_png', None)
         if to_png:
-            out['fig'].write_image(to_png)
+            if to_png == 'return':
+                png_bytes = fig.to_image(format="png")
+                out['png_bytes'] = png_bytes
+            else:
+                fig.write_image(to_png)
+
+        # Handle SVG output
+        to_svg = kwargs.pop('to_svg', None)
+        if to_svg:
+            if to_svg == 'return':
+                svg_bytes = fig.to_image(format="svg")
+                out['svg_bytes'] = svg_bytes
+            else:
+                fig.write_image(to_svg, format='svg')
+
         return out
-    wrapper.__name__=func.__name__
-    wrapper.__doc__=func.__doc__
-    return wrapper   
+
+    # Preserve function metadata
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    return wrapper
+
 
 def extract_args(func):
     """Extract the arguments of a function.

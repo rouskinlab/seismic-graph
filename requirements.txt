@@ -21,3 +21,4 @@ sphinx_panels
 sphinx_click
 xmltodict
 pytest
+kaleido
