@@ -556,7 +556,7 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
             # Determination, RMSE, Pearson and linear regression line
             coef_of_determination = np.round(r_value, 4)
             pearson = FilteredPearson(x, y, pearson_filter_gap)[0]
-            annot = 'Pearson = {} <br> RMSE = {} <br> Lin Reg: y = {}x + {} <br> Coef. of determ. of y vs ax+b = {} '.format(pearson, round(np.sqrt(np.mean((y - (slope*x+intercept))**2)),4), round(slope,4), round(intercept,4), coef_of_determination)
+            annot = 'Pearson = {} <br> RMSE = {} <br> Lin Reg: y = {}x + {} <br> Coef. of determ. (R\u00B2) = {} '.format(pearson, round(np.sqrt(np.mean((y - (slope*x+intercept))**2)),4), round(slope,4), round(intercept,4), coef_of_determination)
             fig.add_annotation(visible = False, y=0.13,text=annot, showarrow=False)
             annotationTrack.append(annot)
             
