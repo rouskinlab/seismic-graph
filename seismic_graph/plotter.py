@@ -546,7 +546,7 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
             model = LinearRegression()            
             model.fit(x.reshape(-1,1), y)
             slope, intercept, r_value = model.coef_[0], model.intercept_, model.score(x.reshape(-1,1), y)
-            fig.add_trace(go.Scatter(x=np.linspace(0, maxValue), y=slope*np.linspace(0, maxValue)+intercept, mode='lines', name='linear regression: y = {}x + {}'.format(round(slope,4), round(intercept,4)), visible=False))
+            fig.add_trace(go.Scatter(x=np.linspace(0, maxValue), y=slope*np.linspace(0, maxValue)+intercept, mode='lines', name='linear regression:<br>y = {}x + {}'.format(round(slope,4), round(intercept,4)), visible=False))
             traceTrack.append(plotLabel)
             
             # 1:1 line
@@ -585,10 +585,11 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
                     )
                     for idx, plot in enumerate(np.unique(traceTrack))
                 ]),
-                x=1,
-                y=0.4,
-                xanchor='left',
+                x=0.5,
+                y=-0.2,
+                xanchor='center',
                 yanchor='top',
+                direction='up'
             )
         ],
     )
