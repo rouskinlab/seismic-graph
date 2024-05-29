@@ -586,7 +586,7 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
                     for idx, plot in enumerate(np.unique(traceTrack))
                 ]),
                 x=0.5,
-                y=-0.2,
+                y=-0.15,
                 xanchor='center',
                 yanchor='top',
                 direction='up'
