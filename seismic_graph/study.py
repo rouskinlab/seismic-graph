@@ -403,7 +403,7 @@ class Study(object):
         )
         
     @plot_info('one_pager', 'One Pager')
-    @save_plot
+    # @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
     def one_pager(self, **kwargs):
