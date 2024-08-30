@@ -556,7 +556,7 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
             # Determination, RMSE, Pearson and linear regression line
             coef_of_determination = np.round(r_value, 4)
             pearson = FilteredPearson(x, y, pearson_filter_gap)[0]
-            annot = 'Pearson = {} <br> RMSE = {} <br> Lin Reg: y = {}x + {} <br> Coef. of determ. (R\u00B2) = {} '.format(pearson, round(np.sqrt(np.mean((y - (slope*x+intercept))**2)),4), round(slope,4), round(intercept,4), coef_of_determination)
+            annot = 'Pearson (R) = {}  <br> Coef. of determ. (R\u00B2) = {} <br> RMSE = {} <br> Lin Reg: y = {}x + {} '.format(pearson, coef_of_determination, round(np.sqrt(np.mean((y - (slope*x+intercept))**2)),4), round(slope,4), round(intercept,4))
             fig.add_annotation(visible = False, y=0.13,text=annot, showarrow=False)
             annotationTrack.append(annot)
             
@@ -676,7 +676,10 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
         v1, v2 = df_ref[df_ref['sample'] == s1]['sub_rate'].values[0], df_ref[df_ref['sample'] == s2]['sub_rate'].values[0]
         if len(v1) <= 1 or len(v2) <= 1:
             continue
-        scores[ref] = FilteredPearson(v1, v2, pearson_filter_gap)[0]
+
+        r = FilteredPearson(v1, v2, pearson_filter_gap)[0]
+        r_squared = r**2
+        scores[ref] = r_squared
     
     # sort by correlation
     scores = pd.DataFrame.from_dict(scores, orient='index', columns=['correlation']).reset_index().rename(columns={'index':'reference'})
@@ -684,13 +687,13 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
 
     # plot
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=scores.index, y=scores['correlation'], text = scores['reference'], mode='markers', hovertemplate='reference: %{text}<br>correlation: %{y:.2f}'))
+    fig.add_trace(go.Scatter(x=scores_df.index, y=scores_df['r_squared'], text = scores_df['reference'], mode='markers', hovertemplate='reference: %{text}<br>R²: %{y:.2f}'))
 
     # set layout
     fig.update_layout(
-        title = f"correlation between samples {s1} and {s2}",
+        title = f"R² between samples {s1} and {s2}",
         xaxis_title = "reference rank",
-        yaxis_title = "correlation",
+        yaxis_title = "R²",
     )
 
     return {'fig':fig, 'scores':scores}
