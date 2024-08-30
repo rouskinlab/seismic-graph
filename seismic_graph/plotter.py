@@ -19,6 +19,7 @@ from dms_ci import dms_ci
 from scipy.stats import pearsonr
 from sklearn.metrics import r2_score
 from .util.normalization import LinFitTable
+from io import StringIO
 
 cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
                     N="#f0f0f0")
@@ -682,8 +683,17 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
         scores[ref] = r_squared
     
     # sort by correlation
-    scores = pd.DataFrame.from_dict(scores, orient='index', columns=['correlation']).reset_index().rename(columns={'index':'reference'})
-    scores = scores.sort_values(by='correlation', ascending=True).reset_index(drop=True)
+    scores_df = pd.DataFrame.from_dict(scores, orient='index', columns=['r_squared']).reset_index().rename(columns={'index':'reference'})
+    scores_df = scores_df.sort_values(by='r_squared', ascending=True).reset_index(drop=True)
+
+    # Convert the DataFrame to CSV format in a string
+    csv_output = StringIO()
+    scores_df.to_csv(csv_output, index=False)
+    csv_output.seek(0)
+    csv_data = csv_output.getvalue()
+
+    print(f"CSV Data:\n")
+    print(csv_data)
 
     # plot
     fig = go.Figure()
@@ -696,7 +706,7 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
         yaxis_title = "R²",
     )
 
-    return {'fig':fig, 'scores':scores}
+    return {'fig':fig, 'scores':scores_df, 'scores_csv':csv_data}
 
 
 from .one_pager_utils import one_pager_html_template, export_fig, make_table
