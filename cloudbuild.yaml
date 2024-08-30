@@ -1,4 +1,4 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/draw-base-image:0.22', '.'] 
-images: ['gcr.io/$PROJECT_ID/draw-base-image:0.22']
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/draw-base-image:0.24', '.'] 
+images: ['gcr.io/$PROJECT_ID/draw-base-image:0.24']
