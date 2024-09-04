@@ -682,8 +682,8 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
         scores[ref] = r_squared
     
     # sort by correlation
-    scores = pd.DataFrame.from_dict(scores, orient='index', columns=['correlation']).reset_index().rename(columns={'index':'reference'})
-    scores = scores.sort_values(by='correlation', ascending=True).reset_index(drop=True)
+    scores = pd.DataFrame.from_dict(scores, orient='index', columns=['r_squared']).reset_index().rename(columns={'index':'reference'})
+    scores = scores.sort_values(by='r_squared', ascending=True).reset_index(drop=True)
 
     # plot
     fig = go.Figure()
