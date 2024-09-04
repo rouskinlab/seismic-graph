@@ -22,7 +22,8 @@ class LinFitTable:
         df = df[df['sample'].isin([sampleA, sampleB])]
         df = df.groupby(['reference', 'section']).filter(lambda x: len(x) == 2)
         if not len(df):
-            raise ValueError(f'No common references between {sampleA} and {sampleB}')
+            return np.nan
+            # raise ValueError(f'No common references between {sampleA} and {sampleB}')
         valuesA = self._extract_values_from_sample(df, sampleA)
         valuesB = self._extract_values_from_sample(df, sampleB)
         # remove nans
