@@ -16,14 +16,31 @@ def make_table(row):
         'date': "Date",
         'exp_env': "Experimental environment",
         'temperature_K': "Temperature [K]",
+        'temperature_C': "Temperature [C]",
         'DMS_conc_mM': "DMS concentration [mM]",
+        'DMS_concentration_pct_volume': "DMS Concentration",
+        'Metabolite': "Metabolite",
+        'Modification': "Modification",
     }
-    for k in table_items:
-        if k not in row:
-            row[k] = ''
-    return '<table>' +\
-        '\n'.join([f'<tr><td>{table_items[k]}</td><td>{row[k]}</td></tr>' for k in table_items.keys()])\
-            + '</table>'
+    row_lower = {k.lower(): v for k, v in row.items()}
+
+    # Format temperature and DMS values
+    if 'temperature_k' in row_lower:
+        row_lower['temperature_k'] = f"{row_lower['temperature_k']}&deg; K"
+
+    if 'temperature_c' in row_lower:
+        row_lower['temperature_c'] = f"{row_lower['temperature_c']}&deg; C"
+
+    if 'dms_concentration_pct_volume' in row_lower:
+        row_lower['dms_concentration_pct_volume'] = f"{row_lower['dms_concentration_pct_volume']}% v/v"
+
+    # Construct the table only for rows that have values
+    table_html = '<table>' +\
+        '\n'.join([f'<tr><td>{table_items[k]}</td><td>{row_lower[k.lower()]}</td></tr>' 
+                   for k in table_items.keys() if k.lower() in row_lower and row_lower[k.lower()]])\
+                   + '</table>'
+
+    return table_html
 
 def one_pager_html_template(html_figs, row):
     return f'''
@@ -51,6 +68,7 @@ table, th, td {{
 th, td {{
     padding: 3px;
     text-align: left;
+    white-space: nowrap;
 }}
 .fig-container {{
     margin: 0;
