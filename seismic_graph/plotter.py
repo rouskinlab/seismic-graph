@@ -38,7 +38,7 @@ def mutation_fraction(df, show_ci:bool=False)->dict:
     err_min, err_max= dms_ci(mh['sub_rate'], len(mh['sub_rate'])*[mh['num_aligned']])
     mr = np.array(mh['sub_rate'])
 
-    for bt in set(mh['sequence']):
+    for bt in ['T', 'G', 'C', 'A']:
         df_loc = mh_unrolled[mh_unrolled['base'] == bt]
         if len(df_loc) == 0:
             continue
