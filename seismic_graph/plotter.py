@@ -686,7 +686,7 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
     scores_df = pd.DataFrame.from_dict(scores, orient='index', columns=['r_squared']).reset_index().rename(columns={'index':'reference'})
     scores_df = scores_df.sort_values(by='r_squared', ascending=True).reset_index(drop=True)
 
-    scores_df['rank'] = scores_df.index + 1
+    scores_df['rank'] = scores_df.index
     
     # Convert the DataFrame to CSV format in a string
     csv_output = StringIO()
