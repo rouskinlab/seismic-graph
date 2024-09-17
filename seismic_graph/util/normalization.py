@@ -3,7 +3,7 @@ import numpy as np
 class LinFitTable:
     def __init__(self, df):
         self.df = df
-        if type(df) == type(None) or len(df) == 0:
+        if df is None or len(df) == 0:
             self.samples = []
             self.matrix = np.zeros((0, 0))
         else:
@@ -19,21 +19,27 @@ class LinFitTable:
     
     def _lin_reg_between_samples(self, df, sampleA, sampleB):
         """Fit B = slope*A and return slope"""
-        df = df[df['sample'].isin([sampleA, sampleB])]
-        df = df.groupby(['reference', 'section']).filter(lambda x: len(x) == 2)
-        if not len(df):
+        df_pair = df[df['sample'].isin([sampleA, sampleB])]
+        # Filter for common 'reference' and 'section'
+        df_common = df_pair.groupby(['reference', 'section']).filter(lambda x: set(x['sample']) == {sampleA, sampleB})
+        if df_common.empty:
+            # No common references between samples
             return np.nan
-            # raise ValueError(f'No common references between {sampleA} and {sampleB}')
-        valuesA = self._extract_values_from_sample(df, sampleA)
-        valuesB = self._extract_values_from_sample(df, sampleB)
-        # remove nans
+        valuesA = self._extract_values_from_sample(df_common, sampleA)
+        valuesB = self._extract_values_from_sample(df_common, sampleB)
+        # Remove NaNs
         mask = ~np.isnan(valuesA) & ~np.isnan(valuesB)
         valuesA = valuesA[mask]
         valuesB = valuesB[mask]
-        slope = np.dot(valuesA, valuesB) / np.dot(valuesA, valuesA) 
-        if np.isnan(slope):
-            raise ValueError(f'Linear regression between {sampleA} and {sampleB} failed')
-        return slope
+        if len(valuesA) == 0:
+            # No valid data points to compute slope
+            return np.nan
+        numerator = np.dot(valuesA, valuesB)
+        denominator = np.dot(valuesA, valuesA)
+        if denominator == 0:
+            # Avoid division by zero
+            return np.nan
+        return numerator / denominator
 
     def _build_lin_reg_matrix(self):
         n = len(self.samples)
@@ -49,8 +55,10 @@ class LinFitTable:
     def normalize_array(self, array, ref_sample, sample):
         """Normalize sample to ref_sample"""
         slope = self.matrix[self.samples.index(ref_sample), self.samples.index(sample)]
-        if np.isnan(slope):
-            raise ValueError(f'Couldn\'t read a matrix value for {ref_sample} and {sample}')
+        if np.isnan(slope) or slope == 0:
+            # Can't compute slope; proceed without normalizing
+            print(f'Warning: Cannot normalize sample "{sample}" to reference sample "{ref_sample}" due to lack of common data.')
+            return array
         return array / slope 
 
     def normalize_df(self, df, ref_sample):
