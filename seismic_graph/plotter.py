@@ -699,7 +699,7 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
 
     # plot
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=scores.index, y=scores['r_squared'], text = scores['reference'], mode='markers', hovertemplate='reference: %{text}<br>R²: %{y:.2f}'))
+    fig.add_trace(go.Scatter(x=scores_df.index, y=scores_df['r_squared'], text = scores_df['reference'], mode='markers', hovertemplate='reference: %{text}<br>R²: %{y:.2f}'))
 
     # set layout
     fig.update_layout(
