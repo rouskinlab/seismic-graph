@@ -347,26 +347,95 @@ def mutations_per_read_per_sample(data):
         'data':data
         }
     
-
 def num_aligned_reads_per_reference_frequency_distribution(data):
-    assert len(samples:=data['sample'].unique()) == 1, "data must have 1 sample"
-    data = data['num_aligned'].values
-    fig = go.Figure(
-            go.Histogram(
-                x=data, 
-                showlegend=False, 
-                marker_color='indianred',
-                hovertemplate="Number of aligned reads: %{x}<br>Count: %{y}<extra></extra>"
-                ),
-            layout=go.Layout(
-                title=go.layout.Title(text='{} - Reads per reference count'.format(samples[0])),
-                xaxis=dict(title="Number of aligned reads"),
-                yaxis=dict(title="Count"),
-                plot_bgcolor='white',
-                paper_bgcolor='white'
-                )          
-            )
+    """Plot a histogram showing the distribution of aligned reads per reference for each sample and all samples combined.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing 'num_aligned' and 'sample' columns.
+
+    Returns:
+        dict: {'fig': a Plotly figure, 'data': data}
+    """
+    # Check that required columns are present
+    if 'num_aligned' not in data.columns or 'sample' not in data.columns:
+        raise ValueError("Data must contain 'num_aligned' and 'sample' columns.")
     
+    # Get unique samples
+    unique_samples = data['sample'].unique()
+    
+    # Prepare the sample list, adding 'All Samples Combined'
+    sample_list = list(unique_samples)
+    if len(sample_list) > 1:
+        sample_list.append('All Samples Combined')
+    
+    # Collect num_aligned data for each sample
+    num_aligned_dict = {}
+    for sample in unique_samples:
+        sample_data = data[data['sample'] == sample]['num_aligned']
+        num_aligned_dict[sample] = sample_data
+    
+    # If there are multiple samples, add combined data
+    if len(unique_samples) > 1:
+        combined_data = data['num_aligned']
+        num_aligned_dict['All Samples Combined'] = combined_data
+    
+    # Initialize figure
+    fig = go.Figure()
+    traceTrack = []
+    
+    # Add histogram traces for each sample
+    for sample in sample_list:
+        num_aligned = num_aligned_dict[sample]
+        hist_trace = go.Histogram(
+            x=num_aligned,
+            showlegend=False,
+            marker_color='indianred',
+            hovertemplate="Number of aligned reads: %{x}<br>Count: %{y}<extra></extra>",
+            xbins=dict(size=1000),
+            visible=(sample == 'All Samples Combined')  # Make "All Samples Combined" visible by default
+        )
+        fig.add_trace(hist_trace)
+        traceTrack.append(sample)
+    
+    # Create dropdown menu
+    buttons = []
+    for idx, sample in enumerate(sample_list):
+        visibility = [traceSample == sample for traceSample in traceTrack]
+        button = dict(
+            label=sample,
+            method='update',
+            args=[
+                {'visible': visibility},
+                {
+                    'title': f"Distribution of Number of Aligned Reads - {sample}",
+                    'xaxis': {'title': "Number of aligned reads"},
+                    'yaxis': {'title': "Count"}
+                }
+            ]
+        )
+        buttons.append(button)
+    
+    # Update layout with dropdown menu, setting "All Samples Combined" as the default option
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                active=sample_list.index('All Samples Combined'),  # Set default to "All Samples Combined"
+                buttons=buttons,
+                x=0.5,
+                y=-0.15,
+                xanchor='center',
+                yanchor='top',
+                direction='up'
+            )
+        ],
+        title=f"Distribution of Number of Aligned Reads - All Samples Combined",  # Set initial title to "All Samples Combined"
+        xaxis=dict(title="Number of aligned reads"),
+        yaxis=dict(title="Count"),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    # Update axes
     fig.update_yaxes(
         title='Count',
         gridcolor='lightgray',
@@ -380,33 +449,11 @@ def num_aligned_reads_per_reference_frequency_distribution(data):
         mirror=True,
         autorange=True,
     )
-    return {
-        'fig' : fig,
-        'data' : data
-    }
     
-
-# def num_aligned_reads_per_reference_frequency_distribution(data):
-#     assert len(samples:=data['sample'].unique()) == 1, "data must have 1 sample"
-#     data = data['num_aligned'].values
-#     return {
-#             'fig':go.Figure(
-#                 go.Histogram(
-#                     x=data, 
-#                     showlegend=False, 
-#                     marker_color='indianred',
-#                     hovertemplate="Number of aligned reads: %{x}<br>Count: %{y}<extra></extra>"
-#                     ),
-#                 layout=go.Layout(
-#                     title=go.layout.Title(text='{} - Reads per reference count'.format(samples[0])),
-#                     xaxis=dict(title="Number of aligned reads"),
-#                     yaxis=dict(title="Count"),
-#                     plot_bgcolor='white',
-#                     paper_bgcolor='white'
-#                     )          
-#                 ),
-#             'data':data
-#             }
+    return {
+        'fig': fig,
+        'data': data
+    }
     
     
 def mutation_per_read_per_reference(data):
@@ -752,3 +799,252 @@ def one_pager(df, xrange=[0, 0.15], plot_height_cov=250, plot_height_count=200, 
     html_figs['mutation fraction dms identity'] = export_fig(fig, format='html', name='mutation fraction dms identity')
     
     return {'html': one_pager_html_template(html_figs, row), 'data': row}
+
+
+def dist_of_seq_lengths(data:pd.DataFrame):
+    """Plot a histogram of sequence lengths across all rows in the dataframe.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing 'sequence' column.
+
+    Returns:
+        dict: {'fig': a plotly figure}
+    """
+
+    if 'sequence' not in data.columns:
+        raise ValueError("Data must contain a 'sequence' column.")
+    
+    lengths = data['sequence'].str.len()
+
+    fig = go.Figure(
+        go.Histogram(
+            x=lengths,
+            marker_color='indianred',
+            hovertemplate="Sequence length: %{x}<br>Count: %{y}<extra></extra>",
+            nbinsx=50
+        )
+    )
+
+    fig.update_layout(
+        title="Distribution of Sequence Lengths",
+        xaxis=dict(title="Sequence Length"),
+        yaxis=dict(title="Count"),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True
+    )
+
+    return {
+        'fig': fig,
+        'data': data
+    }
+
+def percent_masked_histogram(data):
+    """Plot a histogram showing the distribution of percentage of A's and C's bases masked.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing 'cov' and 'sample' columns.
+
+    Returns:
+        dict: {'fig': a Plotly figure, 'data': data}
+    """
+    # Check required columns
+    if 'cov' not in data.columns or 'sample' not in data.columns:
+        raise ValueError("Data must contain 'cov' and 'sample' columns.")
+    
+    # Compute masked_percentage for each row
+    def compute_masked_percentage(row):
+        cov = row['cov']
+        sequence = row['sequence']
+        if cov is None or len(cov) == 0:
+            return np.nan
+        if len(sequence) != len(cov):
+            ref = row['reference']
+            raise ValueError(f"Length of coverage array does not match length of sequence for reference {ref}")
+        cov_array = np.array(cov)
+        ac_positions = np.isin(list(sequence), ['A', 'C'])
+        ac_cov_array = cov_array[ac_positions]
+        num_masked = np.isnan(ac_cov_array).sum()
+        total_ac_bases = len(ac_cov_array)
+        
+        return 100.0 * num_masked / total_ac_bases if total_ac_bases > 0 else np.nan
+
+    data['masked_percentage'] = data.apply(compute_masked_percentage, axis=1)
+    
+    # Get unique samples
+    unique_samples = data['sample'].unique()
+    
+    # Prepare sample list
+    sample_list = list(unique_samples)
+    if len(sample_list) > 1:
+        sample_list.append('All Samples Combined')
+    
+    # Collect masked_percentage data for each sample
+    masked_percentage_dict = {}
+    for sample in unique_samples:
+        sample_data = data[data['sample'] == sample]
+        masked_percentage = sample_data['masked_percentage'].dropna()
+        masked_percentage_dict[sample] = masked_percentage
+
+    if len(unique_samples) > 1:
+        # Combined data
+        masked_percentage_combined = data['masked_percentage'].dropna()
+        masked_percentage_dict['All Samples Combined'] = masked_percentage_combined
+
+    # Determine the global x-axis range
+    all_masked_percentages = pd.concat(masked_percentage_dict.values())
+    x_range = [0, all_masked_percentages.max()]
+
+    # Initialize figure
+    fig = go.Figure()
+    traceTrack = []
+    
+    # Add histogram traces for each sample
+    for sample in sample_list:
+        masked_percentage = masked_percentage_dict[sample]
+        hist_trace = go.Histogram(
+            x=masked_percentage,
+            marker_color='indianred',
+            hovertemplate="Percentage of A's & C's Bases Masked: %{x}<br>Count: %{y}<extra></extra>",
+            nbinsx=50,  # Adjust bins as needed
+            visible=(sample == 'All Samples Combined')  # Make "All Samples Combined" visible by default
+        )
+        fig.add_trace(hist_trace)
+        traceTrack.append(sample)
+    
+    # Create dropdown menu
+    buttons = []
+    for idx, sample in enumerate(sample_list):
+        visibility = [traceSample == sample for traceSample in traceTrack]
+        button = dict(
+            label=sample,
+            method='update',
+            args=[
+                {'visible': visibility},
+                {
+                    'title': f"Masked Percentage Histogram - {sample}",
+                    'xaxis': {'title': "Percentage of A & C Masked", 'range': x_range},
+                    'yaxis': {'title': "Count"}
+                }
+            ]
+        )
+        buttons.append(button)
+    
+    # Update layout with dropdown menu, setting "All Samples Combined" as the default option
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                active=sample_list.index('All Samples Combined'),  # Set default to "All Samples Combined"
+                buttons=buttons,
+                x=0.5,
+                y=-0.15,
+                xanchor='center',
+                yanchor='top',
+                direction='up'
+            )
+        ],
+        title=f"Masked Percentage Histogram - All Samples Combined",  # Set initial title to "All Samples Combined"
+        xaxis=dict(title="Percentage of A & C Masked", range=x_range),
+        yaxis=dict(title="Count"),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    # Update axes
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=False,
+    )
+    
+    return {
+        'fig': fig,
+        'data': data
+    }
+
+def f1_violin_by_family(data):
+    """Generate a violin plot for each family showing the distribution of F1 scores.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing 'family' and 'F1' columns.
+
+    Returns:
+        dict: {'fig': a Plotly figure, 'data': data}
+    """
+    # Check required columns
+    if 'family' not in data.columns or 'F1' not in data.columns:
+        raise ValueError("Data must contain 'family' and 'F1' columns.")
+    
+    # Drop rows with missing values in 'family' or 'F1'
+    data = data.dropna(subset=['family', 'F1'])
+
+    # Get unique families
+    families = data['family'].unique()
+
+    # Initialize figure
+    fig = go.Figure()
+
+    # Add a violin trace for each family
+    for family in families:
+        family_data = data[data['family'] == family]['F1']
+        fig.add_trace(
+            go.Violin(
+                y=family_data,
+                name=family,
+                box_visible=True,
+                meanline_visible=True,
+                line_color='black',
+                fillcolor='#1f77b4',
+                opacity=0.7,
+                marker=dict(color='#1f77b4')
+            )
+        )
+
+    # Update layout
+    fig.update_layout(
+        title="Distribution of F1 Scores by Family",
+        yaxis=dict(title="F1 Score"),
+        xaxis=dict(title="Family"),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        tickangle=45,
+        tickmode='array',
+        tickvals=[family for family in families],
+        ticktext=[family for family in families]
+    )
+
+    return {
+        'fig': fig,
+        'data': data
+    }

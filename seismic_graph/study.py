@@ -299,7 +299,7 @@ class Study(object):
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
     def num_aligned_reads_per_reference_frequency_distribution(
-        self, sample, section=None, **kwargs
+        self, section=None, **kwargs
     ) -> dict:
         """Plot the number of aligned reads per reference as a frequency distribution. x axis is the number of aligned reads per reference, y axis is the count of reference that have this number of aligned reads."""
         return self.wrap_to_plotter(
@@ -419,6 +419,44 @@ class Study(object):
             plot_width_bar (int, optional): Width of the mutation fraction bar plot. Defaults to 900.
         """
         return self.wrap_to_plotter(plotter.one_pager, locals(), kwargs)
+
+    @plot_info("dist_of_seq_lengths", "Distribution of Sequence Lengths")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def dist_of_seq_lengths(self, **kwargs) -> dict:
+        """Plot a histogram of sequence lengths across all rows in the dataframe.
+        """
+        return self.wrap_to_plotter(
+            plotter.dist_of_seq_lengths, locals(), kwargs
+        )
+    
+    @plot_info("percent_masked_histogram", "Percent Masked Histogram")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def percent_masked_histogram(self, **kwargs) -> dict:
+        """Plot a histogram of the percentage of bases that are masked across all rows in the dataframe.
+
+        """
+        return self.wrap_to_plotter(
+            plotter.percent_masked_histogram, locals(), kwargs
+        )
+    
+    @plot_info("f1_violin_by_family", "F1 Violin Plot by Family")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def f1_violin_by_family(self, **kwargs) -> dict:
+        """Generate a violin plot for each family showing the distribution of F1 scores.
+
+        Returns:
+            dict: {'fig': a Plotly figure, 'data': a pandas dataframe}
+        """
+        return self.wrap_to_plotter(
+            plotter.f1_violin_by_family, locals(), kwargs
+        )
+
 
     def add_sections_from_library(self, library):
         """
