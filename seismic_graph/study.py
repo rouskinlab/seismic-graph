@@ -420,7 +420,7 @@ class Study(object):
         """
         return self.wrap_to_plotter(plotter.one_pager, locals(), kwargs)
 
-    @plot_info("dist_of_seq_lengths", "Distribution of Sequence Lengths")
+    # @plot_info("dist_of_seq_lengths", "Distribution of Sequence Lengths")
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -431,7 +431,7 @@ class Study(object):
             plotter.dist_of_seq_lengths, locals(), kwargs
         )
     
-    @plot_info("percent_masked_histogram", "Percent Masked Histogram")
+    # @plot_info("percent_masked_histogram", "Percent Masked Histogram")
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -443,7 +443,7 @@ class Study(object):
             plotter.percent_masked_histogram, locals(), kwargs
         )
     
-    @plot_info("f1_violin_by_family", "F1 Violin Plot by Family")
+    # @plot_info("f1_violin_by_family", "F1 Violin Plot by Family")
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
