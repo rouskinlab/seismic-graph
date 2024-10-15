@@ -346,7 +346,7 @@ def mutations_per_read_per_sample(data):
         'fig':fig,
         'data':data
         }
-    
+
 def num_aligned_reads_per_reference_frequency_distribution(data):
     """Plot a histogram showing the distribution of aligned reads per reference for each sample and all samples combined.
 
@@ -363,21 +363,26 @@ def num_aligned_reads_per_reference_frequency_distribution(data):
     # Get unique samples
     unique_samples = data['sample'].unique()
     
-    # Prepare the sample list, adding 'All Samples Combined'
+    # Prepare the sample list, adding 'All Samples Combined' if multiple samples
     sample_list = list(unique_samples)
+    has_combined = False
     if len(sample_list) > 1:
         sample_list.append('All Samples Combined')
+        has_combined = True
     
-    # Collect num_aligned data for each sample
+    # Collect num_aligned data and counts for each sample
     num_aligned_dict = {}
+    sample_counts = {}
     for sample in unique_samples:
         sample_data = data[data['sample'] == sample]['num_aligned']
         num_aligned_dict[sample] = sample_data
+        sample_counts[sample] = len(sample_data)
     
     # If there are multiple samples, add combined data
-    if len(unique_samples) > 1:
+    if has_combined:
         combined_data = data['num_aligned']
         num_aligned_dict['All Samples Combined'] = combined_data
+        sample_counts['All Samples Combined'] = len(combined_data)
     
     # Initialize figure
     fig = go.Figure()
@@ -392,22 +397,36 @@ def num_aligned_reads_per_reference_frequency_distribution(data):
             marker_color='indianred',
             hovertemplate="Number of aligned reads: %{x}<br>Count: %{y}<extra></extra>",
             xbins=dict(size=1000),
-            visible=(sample == 'All Samples Combined')  # Make "All Samples Combined" visible by default
+            visible=False  # Initially set all traces to not visible
         )
         fig.add_trace(hist_trace)
         traceTrack.append(sample)
+    
+    # Determine the default view
+    if has_combined:
+        default_sample = 'All Samples Combined'
+    else:
+        default_sample = sample_list[0]
+    
+    # Set the default trace to be visible
+    for i, sample in enumerate(sample_list):
+        if sample == default_sample:
+            fig.data[i].visible = True
+            break
     
     # Create dropdown menu
     buttons = []
     for idx, sample in enumerate(sample_list):
         visibility = [traceSample == sample for traceSample in traceTrack]
+        # Get the count for this sample
+        count = sample_counts.get(sample, 0)
         button = dict(
-            label=sample,
+            label=f"{sample} ({count} rows)",
             method='update',
             args=[
                 {'visible': visibility},
                 {
-                    'title': f"Distribution of Number of Aligned Reads - {sample}",
+                    'title': f"Distribution of Number of Aligned Reads - {sample} ({count} rows)",
                     'xaxis': {'title': "Number of aligned reads"},
                     'yaxis': {'title': "Count"}
                 }
@@ -415,11 +434,11 @@ def num_aligned_reads_per_reference_frequency_distribution(data):
         )
         buttons.append(button)
     
-    # Update layout with dropdown menu, setting "All Samples Combined" as the default option
+    # Update layout with dropdown menu
     fig.update_layout(
         updatemenus=[
             dict(
-                active=sample_list.index('All Samples Combined'),  # Set default to "All Samples Combined"
+                active=sample_list.index(default_sample),  # Set default active sample
                 buttons=buttons,
                 x=0.5,
                 y=-0.15,
@@ -428,7 +447,7 @@ def num_aligned_reads_per_reference_frequency_distribution(data):
                 direction='up'
             )
         ],
-        title=f"Distribution of Number of Aligned Reads - All Samples Combined",  # Set initial title to "All Samples Combined"
+        title=f"Distribution of Number of Aligned Reads - {default_sample} ({sample_counts[default_sample]} rows)",  # Set initial title
         xaxis=dict(title="Number of aligned reads"),
         yaxis=dict(title="Count"),
         plot_bgcolor='white',
@@ -855,14 +874,15 @@ def percent_masked_histogram(data):
     """Plot a histogram showing the distribution of percentage of A's and C's bases masked.
 
     Args:
-        data (pd.DataFrame): DataFrame containing 'cov' and 'sample' columns.
+        data (pd.DataFrame): DataFrame containing 'cov', 'sequence', 'reference', and 'sample' columns.
 
     Returns:
         dict: {'fig': a Plotly figure, 'data': data}
     """
     # Check required columns
-    if 'cov' not in data.columns or 'sample' not in data.columns:
-        raise ValueError("Data must contain 'cov' and 'sample' columns.")
+    required_columns = ['cov', 'sample', 'sequence', 'reference']
+    if not all(col in data.columns for col in required_columns):
+        raise ValueError(f"Data must contain columns: {', '.join(required_columns)}")
     
     # Compute masked_percentage for each row
     def compute_masked_percentage(row):
@@ -888,24 +908,30 @@ def percent_masked_histogram(data):
     
     # Prepare sample list
     sample_list = list(unique_samples)
+    has_combined = False
     if len(sample_list) > 1:
         sample_list.append('All Samples Combined')
+        has_combined = True
     
-    # Collect masked_percentage data for each sample
+    # Collect masked_percentage data and counts for each sample
     masked_percentage_dict = {}
+    sample_counts = {}
     for sample in unique_samples:
         sample_data = data[data['sample'] == sample]
         masked_percentage = sample_data['masked_percentage'].dropna()
         masked_percentage_dict[sample] = masked_percentage
-
-    if len(unique_samples) > 1:
+        sample_counts[sample] = len(masked_percentage)
+    
+    if has_combined:
         # Combined data
         masked_percentage_combined = data['masked_percentage'].dropna()
         masked_percentage_dict['All Samples Combined'] = masked_percentage_combined
+        sample_counts['All Samples Combined'] = len(masked_percentage_combined)
 
     # Determine the global x-axis range
-    all_masked_percentages = pd.concat(masked_percentage_dict.values())
-    x_range = [0, all_masked_percentages.max()]
+    # all_masked_percentages = pd.concat(masked_percentage_dict.values())
+    # x_range = [0, all_masked_percentages.max()]
+    x_range = [0, 100]
 
     # Initialize figure
     fig = go.Figure()
@@ -919,22 +945,35 @@ def percent_masked_histogram(data):
             marker_color='indianred',
             hovertemplate="Percentage of A's & C's Bases Masked: %{x}<br>Count: %{y}<extra></extra>",
             nbinsx=50,  # Adjust bins as needed
-            visible=(sample == 'All Samples Combined')  # Make "All Samples Combined" visible by default
+            visible=False  # Initially set to False
         )
         fig.add_trace(hist_trace)
         traceTrack.append(sample)
+    
+    # Determine the default view
+    if has_combined:
+        default_sample = 'All Samples Combined'
+    else:
+        default_sample = sample_list[0]
+    
+    # Set the default trace to be visible
+    for i, sample in enumerate(sample_list):
+        if sample == default_sample:
+            fig.data[i].visible = True
+            break
     
     # Create dropdown menu
     buttons = []
     for idx, sample in enumerate(sample_list):
         visibility = [traceSample == sample for traceSample in traceTrack]
+        count = sample_counts.get(sample, 0)
         button = dict(
-            label=sample,
+            label=f"{sample} ({count} rows)",
             method='update',
             args=[
                 {'visible': visibility},
                 {
-                    'title': f"Masked Percentage Histogram - {sample}",
+                    'title': f"Masked Percentage Histogram - {sample} ({count} rows)",
                     'xaxis': {'title': "Percentage of A & C Masked", 'range': x_range},
                     'yaxis': {'title': "Count"}
                 }
@@ -942,11 +981,11 @@ def percent_masked_histogram(data):
         )
         buttons.append(button)
     
-    # Update layout with dropdown menu, setting "All Samples Combined" as the default option
+    # Update layout with dropdown menu
     fig.update_layout(
         updatemenus=[
             dict(
-                active=sample_list.index('All Samples Combined'),  # Set default to "All Samples Combined"
+                active=sample_list.index(default_sample),  # Set default active sample
                 buttons=buttons,
                 x=0.5,
                 y=-0.15,
@@ -955,7 +994,7 @@ def percent_masked_histogram(data):
                 direction='up'
             )
         ],
-        title=f"Masked Percentage Histogram - All Samples Combined",  # Set initial title to "All Samples Combined"
+        title=f"Masked Percentage Histogram - {default_sample} ({sample_counts[default_sample]} rows)",  # Set initial title
         xaxis=dict(title="Percentage of A & C Masked", range=x_range),
         yaxis=dict(title="Count"),
         plot_bgcolor='white',
