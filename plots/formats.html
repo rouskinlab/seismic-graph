@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Input formats &mdash; seismic-graph 28.02.2023 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=65f38aaf"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Write your own plots" href="create_a_plot.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            seismic-graph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Plots</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">Get started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="create_a_plot.html">Write your own plots</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Input formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#seismic-output-format">SEISMIC-OUTPUT format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#levels">Levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cluster-level-data">Cluster level data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#shape-mapper-format">SHAPE-MAPPER format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#format-example">Format example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conversion-to-seismic-format">Conversion to SEISMIC format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rna-framework-format">RNA framework format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Format example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Conversion to SEISMIC format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">seismic-graph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Input formats</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/plots/formats.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="input-formats">
+<h1>Input formats<a class="headerlink" href="#input-formats" title="Link to this heading"></a></h1>
+<p>SEISMIC-graph is compatible with the SEISMIC-output format, the shape-mapper format, and the RNA framework format. These formats are defined below.</p>
+<section id="seismic-output-format">
+<h2>SEISMIC-OUTPUT format<a class="headerlink" href="#seismic-output-format" title="Link to this heading"></a></h2>
+<p>The input format is a JSON file. The data is stored on a 4 levels hierarchical structure: sample, reference, section, and cluster.
+Each level contains metadata and instances of the next level. Metadata names start with a “#” sign.</p>
+<section id="levels">
+<h3>Levels<a class="headerlink" href="#levels" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>sample level</strong>: contains metadata about the whole file (ex: temperature, salt concentration, sample name, etc) and a list of its references.</p></li>
+<li><p><strong>reference level</strong>: A reference is the name of a sequence (for example, in a fasta file). The reference level contains metadata about one specific whole sequence (ex: number of aligned reads, RNA family, etc), and a list of its sections.</p></li>
+<li><p><strong>section level</strong>: A section is a subset of a sequence. For example, a specific region of interest, or simply the whole sequence. The section level contains metadata about one specific region (ex: name, sequence, structure and free energy prediction using RNAstructure, etc) and a list of its clusters.</p></li>
+<li><p><strong>cluster level</strong>: A cluster is an aggregation of certain reads based on their mutation profile (ref DREEM, DRACO, and DANCEmap). The <code class="docutils literal notranslate"><span class="pre">average</span></code> cluster contains all reads. The reactivity signal, the base coverage and other signals are contained in the cluster.</p></li>
+</ul>
+</section>
+<section id="cluster-level-data">
+<h3>Cluster level data<a class="headerlink" href="#cluster-level-data" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">positions</span></code>: An array giving the one indexed positions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cov</span></code>: An array giving the number of valid reads per position, non-including deleted bases.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">del</span></code>: An array giving the number of deletions per position.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">info</span></code>: An array giving the number of valid reads per position, including deleted bases.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ins</span></code>: An array giving the number of insertions per position.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sub_{base}</span></code>: An array giving the number of reads that mutated to this base for each position. N includes all bases.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sub_hist</span></code>: A histogram of the number of mutations per read.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sub_rate</span></code>: An array giving the substitution rate for each position. This is computed by dividing sub_N by info.</p></li>
+</ul>
+</section>
+<section id="example">
+<h3>Example:<a class="headerlink" href="#example" title="Link to this heading"></a></h3>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;#sample&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;this sample&#39;s name&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;#temperature_K&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">310</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;a reference&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;#num_aligned&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1998</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;a section&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;#sequence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TTAAACCGGCCAACATCAA&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;average&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;average&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">&quot;positions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;one indexed positions&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;cov&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;del&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;info&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;ins&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;sub_A&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;sub_C&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;sub_G&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;sub_T&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;sub_N&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;sub_hist&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">],</span>
+<span class="w">              </span><span class="nt">&quot;sub_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;some values&quot;</span><span class="p">]</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;some other cluster&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">   </span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;some other section&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">   </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;some other reference&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">   </span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="shape-mapper-format">
+<h2>SHAPE-MAPPER format<a class="headerlink" href="#shape-mapper-format" title="Link to this heading"></a></h2>
+<p>A definition of the shape-mapper format can be found <a class="reference external" href="https://github.com/Weeks-UNC/shapemapper2/blob/master/docs/file_formats.md#name_rna_profiletxt">here</a>.</p>
+<section id="format-example">
+<h3>Format example<a class="headerlink" href="#format-example" title="Link to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># name: sample_name/reference_name.txt
+
+Nucleotide    Sequence        Modified_mutations      Modified_read_depth     Modified_effective_depth        Modified_rate   Modified_off_target_mapped_depth        Modified_low_mapq_mapped_depth  Modified_primer_pair_1_mapped_depth     Untreated_mutations     Untreated_read_depth    Untreated_effective_depth       Untreated_rate  Untreated_off_target_mapped_depth       Untreated_low_mapq_mapped_depth Untreated_primer_pair_1_mapped_depth    Denatured_mutations     Denatured_read_depth    Denatured_effective_depth       Denatured_rate  Denatured_off_target_mapped_depth       Denatured_low_mapq_mapped_depth Denatured_primer_pair_1_mapped_depth    Reactivity_profile      Std_err HQ_profile      HQ_stderr       Norm_profile    Norm_stderr
+1     U       3       5835    4214    0.000712        127     0       5835    3       6037    4225    0.000710        76      0       6037    6       5943    4189    0.001432        166     0       5943    0.001294        0.405299        0.001294        0.405299        0.000579        0.181487
+2     C       13      5852    4264    0.003049        128     0       5852    16      6052    4415    0.003624        76      0       6052    29      5957    4266    0.006798        166     0       5957    -0.084618       0.182980        -0.084618       0.182980        -0.037891       0.081936
+3     G       86      5874    4756    0.018082        129     0       5874    95      6087    4933    0.019258        76      0       6087    102     5996    4502    0.022657        166     0       5996    -0.051889       0.122631        -0.051889       0.122631        -0.023235       0.054913
+4     G       39      5926    5138    0.007591        129     0       5926    53      6168    5417    0.009784        77      0       6168    199     6048    5041    0.039476        167     0       6048    -0.055565       0.046071        -0.055565       0.046071        -0.024881       0.020630
+5     G       27      5970    5378    0.005020        129     0       5970    50      6215    5784    0.008645        77      0       6215    55      6087    5297    0.010383        168     0       6087    -0.349032       0.157278        -0.349032       0.157278        -0.156292       0.070427
+</pre></div>
+</div>
+</section>
+<section id="conversion-to-seismic-format">
+<h3>Conversion to SEISMIC format<a class="headerlink" href="#conversion-to-seismic-format" title="Link to this heading"></a></h3>
+<p>Mapping:</p>
+<p>The shape-mapper files are converted map 3 samples, <code class="docutils literal notranslate"><span class="pre">modified</span></code>, <code class="docutils literal notranslate"><span class="pre">untreated</span></code> and <code class="docutils literal notranslate"><span class="pre">denatured</span></code>.</p>
+<p>The columns are converted to a SEISMIC format as follows:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Nucleotide</span></code>: <code class="docutils literal notranslate"><span class="pre">positions</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sequence</span></code>: <code class="docutils literal notranslate"><span class="pre">sequence</span></code></p></li>
+</ul>
+<p>Then for each sample:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{sample}_read_depth</span></code>: <code class="docutils literal notranslate"><span class="pre">cov</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{sample}_effective_depth</span></code>: <code class="docutils literal notranslate"><span class="pre">info</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{sample}_mutations</span></code>: <code class="docutils literal notranslate"><span class="pre">sub_N</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{sample}_rate</span></code>: <code class="docutils literal notranslate"><span class="pre">sub_rate</span></code></p></li>
+</ul>
+<p>Naming:</p>
+<p>The sample are named <code class="docutils literal notranslate"><span class="pre">{sample_name}_{sample_type}</span></code> where <code class="docutils literal notranslate"><span class="pre">sample_name</span></code> is the folder name and <code class="docutils literal notranslate"><span class="pre">sample_type</span></code> is <code class="docutils literal notranslate"><span class="pre">modified</span></code>, <code class="docutils literal notranslate"><span class="pre">untreated</span></code> or <code class="docutils literal notranslate"><span class="pre">denatured</span></code>.
+The reference is the file name.
+The section is <code class="docutils literal notranslate"><span class="pre">full</span></code> by default.
+The cluster is <code class="docutils literal notranslate"><span class="pre">pop_avg</span></code> by default.</p>
+<p>Example:</p>
+<p>We write the shape-mapper file above into a file <code class="docutils literal notranslate"><span class="pre">my_example_sample/my_example_ref.txt</span></code>. The SEISMIC format is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># sample: my_example_sample
+{
+&quot;#sample&quot;:&quot;my_example_sample&quot;,
+&quot;my_example_ref&quot;:{
+  &quot;full&quot;:{
+    &quot;#sequence&quot;:&quot;TCGGG&quot;,
+    &quot;#positions&quot;:[1,2,3,4,5],
+    &quot;#num_aligned&quot;:5970,
+    &quot;average&quot;:{
+      &quot;cov&quot;:[5835,5852,5874,5926,5970],
+      &quot;info&quot;:[4214,4264,4756,5138,5378],
+      &quot;sub_N&quot;:[3,13,86,39,27],
+      &quot;sub_rate&quot;:[0.000712,0.003049,0.018082,0.007591,0.00502]
+      }
+    }
+  }
+
+  # sample: my_example_sample-untreated
+  {
+  &quot;#sample&quot;:&quot;my_example_sample-untreated&quot;,
+  &quot;my_example_ref&quot;:{
+    &quot;full&quot;:{
+      &quot;#sequence&quot;:&quot;TCGGG&quot;,
+      &quot;#positions&quot;:[1,2,3,4,5],
+      &quot;#num_aligned&quot;:6168,
+      &quot;average&quot;:{
+        &quot;cov&quot;:[6037,6052,6087,6168,6215],
+        &quot;info&quot;:[4225,4415,4933,5417,5784],
+        &quot;sub_N&quot;:[3,16,95,53,50],
+        &quot;sub_rate&quot;:[0.00071,0.003624,0.019258,0.009784,0.008645]
+        }
+      }
+    }
+  }
+
+  # sample: my_example_sample-denatured
+  {
+  &quot;#sample&quot;:&quot;my_example_sample-denatured&quot;,
+  &quot;my_example_ref&quot;:{
+    &quot;full&quot;:{
+      &quot;#sequence&quot;:&quot;TCGGG&quot;,
+      &quot;#positions&quot;:[1,2,3,4,5],
+      &quot;#num_aligned&quot;:6087,
+      &quot;average&quot;:{
+        &quot;cov&quot;:[5943,5957,5996,6048,6087],
+        &quot;info&quot;:[4189,4266,4502,5041,5297],
+        &quot;sub_N&quot;:[6,29,102,199,55],
+        &quot;sub_rate&quot;:[0.001432,0.006798,0.022657,0.039476,0.010383]
+        }
+      }
+    }
+  }
+</pre></div>
+</div>
+</section>
+</section>
+<section id="rna-framework-format">
+<h2>RNA framework format<a class="headerlink" href="#rna-framework-format" title="Link to this heading"></a></h2>
+<section id="id1">
+<h3>Format example<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># name: example_rnaf/sample_name_R1_001_count_data.txt
+HFE_amp_1
+AGATGATACAAAAAAACATGACTAC
+138,63,72,38,42,51,17,51,22,9,5,4,0,0,1,0,0,0,0,0,0,0,0,0,0
+138,201,273,311,353,404,421,472,494,503,508,512,512,512,513,513,513,513,513,513,513,513,513,513,513
+
+HFE_amp_2
+GGCAAGCGAAAGATTTTGAAACTTT
+440,66,62,33,11,9,7,7,7,14,3,4,2,3,15,18,11,1,6,5,4,0,2,2,1
+440,506,568,601,612,621,628,635,642,656,659,663,665,668,683,701,712,713,719,724,728,728,730,732,733
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Conversion to SEISMIC format<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>Mapping for the .txt format:</p>
+<ul class="simple">
+<li><p>The first line is the reference name.</p></li>
+<li><p>The second line is the sequence.</p></li>
+<li><p>The third line is the number of mutations per position.</p></li>
+<li><p>The fourth line is the number of reads per position.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;#sample&quot;</span><span class="p">:</span> <span class="s2">&quot;example_rnaf&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;HFE_amp_1&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;full&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;average&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="s2">&quot;AGATGATACAAAAAAACATGACTAC&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;positions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;cov&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">138</span><span class="p">,</span><span class="mi">201</span><span class="p">,</span><span class="mi">273</span><span class="p">,</span><span class="mi">311</span><span class="p">,</span><span class="mi">353</span><span class="p">,</span><span class="mi">404</span><span class="p">,</span><span class="mi">421</span><span class="p">,</span><span class="mi">472</span><span class="p">,</span><span class="mi">494</span><span class="p">,</span><span class="mi">503</span><span class="p">,</span><span class="mi">508</span><span class="p">,</span><span class="mi">512</span><span class="p">,</span><span class="mi">512</span><span class="p">,</span><span class="mi">512</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span><span class="p">,</span><span class="mi">513</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;sub_rate&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.31343283582089554</span><span class="p">,</span><span class="mf">0.26373626373626374</span><span class="p">,</span><span class="mf">0.12218649517684887</span><span class="p">,</span><span class="mf">0.11898016997167139</span><span class="p">,</span><span class="mf">0.12623762376237624</span><span class="p">,</span><span class="mf">0.040380047505938245</span><span class="p">,</span><span class="mf">0.10805084745762712</span><span class="p">,</span><span class="mf">0.044534412955465584</span><span class="p">,</span><span class="mf">0.017892644135188866</span><span class="p">,</span><span class="mf">0.00984251968503937</span><span class="p">,</span><span class="mf">0.0078125</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.001949317738791423</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span>
+        <span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;HFE_amp_2&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;full&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;average&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="s2">&quot;GGCAAGCGAAAGATTTTGAAACTTT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;positions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;cov&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">440</span><span class="p">,</span><span class="mi">506</span><span class="p">,</span><span class="mi">568</span><span class="p">,</span><span class="mi">601</span><span class="p">,</span><span class="mi">612</span><span class="p">,</span><span class="mi">621</span><span class="p">,</span><span class="mi">628</span><span class="p">,</span><span class="mi">635</span><span class="p">,</span><span class="mi">642</span><span class="p">,</span><span class="mi">656</span><span class="p">,</span><span class="mi">659</span><span class="p">,</span><span class="mi">663</span><span class="p">,</span><span class="mi">665</span><span class="p">,</span><span class="mi">668</span><span class="p">,</span><span class="mi">683</span><span class="p">,</span><span class="mi">701</span><span class="p">,</span><span class="mi">712</span><span class="p">,</span><span class="mi">713</span><span class="p">,</span><span class="mi">719</span><span class="p">,</span><span class="mi">724</span><span class="p">,</span><span class="mi">728</span><span class="p">,</span><span class="mi">728</span><span class="p">,</span><span class="mi">730</span><span class="p">,</span><span class="mi">732</span><span class="p">,</span><span class="mi">733</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;sub_rate&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.13043478260869565</span><span class="p">,</span><span class="mf">0.10915492957746478</span><span class="p">,</span><span class="mf">0.05490848585690516</span><span class="p">,</span><span class="mf">0.017973856209150325</span><span class="p">,</span><span class="mf">0.014492753623188406</span><span class="p">,</span><span class="mf">0.011146496815286623</span><span class="p">,</span><span class="mf">0.011023622047244094</span><span class="p">,</span><span class="mf">0.010903426791277258</span><span class="p">,</span><span class="mf">0.021341463414634148</span><span class="p">,</span><span class="mf">0.004552352048558422</span><span class="p">,</span><span class="mf">0.006033182503770739</span><span class="p">,</span><span class="mf">0.0030075187969924814</span><span class="p">,</span><span class="mf">0.004491017964071856</span><span class="p">,</span><span class="mf">0.021961932650073207</span><span class="p">,</span><span class="mf">0.025677603423680456</span><span class="p">,</span><span class="mf">0.01544943820224719</span><span class="p">,</span><span class="mf">0.001402524544179523</span><span class="p">,</span><span class="mf">0.008344923504867872</span><span class="p">,</span><span class="mf">0.006906077348066298</span><span class="p">,</span><span class="mf">0.005494505494505495</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.0027397260273972603</span><span class="p">,</span><span class="mf">0.00273224043715847</span><span class="p">,</span><span class="mf">0.001364256480218281</span>
+        <span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="create_a_plot.html" class="btn btn-neutral float-left" title="Write your own plots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rouskin Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

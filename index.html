@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to seismic-graph’s documentation! &mdash; seismic-graph 28.02.2023 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=65f38aaf"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Get started" href="plots/get_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            seismic-graph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Plots</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plots/get_started.html">Get started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plots/gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plots/create_a_plot.html">Write your own plots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plots/formats.html">Input formats</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">seismic-graph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to seismic-graph’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-seismic-graph-s-documentation">
+<h1>Welcome to seismic-graph’s documentation!<a class="headerlink" href="#welcome-to-seismic-graph-s-documentation" title="Link to this heading"></a></h1>
+<p>seismic-graph is a plotting library for SEISMIC output.</p>
+<section id="get-started">
+<span id="plots-get-started"></span><h2>Get started<a class="headerlink" href="#get-started" title="Link to this heading"></a></h2>
+<section id="install-seismograph">
+<h3>Install SEISMOGRAPH<a class="headerlink" href="#install-seismograph" title="Link to this heading"></a></h3>
+<p>Install SEISMOGRAPH with pip. <strong>Use Python &gt;= 3.10</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">seismic</span><span class="o">-</span><span class="n">graph</span>
+</pre></div>
+</div>
+</section>
+<section id="import-your-data-into-a-study-object">
+<h3>Import your data into a study object<a class="headerlink" href="#import-your-data-into-a-study-object" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">seismic_graph</span> <span class="kn">import</span> <span class="n">Study</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="c1"># Define the list of samples you want to load</span>
+<span class="n">my_samples</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;my_sample_1&#39;</span><span class="p">,</span> <span class="s1">&#39;my_sample_2&#39;</span><span class="p">,</span> <span class="s1">&#39;my_sample_3&#39;</span><span class="p">]</span>
+
+<span class="c1"># Load the data as a list of dictionaries</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">my_samples</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sample</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+
+<span class="c1"># Create a study object</span>
+<span class="n">my_study</span> <span class="o">=</span> <span class="n">Study</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<span class="c1"># Print the list of available samples</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">my_study</span><span class="o">.</span><span class="n">get_samples</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="make-a-plot">
+<h3>Make a plot<a class="headerlink" href="#make-a-plot" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">study</span><span class="o">.</span><span class="n">mutation_fraction</span><span class="p">(</span>
+    <span class="n">sample</span><span class="o">=</span><span class="s1">&#39;my_sample_1&#39;</span><span class="p">,</span>
+    <span class="n">reference</span> <span class="o">=</span> <span class="s1">&#39;my_reference_1&#39;</span><span class="p">,</span>
+    <span class="n">section</span> <span class="o">=</span> <span class="s1">&#39;my_section_1&#39;</span><span class="p">,</span>
+    <span class="n">cluster</span> <span class="o">=</span> <span class="s1">&#39;pop_avg&#39;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>                <div id="46fcbdb5-c2a8-4f2b-aa88-1e30a5fa27ba" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("46fcbdb5-c2a8-4f2b-aa88-1e30a5fa27ba")) {                    Plotly.newPlot(                        "46fcbdb5-c2a8-4f2b-aa88-1e30a5fa27ba",                        [{"hovertemplate":"\u003cb\u003emut_rate: %{text[0]}\u003cbr\u003e\u003cb\u003ebase: %{text[1]}\u003cbr\u003e\u003cb\u003eindex: %{text[2]}\u003cbr\u003e","marker":{"color":"#99C3EB"},"name":"T","text":[[0.0008193363375665711,"T",5],[0.0004098360655737705,"T",7],[0.0004086636697997548,"T",8],[0.0008153281695882593,"T",17],[0.0012510425354462051,"T",19],[0.0004158004158004158,"T",21],[0.0012484394506866417,"T",22]],"x":[5,7,8,17,19,21,22],"y":[0.0008193363375665711,0.0004098360655737705,0.0004086636697997548,0.0008153281695882593,0.0012510425354462051,0.0004158004158004158,0.0012484394506866417],"type":"bar"},{"hovertemplate":"\u003cb\u003emut_rate: %{text[0]}\u003cbr\u003e\u003cb\u003ebase: %{text[1]}\u003cbr\u003e\u003cb\u003eindex: %{text[2]}\u003cbr\u003e","marker":{"color":"#F7ED8F"},"name":"G","text":[[0.005303957568339453,"G",3],[0.003663003663003663,"G",10],[0.003258655804480652,"G",14]],"x":[3,10,14],"y":[0.005303957568339453,0.003663003663003663,0.003258655804480652],"type":"bar"},{"hovertemplate":"\u003cb\u003emut_rate: %{text[0]}\u003cbr\u003e\u003cb\u003ebase: %{text[1]}\u003cbr\u003e\u003cb\u003eindex: %{text[2]}\u003cbr\u003e","marker":{"color":"#8875C7"},"name":"C","text":[[0.002437043054427295,"C",9],[0.004932182490752158,"C",20]],"x":[9,20],"y":[0.002437043054427295,0.004932182490752158],"type":"bar"},{"hovertemplate":"\u003cb\u003emut_rate: %{text[0]}\u003cbr\u003e\u003cb\u003ebase: %{text[1]}\u003cbr\u003e\u003cb\u003eindex: %{text[2]}\u003cbr\u003e","marker":{"color":"#F09869"},"name":"A","text":[[0.01309328968903437,"A",1],[0.006129955046996322,"A",2],[0.0024650780608052587,"A",4],[0.0,"A",6],[0.017493897477624084,"A",11],[0.012043189368770765,"A",12],[0.017486783245221633,"A",13],[0.0024640657084188913,"A",15],[0.003676470588235294,"A",16],[0.0020475020475020475,"A",18]],"x":[1,2,4,6,11,12,13,15,16,18],"y":[0.01309328968903437,0.006129955046996322,0.0024650780608052587,0.0,0.017493897477624084,0.012043189368770765,0.017486783245221633,0.0024640657084188913,0.003676470588235294,0.0020475020475020475],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"text":"65degrees_1_S20_L001 - 3042-O-flank_1=hp1-DB - ROI - pop_avg - 2463 reads"},"xaxis":{"title":{"text":"Position"},"linewidth":1,"linecolor":"black","mirror":true,"autorange":true},"yaxis":{"title":{"text":"Mutation fraction"},"gridcolor":"lightgray","linewidth":1,"linecolor":"black","mirror":true},"plot_bgcolor":"white","paper_bgcolor":"white"},                        {"responsive": true}                    )                };                            </script>        </div>
+</body>
+</html><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We regularly update the list of available plots. Make sure that you have the last version of seismograph.</p>
+</div>
+</section>
+<section id="outlier-filtering">
+<h3>Outlier filtering<a class="headerlink" href="#outlier-filtering" title="Link to this heading"></a></h3>
+<ul>
+<li><dl>
+<dt><strong>pearson_filter_gap</strong>: float, default=None</dt><dd><p>This parameter allows filtering out outliers by setting a minimal gap between the Pearson correlation of the data
+with the outlier and the Pearson correlation of the data without the outlier. If the difference is higher than
+this value, the outlier is removed from the Pearson correlation calculation.</p>
+<p>If the parameter is set to None (default), no outlier filtering is applied.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reference_data</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">2.9</span><span class="p">,</span> <span class="mf">4.1</span><span class="p">,</span> <span class="mf">5.2</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]</span>
+<span class="n">data_with_outlier</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">outlier_filter_gap</span></code> is set to 0.5, the outlier (100.) will be removed from the Pearson correlation calculation
+because the difference between the correlation with and without the outlier is greater than 0.5.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="normalize">
+<h3>Normalize<a class="headerlink" href="#normalize" title="Link to this heading"></a></h3>
+<ul>
+<li><dl>
+<dt><strong>normalize</strong>: bool, default=False</dt><dd><p>If you have multiple samples and this parameter is set to True, the data of the samples are divided by the
+slope of the linear regression between the data of the first sample and the data of each other samples.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sample_1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="n">sample_2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>If normalize is set to True, the data of sample_2 will be divided by 2.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+</section>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound" id="plots">
+<p class="caption" role="heading"><span class="caption-text">Plots</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plots/get_started.html">Get started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plots/get_started.html#install-seismograph">Install SEISMOGRAPH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots/get_started.html#import-your-data-into-a-study-object">Import your data into a study object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots/get_started.html#make-a-plot">Make a plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots/get_started.html#outlier-filtering">Outlier filtering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots/get_started.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plots/gallery.html">Gallery</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#base-coverage">Base coverage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.base_coverage"><code class="docutils literal notranslate"><span class="pre">base_coverage()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#compare-mutation-profiles">Compare mutation profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.compare_mutation_profiles"><code class="docutils literal notranslate"><span class="pre">compare_mutation_profiles()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#correlation-by-refs-between-samples">Correlation by refs between samples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.correlation_by_refs_between_samples"><code class="docutils literal notranslate"><span class="pre">correlation_by_refs_between_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#experimental-variable-across-samples">Experimental variable across samples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.experimental_variable_across_samples"><code class="docutils literal notranslate"><span class="pre">experimental_variable_across_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#mutation-fraction">Mutation fraction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.mutation_fraction"><code class="docutils literal notranslate"><span class="pre">mutation_fraction()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#mutation-fraction-delta">Mutation fraction delta</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.mutation_fraction_delta"><code class="docutils literal notranslate"><span class="pre">mutation_fraction_delta()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#mutation-fraction-identity">Mutation fraction identity</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.mutation_fraction_identity"><code class="docutils literal notranslate"><span class="pre">mutation_fraction_identity()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#mutation-per-read-per-reference">Mutation per read per reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.mutation_per_read_per_reference"><code class="docutils literal notranslate"><span class="pre">mutation_per_read_per_reference()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#mutations-per-read-per-sample">Mutations per read per sample</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.mutations_per_read_per_sample"><code class="docutils literal notranslate"><span class="pre">mutations_per_read_per_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/gallery.html#num-aligned-reads-per-reference-frequency-distribution">Num aligned reads per reference frequency distribution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/gallery.html#seismic_graph.study.Study.num_aligned_reads_per_reference_frequency_distribution"><code class="docutils literal notranslate"><span class="pre">num_aligned_reads_per_reference_frequency_distribution()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plots/create_a_plot.html">Write your own plots</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plots/create_a_plot.html#select-your-data">1. Select your data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/create_a_plot.html#seismic_graph.study.Study.get_df"><code class="docutils literal notranslate"><span class="pre">get_df()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/create_a_plot.html#plot-your-data">2. Plot your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots/create_a_plot.html#add-your-plot-to-seismograph">3. Add your plot to SEISMOGRAPH</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/create_a_plot.html#setup-your-development-environment">1. Setup your development environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plots/create_a_plot.html#example">2. Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plots/create_a_plot.html#add-your-plot">3. Add your plot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plots/formats.html">Input formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plots/formats.html#seismic-output-format">SEISMIC-OUTPUT format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/formats.html#levels">Levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plots/formats.html#cluster-level-data">Cluster level data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plots/formats.html#example">Example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/formats.html#shape-mapper-format">SHAPE-MAPPER format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/formats.html#format-example">Format example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plots/formats.html#conversion-to-seismic-format">Conversion to SEISMIC format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plots/formats.html#rna-framework-format">RNA framework format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="plots/formats.html#id1">Format example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plots/formats.html#id2">Conversion to SEISMIC format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plots/get_started.html" class="btn btn-neutral float-right" title="Get started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Rouskin Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
