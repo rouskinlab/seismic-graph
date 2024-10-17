@@ -928,10 +928,8 @@ def percent_masked_histogram(data):
         masked_percentage_dict['All Samples Combined'] = masked_percentage_combined
         sample_counts['All Samples Combined'] = len(masked_percentage_combined)
 
-    # Determine the global x-axis range
-    # all_masked_percentages = pd.concat(masked_percentage_dict.values())
-    # x_range = [0, all_masked_percentages.max()]
-    x_range = [0, 100]
+    # Restrict bins to be between 0 and 100%
+    x_range = [0, 102]
 
     # Initialize figure
     fig = go.Figure()
@@ -944,7 +942,7 @@ def percent_masked_histogram(data):
             x=masked_percentage,
             marker_color='indianred',
             hovertemplate="Percentage of A's & C's Bases Masked: %{x}<br>Count: %{y}<extra></extra>",
-            nbinsx=50,  # Adjust bins as needed
+            xbins=dict(start=0, end=102, size=2),
             visible=False  # Initially set to False
         )
         fig.add_trace(hist_trace)
