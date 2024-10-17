@@ -1085,3 +1085,211 @@ def f1_violin_by_family(data):
         'fig': fig,
         'data': data
     }
+
+def compare_mutation_profiles_2(data, table, normalize=False, max_plots=100, max_axis=None, pearson_filter_gap=None):
+    if normalize:
+        data = table.normalize_df(data, data['sample'].iloc[0])
+
+    # total number of plots
+    totNumPlots = int((data.shape[0] * (data.shape[0] - 1)) / 2)
+    if totNumPlots > max_plots:
+        print('Too many plots: {} rows combined together make {} plots when using these arguments. Filtered dataset is: \n\n{}.'.format(
+            data.shape[0], totNumPlots, data[['sample', 'reference', 'section', 'cluster', 'sub_rate_x']]))
+        return {'fig': go.Figure(), 'data': data}
+
+    if data.shape[0] == 0:
+        print('No data found for this combination of arguments')
+        return {'fig': go.Figure(), 'data': data}
+
+    if data.shape[0] == 1:
+        print('Only one row found for this combination of arguments.')
+        return {'fig': go.Figure(), 'data': data}
+
+    # Assert sequence is the same for all rows
+    assert data['sequence'].nunique() == 1, 'Sequence is not the same for all rows. Select a subset of the data that has the same sequence.'
+
+    # sort by unique_id
+    data = data.sort_values('unique_id').reset_index(drop=True)
+
+    # plot these
+    fig = go.Figure()
+
+    makePlotLabel = lambda x, y: '{} vs {}'.format(x, y)
+
+    traceTrack = []
+    annotationTrack = []
+    stats_dict = {}
+
+    if max_axis is not None:
+        maxValue = max_axis
+    else:
+        maxValue = 0
+        for idx1, row1 in data.iloc[:-1].iterrows():
+            for _, row2 in data.iloc[idx1 + 1:].iterrows():
+                x, y = row1['sub_rate'], row2['sub_rate']
+                x, y = np.array(x), np.array(y)
+                mask = np.logical_and(~np.isnan(x), ~np.isnan(y))
+                x, y = x[mask], y[mask]
+                maxValue = max(x.max(), y.max(), 0.14, maxValue)
+    maxValue += 0.01
+
+    # Generate identical ticks for both axes
+    tick_start = 0.0
+    tick_end = np.round(maxValue, 2)
+    tick_step = np.round((tick_end - tick_start) / 5, 2)
+    tick_vals = np.arange(tick_start, tick_end + tick_step, tick_step)
+
+    for idx1, row1 in data.iloc[:-1].iterrows():
+        for idx2, row2 in data.iloc[idx1 + 1:].iterrows():
+            x, y = row1['sub_rate'], row2['sub_rate']
+            x, y = np.array(x), np.array(y)
+            mask = np.logical_and(np.logical_and(~np.isnan(x), ~np.isnan(y)),
+                                  np.logical_and(x != -1000., y != -1000.))
+            x, y = np.round(x[mask], 4), np.round(y[mask], 4)
+            xlabel, ylabel = row1['unique_id'], row2['unique_id']
+            plotLabel = makePlotLabel(xlabel, ylabel)
+
+            text = []
+            for seq_idx in np.where(mask)[0]:
+                text.append(f"position: {seq_idx}<br>base: {data['sequence'].iloc[0][seq_idx]}")
+
+            # plot x vs y then the linear regression line, then the 1:1 line, then the R2 and RMSE values
+            fig.add_trace(go.Scatter(
+                x=x, y=y, mode='markers', name='mutation fraction',
+                visible=False, text=text,
+                hovertemplate='%{text} <br>mut frac x: %{x} <br>mut frac y: %{y}'))
+
+            traceTrack.append(plotLabel)
+
+            # linear regression line
+            model = LinearRegression()
+            model.fit(x.reshape(-1, 1), y)
+            slope = model.coef_[0]
+            intercept = model.intercept_
+            r_squared = model.score(x.reshape(-1, 1), y)
+            pearson_r = np.corrcoef(x, y)[0, 1]
+
+            # Create regression line
+            regression_line = slope * np.linspace(0, maxValue) + intercept
+            fig.add_trace(go.Scatter(
+                x=np.linspace(0, maxValue), y=regression_line,
+                mode='lines', name=f'Linear regression: y = {round(slope, 4)}x + {round(intercept, 4)}',
+                visible=False, line=dict(color='red')))
+            traceTrack.append(plotLabel)
+
+            # 1:1 line
+            fig.add_trace(go.Scatter(
+                x=[0, maxValue], y=[0, maxValue],
+                mode='lines', name='Line of Identity',
+                visible=False, line=dict(color='black', dash='dash')))
+            traceTrack.append(plotLabel)
+
+            # Collect stats for output
+            stats_dict[plotLabel] = {
+                'Slope': round(slope, 2),
+                'R2': round(r_squared, 2),
+                'R': round(pearson_r, 2)
+            }
+
+            # Annotation for statistics
+            annot = (f'Slope = {round(slope, 2)}<br>'
+                     f'R² = {round(r_squared, 2)}<br>'
+                     f'Pearson R = {round(pearson_r, 2)}')
+            fig.add_annotation(visible=False, x=0.05 * maxValue, y=0.95 * maxValue,
+                               xanchor='left', yanchor='top',
+                               text=annot, showarrow=False)
+            annotationTrack.append(annot)
+
+    # Add dropdown to select specific plots
+    unique_plots = np.unique(traceTrack)
+    buttons = []
+    for idx, plot in enumerate(unique_plots):
+        visibility = []
+        annotations = []
+        for i, trace_label in enumerate(traceTrack):
+            visibility.append(trace_label == plot)
+        # Annotations
+        for ann_index, ann_label in enumerate(annotationTrack):
+            annotations.append(dict(
+                visible=(traceTrack[ann_index] == plot),
+                x=0.05 * maxValue,
+                y=0.95 * maxValue,
+                xanchor='left',
+                yanchor='top',
+                text=annotationTrack[ann_index],
+                showarrow=False))
+
+        buttons.append(dict(
+            label=plot,
+            method='update',
+            args=[
+                {'visible': visibility},
+                {
+                    'annotations': annotations,
+                    'xaxis.title': f"{plot.split(' vs ')[0]} sub rate",
+                    'yaxis.title': f"{plot.split(' vs ')[1]} sub rate",
+                    'title': f"{plot} mutation fraction correlation"
+                }
+            ]
+        ))
+
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                active=0,
+                buttons=buttons,
+                x=0.5,
+                y=-0.15,
+                xanchor='center',
+                yanchor='top',
+                direction='up'
+            )
+        ],
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        width=1000,
+        height=600,
+        xaxis=dict(
+            range=[0, maxValue],
+            dtick=tick_step,
+            tickvals=tick_vals,
+            ticktext=[str(round(val, 2)) for val in tick_vals],
+            showgrid=False,
+            ticks='outside',
+            showline=True,
+            linecolor='black',
+            mirror=True,
+            zeroline=False,
+            constrain="domain",
+        ),
+        yaxis=dict(
+            range=[0, maxValue],
+            dtick=tick_step,
+            tickvals=tick_vals,
+            ticktext=[str(round(val, 2)) for val in tick_vals],
+            showgrid=False,
+            ticks='outside',
+            showline=True,
+            linecolor='black',
+            mirror=True,
+            zeroline=False,
+            scaleanchor='x',
+            scaleratio=1,
+        ),
+        margin=dict(
+            l=50,
+            r=50,
+            b=50,
+            t=50,
+            pad=4
+        ),
+    )
+
+    # Set the first plot to be visible
+    for i in range(3):
+        fig.data[i].visible = True
+
+    # Make the first annotation visible
+    fig.layout.annotations[0]['visible'] = True
+
+    return {'fig': fig, 'data': data, 'full': stats_dict}
