@@ -21,6 +21,7 @@ from sklearn.metrics import r2_score
 from .util.normalization import LinFitTable
 from io import StringIO
 import copy
+from scipy.stats import pearsonr
 
 cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
                     N="#f0f0f0")
@@ -1158,3 +1159,158 @@ def f1_violin_by_family(data):
         'fig': fig,
         'data': data
     }
+
+def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
+    """Generate a histogram of Pearson R² correlations between two samples for each reference.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the mutation rates.
+
+    Returns:
+        dict: Dictionary containing the figure, the computed R² values, and the CSV data.
+    """
+    # Ensure exactly two samples are selected
+    assert len(df['sample'].unique()) == 2, "Exactly two samples are required for this plot."
+    s1, s2 = df['sample'].unique()
+
+    refs = df['reference'].unique()
+    results = []
+    num_plotted = 0
+
+    for ref in refs:
+        ref_df = df[df['reference'] == ref]
+        num_rows = len(ref_df)
+        entry = {
+            'Reference': ref,
+            'Sample 1': None,
+            'Sample 2': None,
+            'R2': None,
+            'No Replicate Found': False,
+            'Insufficient Coverage to Calculate R2': None
+        }
+
+        if s1 in ref_df['sample'].values:
+            entry['Sample 1'] = s1
+        else:
+            entry['No Replicate Found'] = True
+        if s2 in ref_df['sample'].values:
+            entry['Sample 2'] = s2
+        else:
+            entry['No Replicate Found'] = True
+
+        if num_rows > 2:
+            raise ValueError(f"More than two rows found for reference '{ref}'. Ensure only two samples are selected.")
+        elif num_rows == 2:
+            # Exactly two rows
+            v1 = np.array(ref_df.iloc[0]['sub_rate'])
+            v2 = np.array(ref_df.iloc[1]['sub_rate'])
+
+            # Mask invalid values
+            mask = np.logical_and(
+                np.logical_and(~np.isnan(v1), ~np.isnan(v2)),
+                np.logical_and(v1 != -1000., v2 != -1000.)
+            )
+            x = v1[mask]
+            y = v2[mask]
+
+            if len(x) < 2:
+                # Insufficient data
+                entry['Insufficient Coverage to Calculate R2'] = True
+
+            else:
+                # Compute Pearson correlation
+                entry['Insufficient Coverage to Calculate R2'] = False
+                r, _ = pearsonr(x, y)
+                r_squared = r ** 2
+                entry['R2'] = r_squared
+                num_plotted += 1
+
+        results.append(entry)
+
+    # Create DataFrame from results
+    results_df = pd.DataFrame(results).sort_values(by='R2', ascending=False, na_position='last')
+
+    # Calculate statistics
+    plotted_r2 = results_df['R2'].dropna()
+    num_no_replicate = len(results_df[results_df['No Replicate Found'] == True])
+    num_insufficient_data = len(results_df[results_df['Insufficient Coverage to Calculate R2'] == True])
+    num_references = len(refs)
+    num_not_plotted = num_references - num_plotted
+
+    if not plotted_r2.empty:
+        highest_r2 = plotted_r2.max()
+        median_r2 = plotted_r2.median()
+        lowest_r2 = plotted_r2.min()
+        # Format R² values to four decimal places
+        highest_r2_str = f"{highest_r2:.4f}"
+        median_r2_str = f"{median_r2:.4f}"
+        lowest_r2_str = f"{lowest_r2:.4f}"
+    else:
+        highest_r2_str = median_r2_str = lowest_r2_str = "N/A"
+
+    # Prepare annotations for the plot
+    stats_text = (
+        f"References Plotted: {num_plotted}<br>"
+        f"References Not Plotted: {num_not_plotted}<br>"
+        f"&nbsp;&nbsp;- Due to No Replicate Found: {num_no_replicate}<br>"
+        f"&nbsp;&nbsp;- Due to Insufficient Coverage to Calculate R²: {num_insufficient_data}<br>"
+        f"Highest R²: {highest_r2_str}<br>"
+        f"Median R²: {median_r2_str}<br>"
+        f"Lowest R²: {lowest_r2_str}"
+    )
+
+    # Plot histogram with bin size of 0.01 from 0 to 1.01
+    fig = go.Figure()
+    if num_plotted > 0:
+        fig.add_trace(
+            go.Histogram(
+                x=plotted_r2,
+                xbins=dict(start=0, end=1.0001, size=0.010001),  # Define bin size and range
+                marker_color='indianred',
+                hovertemplate="R²: %{x:.2f}<br>Count: %{y}<extra></extra>"
+            )
+        )
+    else:
+        fig.add_trace(go.Histogram())  # Add an empty histogram
+
+    fig.update_layout(
+        title=f"Distribution of Pearson R² between samples '{s1}' and '{s2}'",
+        xaxis_title="R²",
+        yaxis_title="Count",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+    )
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        range=[0, 1.0001],  # Ensure x-axis matches bin range
+        dtick=0.1,  # Set ticks to appear every 0.1 interval
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=False,  # Keep the range fixed to the defined bins
+    )
+
+    # Add annotation to display statistics
+    fig.add_annotation(
+        x=0.15,  # Position to the right of the plot
+        y=0.5,
+        xref='paper',
+        yref='paper',
+        text=stats_text,
+        showarrow=False,
+        align='left',
+        bordercolor='black',
+        borderwidth=1,
+        bgcolor='white',
+        font=dict(size=12),
+    )
+
+    # Convert DataFrame to CSV string
+    csv_data = results_df.to_csv(index=False)
+
+    return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}

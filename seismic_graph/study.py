@@ -540,3 +540,17 @@ class Study(object):
         kwargs['table'] = self.table
 
         return self.wrap_to_plotter(plotter.compare_mutation_profiles_2, locals(), kwargs)
+    
+    @plot_info("pearson_correlation_histogram", "Pearson Correlation Histogram")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def pearson_correlation_histogram(self, **kwargs):
+        """Plot a histogram showing the distribution of Pearson R² correlations across references.
+
+        Args:
+            sample (list, str, optional): Filter rows by sample (use exactly two samples). Defaults to None.
+        """
+        return self.wrap_to_plotter(
+            plotter.pearson_correlation_histogram, locals(), kwargs
+        )
