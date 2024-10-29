@@ -88,7 +88,8 @@ class Study(object):
     def set_df(self, df, min_cov=0, filter_by="sample"):
         self.df = df.reset_index(drop=True)
 
-        self.df = self.df[self.df["min_cov"] >= min_cov]
+        if min_cov > 0:
+            self.df = self.df[self.df["min_cov"] >= min_cov]
 
         if filter_by == "study":
             self.filter_by_study()
