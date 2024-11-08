@@ -159,11 +159,12 @@ def save_plot(func):
         # Handle PNG output
         to_png = kwargs.pop('to_png', None)
         if to_png:
+            scale_factor=3
             if to_png == 'return':
-                png_bytes = fig.to_image(format="png")
+                png_bytes = fig.to_image(format="png", scale=scale_factor)
                 out['png_bytes'] = png_bytes
             else:
-                fig.write_image(to_png)
+                fig.write_image(to_png, scale=scale_factor)
 
         # Handle SVG output
         to_svg = kwargs.pop('to_svg', None)

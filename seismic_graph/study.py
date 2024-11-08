@@ -555,3 +555,85 @@ class Study(object):
         return self.wrap_to_plotter(
             plotter.pearson_correlation_histogram, locals(), kwargs
         )
+    
+    def identify_high_mutation_sequences(self, **kwargs):
+        """
+        Identify sequences in the untreated data (NO DMS) that have high mutations.
+
+        Args:
+            signal_threshold_low (float): The lower threshold for mutation fraction.
+            signal_threshold_high (float): The higher threshold for mutation fraction.
+
+        Returns:
+            pd.DataFrame: The dataframe with additional columns indicating acceptable sequences.
+        """
+        return self.wrap_to_plotter(
+            plotter.identify_high_mutation_sequences, locals(), kwargs
+        )
+    
+    @plot_info("max_sub_rate_histogram", "Histogram of Maximum Sub Rate per Reference")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def max_sub_rate_histogram(self, **kwargs):
+        """
+        Generate a histogram of maximum sub rates. For each row in the data, it finds the maximum mutation rate and generates a histogram.
+
+        Returns:
+            dict: Contains the Plotly figure "fig" and histogram data "histogram_data".
+        """
+        return self.wrap_to_plotter(
+            plotter.max_sub_rate_histogram, locals(), kwargs
+        )
+    
+    def sequence_length_vs_aligned_reads(self, **kwargs):
+        """
+        Generate a scatter plot with sequence length on the x-axis and number of aligned reads on the y-axis.
+        Adds a line of best fit and indicates the R² value.
+
+        Returns:
+            dict: Contains the Plotly figure and data used for the plot.
+        """
+        return self.wrap_to_plotter(
+            plotter.sequence_length_vs_aligned_reads, locals(), kwargs
+        )
+    
+    def count_rows_with_all_nan_cov(self, **kwargs) -> dict:
+        """Count the number of rows in the dataframe where 'cov' is all NaN.
+
+        Returns:
+            dict: {'count': integer count of rows where 'cov' is all NaN,
+                   'rows': DataFrame with these rows}
+        """
+        return self.wrap_to_plotter(plotter.count_rows_with_all_nan_cov, locals(), kwargs)
+    
+    @plot_info("percent_masked_histogram", "Percent Masked Histogram")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def percent_masked_histogram(self, **kwargs) -> dict:
+        """Plot a histogram showing the distribution of percentage of A's and C's bases masked.
+
+        Args:
+            potentially_reactive_bases (list of str, optional): List of bases considered potentially reactive. Defaults to ['A', 'C'].
+
+        Returns:
+            dict: {'fig': a Plotly figure, 'data': data}
+        """
+        return self.wrap_to_plotter(
+            plotter.percent_masked_histogram, locals(), kwargs
+        )
+    
+    @plot_info("auroc_histogram", "AUROC Histogram")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def auroc_histogram(self, **kwargs):
+        """Compute AUROC scores for each row and plot a histogram of the AUROC scores.
+
+        Returns:
+            dict: {'fig': a Plotly figure, 'data': DataFrame with 'auroc' column added}
+        """
+        return self.wrap_to_plotter(
+            plotter.auroc_histogram, locals(), kwargs
+        )

@@ -22,6 +22,7 @@ from .util.normalization import LinFitTable
 from io import StringIO
 import copy
 from scipy.stats import pearsonr
+from sklearn.metrics import roc_auc_score
 
 cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
                     N="#f0f0f0")
@@ -1092,51 +1093,162 @@ def percent_masked_histogram(data):
         'data': data
     }
 
+# def f1_violin_by_family(data):
+#     """Generate a violin plot for each family showing the distribution of F1 scores.
+
+#     Args:
+#         data (pd.DataFrame): DataFrame containing 'family' and 'F1' columns.
+
+#     Returns:
+#         dict: {'fig': a Plotly figure, 'data': data}
+#     """
+#     # Check required columns
+#     if 'family' not in data.columns or 'F1' not in data.columns:
+#         raise ValueError("Data must contain 'family' and 'F1' columns.")
+    
+#     # Drop rows with missing values in 'family' or 'F1'
+#     data = data.dropna(subset=['family', 'F1'])
+
+#     # Get unique families
+#     families = data['family'].unique()
+
+#     # Initialize figure
+#     fig = go.Figure()
+
+#     # Add a violin trace for each family
+#     for family in families:
+#         family_data = data[data['family'] == family]['F1']
+#         fig.add_trace(
+#             go.Violin(
+#                 y=family_data,
+#                 name=family,
+#                 box_visible=True,
+#                 meanline_visible=False,
+#                 line_color='black',
+#                 fillcolor='#1f77b4',
+#                 opacity=0.7,
+#                 marker=dict(color='#1f77b4')
+#             )
+#         )
+
+#     # Update layout
+#     fig.update_layout(
+#         title="Distribution of F1 Scores by Family",
+#         yaxis=dict(title="F1 Score"),
+#         xaxis=dict(title="Family"),
+#         plot_bgcolor='white',
+#         paper_bgcolor='white'
+#     )
+
+#     fig.update_yaxes(
+#         gridcolor='lightgray',
+#         linewidth=1,
+#         linecolor='black',
+#         mirror=True,
+#         range=[0,1]
+#     )
+#     fig.update_xaxes(
+#         linewidth=1,
+#         linecolor='black',
+#         mirror=True,
+#         tickangle=45,
+#         tickmode='array',
+#         tickvals=[family for family in families],
+#         ticktext=[family for family in families]
+#     )
+
+#     return {
+#         'fig': fig,
+#         'data': data
+#     }
+
+
+
 def f1_violin_by_family(data):
-    """Generate a violin plot for each family showing the distribution of F1 scores.
+    """
+    Generate a split violin plot for each family showing the distribution of F1 scores
+    with DMS and without DMS.
 
     Args:
-        data (pd.DataFrame): DataFrame containing 'family' and 'F1' columns.
+        data (pd.DataFrame): DataFrame containing 'family', 'F1_with_DMS', and 'F1_no_dms' columns.
 
     Returns:
         dict: {'fig': a Plotly figure, 'data': data}
     """
+    f1_w_DMS_col = 'F1'
+    f1_no_DMS_col = 'F1_no_dms'
     # Check required columns
-    if 'family' not in data.columns or 'F1' not in data.columns:
-        raise ValueError("Data must contain 'family' and 'F1' columns.")
+    required_columns = ['family', f1_w_DMS_col, f1_no_DMS_col]
+    for col in required_columns:
+        if col not in data.columns:
+            raise ValueError(f"Data must contain '{col}' column.")
     
-    # Drop rows with missing values in 'family' or 'F1'
-    data = data.dropna(subset=['family', 'F1'])
+    # Drop rows with missing values in required columns
+    data = data.dropna(subset=required_columns)
 
     # Get unique families
-    families = data['family'].unique()
+    families = sorted(data['family'].unique())
 
     # Initialize figure
     fig = go.Figure()
 
-    # Add a violin trace for each family
+    # Add a split violin trace for each family
     for family in families:
-        family_data = data[data['family'] == family]['F1']
+        family_data = data[data['family'] == family]
+
+        # F1 with DMS (left half)
         fig.add_trace(
             go.Violin(
-                y=family_data,
-                name=family,
-                box_visible=True,
+                y=family_data[f1_w_DMS_col],
+                x=[family] * len(family_data),
+                name='F1 with DMS',
+                side='negative',
+                legendgroup='F1 with DMS',
+                scalegroup=family,
                 meanline_visible=True,
-                line_color='black',
-                fillcolor='#1f77b4',
-                opacity=0.7,
-                marker=dict(color='#1f77b4')
+                showlegend=(family == families[0]),
+                line_color='blue',
+                fillcolor='blue',
+                opacity=0.6,
+                spanmode='hard',
+                width=0.6,
+                points=False
+            )
+        )
+
+        # F1 without DMS (right half)
+        fig.add_trace(
+            go.Violin(
+                y=family_data[f1_no_DMS_col],
+                x=[family] * len(family_data),
+                name='F1 without DMS',
+                side='positive',
+                legendgroup='F1 without DMS',
+                scalegroup=family,
+                meanline_visible=True,
+                showlegend=(family == families[0]),
+                line_color='red',
+                fillcolor='red',
+                opacity=0.6,
+                spanmode='hard',
+                width=0.6,
+                points=False
             )
         )
 
     # Update layout
     fig.update_layout(
         title="Distribution of F1 Scores by Family",
-        yaxis=dict(title="F1 Score"),
+        yaxis=dict(title="F1 Score", range=[0, 1]),
         xaxis=dict(title="Family"),
+        violingap=0,
+        violingroupgap=0,
+        violinmode='overlay',
         plot_bgcolor='white',
-        paper_bgcolor='white'
+        paper_bgcolor='white',
+        legend=dict(title='F1 Score Type'),
+        width=800,
+        height=600
     )
 
     fig.update_yaxes(
@@ -1149,10 +1261,7 @@ def f1_violin_by_family(data):
         linewidth=1,
         linecolor='black',
         mirror=True,
-        tickangle=45,
-        tickmode='array',
-        tickvals=[family for family in families],
-        ticktext=[family for family in families]
+        tickangle=45
     )
 
     return {
@@ -1274,7 +1383,7 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
         fig.add_trace(go.Histogram())  # Add an empty histogram
 
     fig.update_layout(
-        title=f"Distribution of Pearson R² between samples '{s1}' and '{s2}'",
+        title=f"Histogram of Per Reference Correlations for samples '{s1}' and '{s2}'",
         xaxis_title="R²",
         yaxis_title="Count",
         plot_bgcolor='white',
@@ -1314,3 +1423,583 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
     csv_data = results_df.to_csv(index=False)
 
     return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}
+
+
+# def identify_high_mutation_sequences(df: pd.DataFrame, signal_threshold_low=0.3, signal_threshold_high=0.7) -> pd.DataFrame:
+#     """
+#     Identify sequences in the untreated data (NO DMS) that have high mutations.
+
+#     Args:
+#         df (pd.DataFrame): The dataframe containing the sequences.
+#         signal_threshold_low (float): The lower threshold for mutation fraction.
+#         signal_threshold_high (float): The higher threshold for mutation fraction.
+
+#     Returns:
+#         pd.DataFrame: The dataframe with additional columns indicating acceptable sequences.
+#     """
+#     # Copy the dataframe to avoid modifying the original
+#     df = df.copy()
+
+#     def all_below_threshold(sub_rates):
+#         # Filter out NaN values
+#         valid_sub_rates = np.array(sub_rates)[~np.isnan(sub_rates)]
+#         # Return true if all non-NaN values are below threshold, False otherwise
+#         return np.all(valid_sub_rates < signal_threshold_low) if len(valid_sub_rates) > 0 else False
+    
+#     df['all nt below threshold'] = df['sub_rate'].apply(all_below_threshold)
+
+#     return df
+
+
+def identify_high_mutation_sequences(df: pd.DataFrame, signal_threshold_low=0.3, signal_threshold_high=0.7, muts_to_same_base=0.8) -> pd.DataFrame:
+    """
+    Identify sequences in the untreated data (NO DMS) that have high mutations and detect endogenous mutations.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the sequences.
+        signal_threshold_low (float): The lower threshold for mutation fraction.
+        signal_threshold_high (float): The higher threshold for mutation fraction.
+        muts_to_same_base (float): Threshold for fraction of mutations to the same base to consider an endogenous mutation.
+
+    Returns:
+        pd.DataFrame: The DataFrame with additional columns indicating acceptable sequences and endogenous mutations.
+    """
+    # Copy the DataFrame to avoid modifying the original
+    df = df.copy()
+
+    # Initialize lists to store results
+    all_below_threshold_list = []
+    has_endogenous_mutation_list = []
+    endogenous_mutation_list = []
+
+    # Iterate over each sequence (row) in the DataFrame
+    for idx, row in df.iterrows():
+        # Extract arrays for sub_rate and substitution counts
+        sub_rate = np.array(row['sub_rate'], dtype=np.float64)
+        sub_N = np.array(row['sub_N'], dtype=np.float64)
+        sub_A = np.array(row['sub_A'], dtype=np.float64)
+        sub_C = np.array(row['sub_C'], dtype=np.float64)
+        sub_G = np.array(row['sub_G'], dtype=np.float64)
+        sub_T = np.array(row['sub_T'], dtype=np.float64)
+
+        # Handle NaNs in sub_rate
+        valid_positions = ~np.isnan(sub_rate)
+
+        # Check if all non-NaN sub_rate values are below signal_threshold_low
+        if np.all(sub_rate[valid_positions] < signal_threshold_low):
+            all_below_threshold = True
+        else:
+            all_below_threshold = False
+
+        # Initialize endogenous mutation array with NaNs
+        endogenous_mutation = np.full_like(sub_rate, np.nan, dtype=object)
+
+        # Initialize flag for endogenous mutations
+        has_endogenous_mutation = False
+
+        # Positions where sub_rate exceeds signal_threshold_high
+        high_sub_rate_positions = np.where((sub_rate > signal_threshold_high) & valid_positions)[0]
+
+        # For each position with high sub_rate
+        for pos in high_sub_rate_positions:
+            # Total substitutions at this position
+            total_substitutions = sub_N[pos]
+
+            # Skip if total_substitutions is NaN or zero
+            if np.isnan(total_substitutions) or total_substitutions <= 0:
+                continue
+
+            # Get substitution counts to each base at this position
+            sub_counts = {
+                'A': sub_A[pos],
+                'C': sub_C[pos],
+                'G': sub_G[pos],
+                'T': sub_T[pos],
+            }
+
+            # Compute fraction of substitutions to each base
+            fraction_to_bases = {}
+            for base, count in sub_counts.items():
+                if np.isnan(count):
+                    fraction_to_bases[base] = 0.0
+                else:
+                    fraction_to_bases[base] = count / total_substitutions
+
+            # Check if any base has fraction >= muts_to_same_base
+            for base, fraction in fraction_to_bases.items():
+                if fraction >= muts_to_same_base:
+                    # Endogenous mutation detected
+                    endogenous_mutation[pos] = base
+                    has_endogenous_mutation = True
+                    break  # Stop checking other bases for this position
+
+        # Append results to lists
+        all_below_threshold_list.append(all_below_threshold)
+        has_endogenous_mutation_list.append(has_endogenous_mutation)
+        endogenous_mutation_list.append(endogenous_mutation)
+
+    # Add new columns to the DataFrame
+    df['all nt below threshold'] = all_below_threshold_list
+    df['has endogenous mutation'] = has_endogenous_mutation_list
+    df['endogenous mutation'] = endogenous_mutation_list
+
+    return df
+
+
+def max_sub_rate_histogram(df: pd.DataFrame, bin_size: float = 0.01) -> dict:
+    """
+    Generate a histogram of maximum sub_rate values per reference.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing 'reference' and 'sub_rate' columns.
+        bin_size (float): Size of each histogram bin.
+
+    Returns:
+        dict: Dictionary containing the figure and histogram data.
+    """
+    # List to store maximum sub_rate per reference
+    max_sub_rates = []
+
+    # Iterate over each reference
+    for idx, row in df.iterrows():
+        sub_rate = row['sub_rate']
+        if isinstance(sub_rate, (list, np.ndarray)):
+            # Convert to numpy array
+            sub_rate_array = np.array(sub_rate, dtype=np.float64)
+            # Ignore NaN values
+            sub_rate_array = sub_rate_array[~np.isnan(sub_rate_array)]
+            if sub_rate_array.size > 0:
+                # Get the maximum sub_rate for this reference
+                max_sub_rate = np.max(sub_rate_array)
+                max_sub_rates.append(max_sub_rate)
+            else:
+                # If all values are NaN, we can decide to skip or include as zero
+                # Here, we'll skip this reference
+                continue
+        else:
+            # If sub_rate is not an array or list, skip this reference
+            continue
+
+    # Convert the list to a numpy array
+    max_sub_rates = np.array(max_sub_rates)
+
+    # Check if we have any data to plot
+    if max_sub_rates.size == 0:
+        print("No valid sub_rate data available to plot.")
+        fig = go.Figure()
+        histogram_data = pd.DataFrame()
+    else:
+        # Define histogram bins for the x-axis based on max_sub_rate values
+        max_value = 1
+        bins = np.arange(0, max_value + bin_size, bin_size)
+
+        # Plot the histogram using Plotly
+        fig = go.Figure()
+        fig.add_trace(
+            go.Histogram(
+                x=max_sub_rates,
+                xbins=dict(start=0, end=max_value + bin_size, size=bin_size),
+                marker_color='indianred',
+                hovertemplate="Max sub_rate: %{x:.4f}<br>Count: %{y}<extra></extra>"
+            )
+        )
+
+        # Update layout and axes
+        fig.update_layout(
+            title="Histogram of Maximum sub_rate per Reference",
+            xaxis_title="Maximum sub_rate",
+            yaxis_title="Frequency",
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+        )
+        fig.update_yaxes(
+            gridcolor='lightgray',
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+        )
+        fig.update_xaxes(
+            range=[0, max_value+ bin_size],
+            dtick=bin_size * 10,
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+            autorange=False,
+        )
+
+        # Generate histogram data for export
+        counts, bin_edges = np.histogram(max_sub_rates, bins=bins)
+        histogram_data = pd.DataFrame({
+            "max_sub_rate_bin_start": bin_edges[:-1],
+            "max_sub_rate_bin_end": bin_edges[1:],
+            "frequency": counts
+        })
+
+    return {'fig': fig, 'histogram_data': histogram_data}
+
+
+def sequence_length_vs_aligned_reads(df: pd.DataFrame) -> dict:
+    """
+    Generate a scatter plot with sequence length on the x-axis and number of aligned reads on the y-axis.
+    Adds a line of best fit and indicates the R² value.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing 'sequence' and 'num_aligned' columns.
+
+    Returns:
+        dict: {'fig': a Plotly figure, 'data': df}
+    """
+    # Check required columns
+    if 'sequence' not in df.columns or 'num_aligned' not in df.columns:
+        raise ValueError("Data must contain 'sequence' and 'num_aligned' columns.")
+
+    # Copy the DataFrame to avoid modifying the original
+    df = df.copy()
+
+    # Compute sequence lengths
+    df['sequence_length'] = df['sequence'].str.len()
+
+    # Remove rows with NaN values in 'sequence_length' or 'num_aligned'
+    df = df.dropna(subset=['sequence_length', 'num_aligned'])
+
+    # Convert 'num_aligned' to numeric, handle non-numeric values
+    df['num_aligned'] = pd.to_numeric(df['num_aligned'], errors='coerce')
+    df = df.dropna(subset=['num_aligned'])
+
+    # Extract x and y data
+    x = df['sequence_length'].values.reshape(-1, 1)
+    y = df['num_aligned'].values
+
+    # Fit linear regression model
+    # model = LinearRegression()
+    # model.fit(x, y)
+    # y_pred = model.predict(x)
+
+    # # Calculate R² value
+    # r_squared = model.score(x, y)
+
+    # Create scatter plot
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=df['sequence_length'],
+            y=df['num_aligned'],
+            mode='markers',
+            marker=dict(
+                color='blue',
+                # opacity=0.7,
+                size=6
+            ),
+            name='Data Points',
+            hovertemplate='Sequence Length: %{x}<br>Number of Aligned Reads: %{y}<extra></extra>'
+        )
+    )
+
+    # Add line of best fit
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=df['sequence_length'],
+    #         y=y_pred,
+    #         mode='lines',
+    #         line=dict(color='red'),
+    #         name='Best Fit Line'
+    #     )
+    # )
+
+    # Add R² annotation
+    # fig.add_annotation(
+    #     x=0.05,
+    #     y=0.95,
+    #     xref='paper',
+    #     yref='paper',
+    #     text=f"R² = {r_squared:.4f}",
+    #     showarrow=False,
+    #     font=dict(size=12),
+    #     bordercolor='black',
+    #     borderwidth=1,
+    #     bgcolor='white'
+    # )
+
+    # Update layout
+    fig.update_layout(
+        title="Sequence Length vs Number of Aligned Reads",
+        xaxis_title="Sequence Length",
+        yaxis_title="Number of Aligned Reads",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+    )
+
+    # Update axes
+    fig.update_xaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        range=[0, None],
+    )
+
+    return {'fig': fig, 'data': df}
+
+def count_rows_with_all_nan_cov(data: pd.DataFrame) -> dict:
+    """
+    Count the number of rows in the dataframe where the 'cov' column is all NaN.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing the 'cov' column.
+
+    Returns:
+        dict: {'count': integer count of rows where 'cov' is all NaN,
+               'rows': DataFrame with these rows}
+    """
+    if 'cov' not in data.columns:
+        raise ValueError("Data must contain 'cov' column.")
+    
+    is_all_nan = data['cov'].apply(lambda x: np.all(np.isnan(x)))
+
+    count = is_all_nan.sum()
+
+    rows_with_all_nan_cov = data[is_all_nan].reset_index(drop=True)
+
+    return {'count': count, 'rows': rows_with_all_nan_cov}
+
+
+def percent_masked_histogram(data, potentially_reactive_bases=['A', 'C']) -> dict:
+    """
+    Plot a histogram showing the distribution of percentage of potentially reactive bases (e.g., A's and C's) that are masked (cov is NaN).
+
+    Args:
+        data (pd.DataFrame): DataFrame containing 'cov', 'sequence', and 'sample' columns.
+        potentially_reactive_bases (list of str, optional): List of bases considered potentially reactive. Defaults to ['A', 'C'].
+
+    Returns:
+        dict: {'fig': a Plotly figure, 'data': data}
+    """
+    # Check required columns
+    required_columns = ['cov', 'sample', 'sequence', 'reference']
+    if not all(col in data.columns for col in required_columns):
+        raise ValueError(f"Data must contain columns: {', '.join(required_columns)}")
+    
+    # Compute masked_percentage for each row
+    def compute_masked_percentage(row):
+        cov = row['cov']
+        sequence = row['sequence']
+        if cov is None or len(cov) == 0:
+            return np.nan
+        if len(sequence) != len(cov):
+            ref = row['reference']
+            raise ValueError(f"Length of coverage array does not match length of sequence for reference {ref}")
+        cov_array = np.array(cov)
+        reactive_positions = np.isin(list(sequence), potentially_reactive_bases)
+        reactive_cov_array = cov_array[reactive_positions]
+        num_masked = np.isnan(reactive_cov_array).sum()
+        total_reactive_bases = len(reactive_cov_array)
+        
+        return 100.0 * num_masked / total_reactive_bases if total_reactive_bases > 0 else np.nan
+
+    data['masked_percentage'] = data.apply(compute_masked_percentage, axis=1)
+    
+    # Get unique samples
+    unique_samples = data['sample'].unique()
+    
+    # Prepare sample list
+    sample_list = list(unique_samples)
+    has_combined = False
+    if len(sample_list) > 1:
+        sample_list.append('All Samples Combined')
+        has_combined = True
+    
+    # Collect masked_percentage data and counts for each sample
+    masked_percentage_dict = {}
+    sample_counts = {}
+    for sample in unique_samples:
+        sample_data = data[data['sample'] == sample]
+        masked_percentage = sample_data['masked_percentage'].dropna()
+        masked_percentage_dict[sample] = masked_percentage
+        sample_counts[sample] = len(masked_percentage)
+    
+    if has_combined:
+        # Combined data
+        masked_percentage_combined = data['masked_percentage'].dropna()
+        masked_percentage_dict['All Samples Combined'] = masked_percentage_combined
+        sample_counts['All Samples Combined'] = len(masked_percentage_combined)
+
+    # Restrict bins to be between 0 and 100%
+    x_range = [0, 102]
+
+    # Initialize figure
+    fig = go.Figure()
+    traceTrack = []
+    
+    # Add histogram traces for each sample
+    base_list = ', '.join(potentially_reactive_bases)
+    for sample in sample_list:
+        masked_percentage = masked_percentage_dict[sample]
+        hist_trace = go.Histogram(
+            x=masked_percentage,
+            marker_color='indianred',
+            hovertemplate="Percentage of Bases Masked: %{x}<br>Count: %{y}<extra></extra>",
+            xbins=dict(start=0, end=102, size=2),
+            visible=False  # Initially set to False
+        )
+        fig.add_trace(hist_trace)
+        traceTrack.append(sample)
+    
+    # Determine the default view
+    if has_combined:
+        default_sample = 'All Samples Combined'
+    else:
+        default_sample = sample_list[0]
+    
+    # Set the default trace to be visible
+    for i, sample in enumerate(sample_list):
+        if sample == default_sample:
+            fig.data[i].visible = True
+            break
+    
+    # Create dropdown menu
+    buttons = []
+    for idx, sample in enumerate(sample_list):
+        visibility = [traceSample == sample for traceSample in traceTrack]
+        count = sample_counts.get(sample, 0)
+        button = dict(
+            label=f"{sample} ({count} rows)",
+            method='update',
+            args=[
+                {'visible': visibility},
+                {
+                    'title': f"Masked Percentage Histogram - {sample} ({count} rows)",
+                    'xaxis': {'title': f"Percentage of {base_list} Masked", 'range': x_range},
+                    'yaxis': {'title': "Count"}
+                }
+            ]
+        )
+        buttons.append(button)
+    
+    # Update layout with dropdown menu
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                active=sample_list.index(default_sample),  # Set default active sample
+                buttons=buttons,
+                x=0.5,
+                y=-0.15,
+                xanchor='center',
+                yanchor='top',
+                direction='up'
+            )
+        ],
+        title=f"Masked Percentage Histogram - {default_sample} ({sample_counts[default_sample]} rows)",  # Set initial title
+        xaxis=dict(title=f"Percentage of {base_list} Masked", range=x_range),
+        yaxis=dict(title="Count"),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    # Update axes
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=False,
+    )
+    
+    return {
+        'fig': fig,
+        'data': data
+    }
+
+def auroc_histogram(data: pd.DataFrame) -> dict:
+    """
+    Compute AUROC scores for each row and plot a histogram of the AUROC scores.
+
+    Args:
+        data (pd.DataFrame): DataFrame containing 'structure' and 'sub_rate' columns.
+
+    Returns:
+        dict: {'fig': a Plotly figure, 'data': DataFrame with 'auroc' column added}
+    """
+    # Function to compute AUROC for a single row
+    def compute_auroc(structure, sub_rate):
+        # Convert structure to paired/unpaired status
+        structure_array = np.array([0 if c in '()' else 1 for c in structure])
+        # Convert sub_rate to numpy array
+        sub_rate = np.array(sub_rate, dtype=np.float64)
+        # Check lengths
+        if len(structure_array) != len(sub_rate):
+            raise ValueError("Length of structure and sub_rate must be the same.")
+        # Remove NaNs
+        valid_positions = ~np.isnan(sub_rate)
+        sub_rate = sub_rate[valid_positions]
+        print(f"{sub_rate=}")
+        structure_array = structure_array[valid_positions]
+        print(f"{structure_array=}")
+        # Need at least two classes
+        unique_classes = np.unique(structure_array)
+        if len(unique_classes) < 2:
+            return np.nan
+        # Compute AUROC
+        try:
+            auroc = roc_auc_score(structure_array, sub_rate)
+            return auroc
+        except ValueError:
+            return np.nan
+
+    # Apply to each row
+    data = data.copy()
+    data['auroc'] = data.apply(lambda row: compute_auroc(row['structure'], row['sub_rate']), axis=1)
+
+    # Drop NaN AUROC scores
+    auroc_values = data['auroc'].dropna()
+
+    # Plot histogram
+    fig = go.Figure()
+
+    if len(auroc_values) == 0:
+        print("No valid AUROC scores to plot.")
+    else:
+        fig.add_trace(go.Histogram(
+            x=auroc_values,
+            xbins=dict(start=0.0, end=1.01, size=0.0505),
+            marker_color='indianred',
+            opacity=0.75,
+            hovertemplate='AUROC Score: %{x:.2f}<br>Count: %{y}<extra></extra>'
+        ))
+
+        fig.update_layout(
+            title='Histogram of AUROC Scores',
+            xaxis_title='AUROC Score',
+            yaxis_title='Count',
+            bargap=0.2,
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+        )
+
+        fig.update_yaxes(
+            gridcolor='lightgray',
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+        )
+        fig.update_xaxes(
+            range=[0.0, 1.0],
+            dtick=0.1,
+            linewidth=1,
+            linecolor='black',
+            mirror=True,
+            autorange=False,
+        )
+
+    return {'fig': fig, 'data': data}

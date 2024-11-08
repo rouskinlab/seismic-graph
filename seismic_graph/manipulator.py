@@ -31,7 +31,7 @@ def __index_selected(row, base_index, base_type, base_pairing, RNAstructure_use_
     return index
 
 
-def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=0, base_index=None, base_type=['A','C','G','T'], base_pairing=None, 
+def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=0, min_aligned_reads=0, base_index=None, base_type=['A','C','G','T'], base_pairing=None, 
            RNAstructure_use_DMS=False, RNAstructure_use_temp=False, unique_id=False, index_selected=False, **kwargs)->pd.DataFrame:
     """Get a dataframe with filtered data
 
@@ -42,6 +42,7 @@ def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=
         section (list, int, str, optional): Filter rows by section (list of sections or just a section). Defaults to None.
         cluster (list, int, str, optional): Filter rows by cluster (list of clusters or just a cluster). Defaults to None.
         min_cov (int, optional): Filter rows by a minimum threshold for base coverage. Defaults to 0.
+        min_aligned_reads (int, optional): Filter rows by minimum number of aligned reads. Defaults to 0.
         base_index (list, int, str, optional): Filter per-base attributes (sub_rate, sequence, etc) by base index, using 1-indexing. Can be a unique sequence in the row's sequence, a list of indexes or a single index. Gives a  Defaults to None.
         base_type (list, str, optional): Filter per-base attributes (sub_rate, sequence, etc) by base type. Defaults to ['A','C','G','T'].
         base_pairing (bool, optional): Filter per-base attributes (sub_rate, sequence, etc) by expected base pairing. See RNAstructure_use_XXX arguments. Defaults to None.
@@ -74,6 +75,8 @@ def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=
     # filter mutation profiles
     if df['min_cov'].min() < min_cov:
         df = df.loc[df.min_cov >= min_cov,:]
+    if 'num_aligned' in df.columns and min_aligned_reads > 0:
+        df = df.loc[df['num_aligned'] >= min_aligned_reads, :]
     for key, value in kwargs.items():
         locals()[key] = value
     mp_attr = ['sample', 'reference', 'section', 'cluster'] + list(kwargs.keys())
