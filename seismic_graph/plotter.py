@@ -835,8 +835,8 @@ def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, norm
     csv_output.seek(0)
     csv_data = csv_output.getvalue()
 
-    print(f"CSV Data:\n")
-    print(csv_data)
+    # print(f"CSV Data:\n")
+    # print(csv_data)
 
     # plot
     fig = go.Figure()
@@ -1093,90 +1093,20 @@ def percent_masked_histogram(data):
         'data': data
     }
 
-# def f1_violin_by_family(data):
-#     """Generate a violin plot for each family showing the distribution of F1 scores.
-
-#     Args:
-#         data (pd.DataFrame): DataFrame containing 'family' and 'F1' columns.
-
-#     Returns:
-#         dict: {'fig': a Plotly figure, 'data': data}
-#     """
-#     # Check required columns
-#     if 'family' not in data.columns or 'F1' not in data.columns:
-#         raise ValueError("Data must contain 'family' and 'F1' columns.")
-    
-#     # Drop rows with missing values in 'family' or 'F1'
-#     data = data.dropna(subset=['family', 'F1'])
-
-#     # Get unique families
-#     families = data['family'].unique()
-
-#     # Initialize figure
-#     fig = go.Figure()
-
-#     # Add a violin trace for each family
-#     for family in families:
-#         family_data = data[data['family'] == family]['F1']
-#         fig.add_trace(
-#             go.Violin(
-#                 y=family_data,
-#                 name=family,
-#                 box_visible=True,
-#                 meanline_visible=False,
-#                 line_color='black',
-#                 fillcolor='#1f77b4',
-#                 opacity=0.7,
-#                 marker=dict(color='#1f77b4')
-#             )
-#         )
-
-#     # Update layout
-#     fig.update_layout(
-#         title="Distribution of F1 Scores by Family",
-#         yaxis=dict(title="F1 Score"),
-#         xaxis=dict(title="Family"),
-#         plot_bgcolor='white',
-#         paper_bgcolor='white'
-#     )
-
-#     fig.update_yaxes(
-#         gridcolor='lightgray',
-#         linewidth=1,
-#         linecolor='black',
-#         mirror=True,
-#         range=[0,1]
-#     )
-#     fig.update_xaxes(
-#         linewidth=1,
-#         linecolor='black',
-#         mirror=True,
-#         tickangle=45,
-#         tickmode='array',
-#         tickvals=[family for family in families],
-#         ticktext=[family for family in families]
-#     )
-
-#     return {
-#         'fig': fig,
-#         'data': data
-#     }
-
-
-
-def f1_violin_by_family(data):
+def f1_violin_by_category(data):
     """
     Generate a split violin plot for each family showing the distribution of F1 scores
-    with DMS and without DMS.
+    with DMS and without DMS. Includes median lines, counts in x-axis labels, and violin outlines.
 
     Args:
-        data (pd.DataFrame): DataFrame containing 'family', 'F1_with_DMS', and 'F1_no_dms' columns.
+        data (pd.DataFrame): DataFrame containing 'family', 'F1', and 'F1_no_dms' columns.
 
     Returns:
         dict: {'fig': a Plotly figure, 'data': data}
     """
-    f1_w_DMS_col = 'F1'
-    f1_no_DMS_col = 'F1_no_dms'
+    f1_w_DMS_col = 'F1'  # Column for F1 scores with DMS
+    f1_no_DMS_col = 'F1_no_dms'  # Column for F1 scores without DMS
+
     # Check required columns
     required_columns = ['family', f1_w_DMS_col, f1_no_DMS_col]
     for col in required_columns:
@@ -1189,30 +1119,40 @@ def f1_violin_by_family(data):
     # Get unique families
     families = sorted(data['family'].unique())
 
+    # Compute counts per family
+    family_counts = data['family'].value_counts().to_dict()
+
+    # Build a mapping from family to label with counts
+    family_label_dict = {family: f"{family} ({family_counts[family]})" for family in families}
+
     # Initialize figure
     fig = go.Figure()
 
     # Add a split violin trace for each family
     for family in families:
         family_data = data[data['family'] == family]
+        family_label = family_label_dict[family]
 
         # F1 with DMS (left half)
         fig.add_trace(
             go.Violin(
                 y=family_data[f1_w_DMS_col],
-                x=[family] * len(family_data),
+                x=[family_label] * len(family_data),
                 name='F1 with DMS',
                 side='negative',
                 legendgroup='F1 with DMS',
                 scalegroup=family,
                 meanline_visible=True,
+                # box_visible=True,
+                # box=dict(visible=True, line=dict(color='black', width=2)),
                 showlegend=(family == families[0]),
                 line_color='blue',
                 fillcolor='blue',
                 opacity=0.6,
                 spanmode='hard',
                 width=0.6,
-                points=False
+                points=False,
+                line_width=1  # Add outline
             )
         )
 
@@ -1220,19 +1160,22 @@ def f1_violin_by_family(data):
         fig.add_trace(
             go.Violin(
                 y=family_data[f1_no_DMS_col],
-                x=[family] * len(family_data),
+                x=[family_label] * len(family_data),
                 name='F1 without DMS',
                 side='positive',
                 legendgroup='F1 without DMS',
                 scalegroup=family,
                 meanline_visible=True,
+                # box_visible=True,
+                # box=dict(visible=True, line=dict(color='black', width=2)),
                 showlegend=(family == families[0]),
                 line_color='red',
                 fillcolor='red',
                 opacity=0.6,
                 spanmode='hard',
                 width=0.6,
-                points=False
+                points=False,
+                line_width=1  # Add outline
             )
         )
 

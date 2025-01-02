@@ -444,18 +444,18 @@ class Study(object):
             plotter.percent_masked_histogram, locals(), kwargs
         )
     
-    # @plot_info("f1_violin_by_family", "F1 Violin Plot by Family")
+    # @plot_info("f1_violin_by_category", "F1 Violin Plot by Category")
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
-    def f1_violin_by_family(self, **kwargs) -> dict:
+    def f1_violin_by_category(self, **kwargs) -> dict:
         """Generate a violin plot for each family showing the distribution of F1 scores.
 
         Returns:
             dict: {'fig': a Plotly figure, 'data': a pandas dataframe}
         """
         return self.wrap_to_plotter(
-            plotter.f1_violin_by_family, locals(), kwargs
+            plotter.f1_violin_by_category, locals(), kwargs
         )
 
 
