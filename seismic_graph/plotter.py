@@ -1093,103 +1093,218 @@ def percent_masked_histogram(data):
         'data': data
     }
 
-def f1_violin_by_category(data):
+def f1_violin_by_category(data, category="family"):
     """
-    Generate a split violin plot for each family showing the distribution of F1 scores
-    with DMS and without DMS. Includes median lines, counts in x-axis labels, and violin outlines.
+    Generate violin plots grouped by the specified category (default: 'family') showing
+    the distribution of F1 scores. If 'F1_no_dms' is present, a split violin
+    comparison is shown (F1 with DMS vs F1 without DMS). Otherwise, a single
+    violin plot is created for F1.
 
     Args:
-        data (pd.DataFrame): DataFrame containing 'family', 'F1', and 'F1_no_dms' columns.
+        data (pd.DataFrame): DataFrame with the following columns:
+            - category (e.g., 'family'): used to group data on the x-axis
+            - 'F1': F1 scores (required)
+            - 'F1_no_dms': optional column with F1 scores without DMS
+        category (str, optional): Column name to group the data on the x-axis.
+                                  Defaults to 'family'.
 
     Returns:
-        dict: {'fig': a Plotly figure, 'data': data}
+        dict: {
+            'fig': Plotly Figure object,
+            'data': DataFrame used for plotting (possibly filtered of NaNs)
+        }
     """
-    f1_w_DMS_col = 'F1'  # Column for F1 scores with DMS
-    f1_no_DMS_col = 'F1_no_dms'  # Column for F1 scores without DMS
-
-    # Check required columns
-    required_columns = ['family', f1_w_DMS_col, f1_no_DMS_col]
+    # Required columns: 'category' and 'F1'. 'F1_no_dms' is optional.
+    required_columns = [category, 'F1']
     for col in required_columns:
         if col not in data.columns:
             raise ValueError(f"Data must contain '{col}' column.")
     
-    # Drop rows with missing values in required columns
-    data = data.dropna(subset=required_columns)
+    has_f1_no_dms = 'F1_no_dms' in data.columns
 
-    # Get unique families
-    families = sorted(data['family'].unique())
+    # Build final list of columns to check for NaN dropping
+    columns_to_check = required_columns.copy()
+    if has_f1_no_dms:
+        columns_to_check.append('F1_no_dms')
 
-    # Compute counts per family
-    family_counts = data['family'].value_counts().to_dict()
+    # Drop rows with missing values in the needed columns
+    data = data.dropna(subset=columns_to_check)
 
-    # Build a mapping from family to label with counts
-    family_label_dict = {family: f"{family} ({family_counts[family]})" for family in families}
+    # Extract sorted unique categories
+    categories = sorted(data[category].unique())
 
-    # Initialize figure
+    # Compute counts per category
+    category_counts = data[category].value_counts().to_dict()
+
+    # Build label dictionary: category value -> "category_value (count)"
+    category_label_dict = {
+        cat: f"{cat} ({category_counts[cat]})"
+        for cat in categories
+    }
+
+    # Initialize the figure
     fig = go.Figure()
 
-    # Add a split violin trace for each family
-    for family in families:
-        family_data = data[data['family'] == family]
-        family_label = family_label_dict[family]
+    # Add one or two violin traces per category
+    for idx, cat_val in enumerate(categories):
+        cat_data = data[data[category] == cat_val]
+        cat_label = category_label_dict[cat_val]
 
-        # F1 with DMS (left half)
+        # Always add F1 (with DMS) on the left side
         fig.add_trace(
             go.Violin(
-                y=family_data[f1_w_DMS_col],
-                x=[family_label] * len(family_data),
+                y=cat_data['F1'],
+                x=[cat_label] * len(cat_data),
                 name='F1 with DMS',
-                side='negative',
+                side='negative',  # left half of the violin
                 legendgroup='F1 with DMS',
-                scalegroup=family,
+                scalegroup=cat_val,
                 meanline_visible=True,
-                # box_visible=True,
-                # box=dict(visible=True, line=dict(color='black', width=2)),
-                showlegend=(family == families[0]),
+                showlegend=(idx == 0),  # show legend once
                 line_color='blue',
                 fillcolor='blue',
                 opacity=0.6,
                 spanmode='hard',
                 width=0.6,
                 points=False,
-                line_width=1  # Add outline
+                line_width=1
             )
         )
 
-        # F1 without DMS (right half)
-        fig.add_trace(
-            go.Violin(
-                y=family_data[f1_no_DMS_col],
-                x=[family_label] * len(family_data),
-                name='F1 without DMS',
-                side='positive',
-                legendgroup='F1 without DMS',
-                scalegroup=family,
-                meanline_visible=True,
-                # box_visible=True,
-                # box=dict(visible=True, line=dict(color='black', width=2)),
-                showlegend=(family == families[0]),
-                line_color='red',
-                fillcolor='red',
-                opacity=0.6,
-                spanmode='hard',
-                width=0.6,
-                points=False,
-                line_width=1  # Add outline
+        # If 'F1_no_dms' is present, add the right side
+        if has_f1_no_dms:
+            fig.add_trace(
+                go.Violin(
+                    y=cat_data['F1_no_dms'],
+                    x=[cat_label] * len(cat_data),
+                    name='F1 without DMS',
+                    side='positive',  # right half of the violin
+                    legendgroup='F1 without DMS',
+                    scalegroup=cat_val,
+                    meanline_visible=True,
+                    showlegend=(idx == 0),  # show legend once
+                    line_color='red',
+                    fillcolor='red',
+                    opacity=0.6,
+                    spanmode='hard',
+                    width=0.6,
+                    points=False,
+                    line_width=1
+                )
             )
-        )
 
-    # Update layout
+    # Update the layout
+    title_suffix = " (with and without DMS)" if has_f1_no_dms else " (with DMS)"
     fig.update_layout(
-        title="Distribution of F1 Scores by Family",
+        title=f"Distribution of F1 Scores by {category}{title_suffix}",
         yaxis=dict(title="F1 Score", range=[0, 1]),
-        xaxis=dict(title="Family"),
+        xaxis=dict(title=category.capitalize()),
         violingap=0,
         violingroupgap=0,
         violinmode='overlay',
         plot_bgcolor='white',
         paper_bgcolor='white',
         legend=dict(title='F1 Score Type'),
+        width=800,
+        height=600
+    )
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        tickangle=45
+    )
+
+    return {
+        'fig': fig,
+        'data': data
+    }
+
+
+def f1_violin_by_category_symmetrical(data, category="family"):
+    """
+    Generate symmetrical violin plots grouped by the specified category (default: 'family'),
+    showing the distribution of F1 scores.
+
+    Args:
+        data (pd.DataFrame): DataFrame with the following columns:
+            - category (e.g., 'family'): used to group data on the x-axis
+            - 'F1': F1 scores (required)
+        category (str, optional): Column name to group the data on the x-axis.
+                                  Defaults to 'family'.
+
+    Returns:
+        dict: {
+            'fig': Plotly Figure object,
+            'data': DataFrame used for plotting (filtered of NaNs)
+        }
+    """
+    # Required columns: 'category' and 'F1'
+    required_columns = [category, 'F1']
+    for col in required_columns:
+        if col not in data.columns:
+            raise ValueError(f"Data must contain '{col}' column.")
+
+    # Drop rows with missing values in required columns
+    data = data.dropna(subset=required_columns)
+
+    # Extract sorted unique categories
+    categories = sorted(data[category].unique())
+
+    # Compute counts per category
+    category_counts = data[category].value_counts().to_dict()
+
+    # Build label dictionary: category value -> "category_value (count)"
+    category_label_dict = {
+        cat: f"{cat} ({category_counts[cat]})"
+        for cat in categories
+    }
+
+    # Initialize the figure
+    fig = go.Figure()
+
+    # Add symmetrical violin traces for each category
+    for cat_val in categories:
+        cat_data = data[data[category] == cat_val]
+        cat_label = category_label_dict[cat_val]
+
+        # Add F1 violin
+        fig.add_trace(
+            go.Violin(
+                y=cat_data['F1'],
+                x=[cat_label] * len(cat_data),
+                name=f"F1 ({cat_label})",
+                legendgroup='F1',
+                scalegroup=cat_val,
+                meanline_visible=True,
+                showlegend=False,  # Legend not needed for each category
+                line_color='blue',
+                fillcolor='blue',
+                opacity=0.6,
+                spanmode='hard',
+                width=0.8,
+                points=False,
+                line_width=1
+            )
+        )
+
+    # Update the layout
+    fig.update_layout(
+        title=f"Distribution of F1 Scores by {category.capitalize()}",
+        yaxis=dict(title="F1 Score", range=[0, 1]),
+        xaxis=dict(title=category.capitalize()),
+        violingap=0,
+        violingroupgap=0,
+        violinmode='overlay',
+        plot_bgcolor='white',
+        paper_bgcolor='white',
         width=800,
         height=600
     )

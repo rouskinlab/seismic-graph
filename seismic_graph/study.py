@@ -449,13 +449,45 @@ class Study(object):
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
     def f1_violin_by_category(self, **kwargs) -> dict:
-        """Generate a violin plot for each family showing the distribution of F1 scores.
+        """
+        Generate violin plots grouped by the specified category (default: 'family').
+        If 'F1_no_dms' exists in the DataFrame, the violin plot is split to
+        compare 'F1' (with DMS) vs 'F1_no_dms' (without DMS). Otherwise, a
+        single violin is displayed for 'F1'.
+
+        Args:
+            category (str, optional): Column name used to group by. Defaults to 'family'.
 
         Returns:
-            dict: {'fig': a Plotly figure, 'data': a pandas dataframe}
+            dict: {
+                'fig': Plotly Figure,
+                'data': DataFrame filtered of NaNs, possibly containing 'F1_no_dms' if present
+            }
         """
         return self.wrap_to_plotter(
             plotter.f1_violin_by_category, locals(), kwargs
+        )
+    
+
+    # @plot_info("f1_violin_by_category_symmetrical", "F1 Violin Plot by Category, Symmetrical")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def f1_violin_by_category_symmetrical(self, **kwargs) -> dict:
+        """
+        Generate symmetrical violin plots grouped by the specified category (default: 'family').
+
+        Args:
+            category (str, optional): Column name used to group by. Defaults to 'family'.
+
+        Returns:
+            dict: {
+                'fig': Plotly Figure,
+                'data': DataFrame filtered of NaNs
+            }
+        """
+        return self.wrap_to_plotter(
+            plotter.f1_violin_by_category_symmetrical, locals(), kwargs
         )
 
 
