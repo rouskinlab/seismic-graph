@@ -669,3 +669,21 @@ class Study(object):
         return self.wrap_to_plotter(
             plotter.auroc_histogram, locals(), kwargs
         )
+    
+    # @plot_info("refs_per_category", "Number of References per Category")
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def refs_per_category(self, category="sample", **kwargs) -> dict:
+        """
+        Generate a bar plot showing the number of references per category.
+
+        Args:
+            category (str): The column name to group by. Default is "sample".
+
+        Returns:
+            dict: {'fig': a Plotly figure, 'data': the DataFrame used for plotting}
+        """
+        return self.wrap_to_plotter(
+            plotter.refs_per_category, locals(), kwargs
+        )

@@ -2061,3 +2061,60 @@ def auroc_histogram(data: pd.DataFrame) -> dict:
         )
 
     return {'fig': fig, 'data': data}
+
+def refs_per_category(data: pd.DataFrame, category: str="sample") -> dict:
+    """
+    Generate a bar plot showing the number of references per category.
+
+    Args:
+        data (pd.DataFrame): The DataFrame containing the data.
+        category (str): The column name to group by. Default is "sample".
+
+    Returns:
+        dict: {'fig': a Plotly figure, 'data': the DataFrame used for plotting}
+    """
+
+    if category not in data.columns:
+        raise ValueError(f"The column '{category}' does not exist in the DataFrame.")
+    
+    counts = data[category].value_counts().reset_index()
+    counts.columns = [category, 'count']
+
+    counts = counts.sort_values(by="count", ascending=True)
+
+    fig = go.Figure(
+        go.Bar(
+            x=counts[category],
+            y=counts['count'],
+            orientation='v',
+            marker=dict(color='blue'),
+            hovertemplate=f"Category: %{category}<br>Count: %{{x}}<extra></extra>"
+        )
+    )
+
+    fig.update_layout(
+        title=f"Number of References per {category.capitalize()}",
+        xaxis_title=category.capitalize(),
+        yaxis_title="Number of References",
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True
+    )
+    fig.update_xaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        # autorange="reversed"  # Ensures the smallest category is at the top
+    )
+
+    return {
+        'fig': fig,
+        'data': counts
+    }
