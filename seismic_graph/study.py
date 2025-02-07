@@ -11,6 +11,7 @@ import inspect
 import json
 import tqdm
 from .util.normalization import LinFitTable
+from sklearn.metrics import roc_auc_score
 
 class Study(object):
     """A class to store information about a study, i.e a set of samples that are relevant to be studied together.
@@ -656,16 +657,58 @@ class Study(object):
             plotter.percent_masked_histogram, locals(), kwargs
         )
     
+
+    def ensure_auroc_column(self):
+        """
+        If the 'auroc' column does not exist in self.df, compute it for every row
+        in the entire DataFrame. Modify self.df in place.
+        """
+        if 'auroc' not in self.df.columns:
+            
+            def compute_auroc(structure, sub_rate):
+                # Convert structure to paired/unpaired status
+                structure_array = np.array([0 if c in '()' else 1 for c in structure])
+                # Convert sub_rate to numpy array
+                sub_rate = np.array(sub_rate, dtype=np.float64)
+                # Check lengths
+                if len(structure_array) != len(sub_rate):
+                    return np.nan
+                # Remove NaNs
+                valid_positions = ~np.isnan(sub_rate)
+                sub_rate = sub_rate[valid_positions]
+                structure_array = structure_array[valid_positions]
+                # Need at least two classes
+                unique_classes = np.unique(structure_array)
+                if len(unique_classes) < 2:
+                    return np.nan
+                # Compute AUROC
+                try:
+                    return roc_auc_score(structure_array, sub_rate)
+                except ValueError:
+                    return np.nan
+
+            # Compute and add the 'auroc' column in-place
+            self.df['auroc'] = self.df.apply(
+                lambda row: compute_auroc(row['structure'], row['sub_rate']),
+                axis=1
+            )
+
     @plot_info("auroc_histogram", "AUROC Histogram")
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
     def auroc_histogram(self, **kwargs):
-        """Compute AUROC scores for each row and plot a histogram of the AUROC scores.
+        """
+        Create a histogram of AUROC scores.
+
+        - Ensures the 'auroc' column is present on the entire self.df
+        - Then uses wrap_to_plotter, which filters the DataFrame, and calls plotter.auroc_histogram
 
         Returns:
             dict: {'fig': a Plotly figure, 'data': DataFrame with 'auroc' column added}
         """
+        self.ensure_auroc_column()
+
         return self.wrap_to_plotter(
             plotter.auroc_histogram, locals(), kwargs
         )

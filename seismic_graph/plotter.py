@@ -1989,40 +1989,9 @@ def auroc_histogram(data: pd.DataFrame) -> dict:
     Returns:
         dict: {'fig': a Plotly figure, 'data': DataFrame with 'auroc' column added}
     """
-    # Function to compute AUROC for a single row
-    def compute_auroc(structure, sub_rate):
-        # Convert structure to paired/unpaired status
-        structure_array = np.array([0 if c in '()' else 1 for c in structure])
-        # Convert sub_rate to numpy array
-        sub_rate = np.array(sub_rate, dtype=np.float64)
-        # Check lengths
-        if len(structure_array) != len(sub_rate):
-            raise ValueError("Length of structure and sub_rate must be the same.")
-        # Remove NaNs
-        valid_positions = ~np.isnan(sub_rate)
-        sub_rate = sub_rate[valid_positions]
-        print(f"{sub_rate=}")
-        structure_array = structure_array[valid_positions]
-        print(f"{structure_array=}")
-        # Need at least two classes
-        unique_classes = np.unique(structure_array)
-        if len(unique_classes) < 2:
-            return np.nan
-        # Compute AUROC
-        try:
-            auroc = roc_auc_score(structure_array, sub_rate)
-            return auroc
-        except ValueError:
-            return np.nan
-
-    # Apply to each row
-    data = data.copy()
-    data['auroc'] = data.apply(lambda row: compute_auroc(row['structure'], row['sub_rate']), axis=1)
 
     # Drop NaN AUROC scores
     auroc_values = data['auroc'].dropna()
-
-    # Plot histogram
     fig = go.Figure()
 
     if len(auroc_values) == 0:
@@ -2062,7 +2031,7 @@ def auroc_histogram(data: pd.DataFrame) -> dict:
 
     return {'fig': fig, 'data': data}
 
-def refs_per_category(data: pd.DataFrame, category: str="sample") -> dict:
+def refs_per_category(data: pd.DataFrame, category: str = "sample") -> dict:
     """
     Generate a bar plot showing the number of references per category.
 
@@ -2075,20 +2044,19 @@ def refs_per_category(data: pd.DataFrame, category: str="sample") -> dict:
     """
 
     if category not in data.columns:
-        raise ValueError(f"The column '{category}' does not exist in the DataFrame.")
+        raise ValueError(f"The category '{category}' does not exist in the DataFrame.")
     
     counts = data[category].value_counts().reset_index()
     counts.columns = [category, 'count']
 
-    counts = counts.sort_values(by="count", ascending=True)
+    counts = counts.sort_values(by='count', ascending=True)
 
     fig = go.Figure(
         go.Bar(
             x=counts[category],
             y=counts['count'],
-            orientation='v',
             marker=dict(color='blue'),
-            hovertemplate=f"Category: %{category}<br>Count: %{{x}}<extra></extra>"
+            hovertemplate=f"Category: %{counts[category]}<br>Count: %{counts['count']}<extra></extra>"
         )
     )
 
@@ -2100,18 +2068,17 @@ def refs_per_category(data: pd.DataFrame, category: str="sample") -> dict:
         paper_bgcolor='white'
     )
 
-    fig.update_yaxes(
+    fig.update_xaxes(
         gridcolor='lightgray',
         linewidth=1,
         linecolor='black',
         mirror=True
     )
-    fig.update_xaxes(
+    fig.update_yaxes(
         gridcolor='lightgray',
         linewidth=1,
         linecolor='black',
-        mirror=True,
-        # autorange="reversed"  # Ensures the smallest category is at the top
+        mirror=True
     )
 
     return {
