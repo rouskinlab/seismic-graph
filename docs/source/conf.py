@@ -25,12 +25,12 @@ MOCK_MODULES = ['yaml']
 
 # -- Project information -----------------------------------------------------
 
-project = 'seismic-graph'
-copyright = '2023, Rouskin Lab'
-author = 'Yves Martin des Taillades, Scott Grote, Matthew Allan, Alberic de Lajarte'
+project = 'Seismic Graph'
+copyright = '2025, Rouskin Lab'
+author = "Yves Martin des Taillades, Scott Grote, Matthew Allan, Alberic de Lajarte, Casper L'Esperance-Kerckhoff"
 
 # The full version, including alpha/beta/rc tags
-release = '28.02.2023'
+release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
 
