@@ -112,5 +112,5 @@ nitpick_ignore = [('py:class', 'type')]
 
 # Generate the plots for the gallery
 sys.path.append(os.path.abspath(""))
-from plots import gallery_generator
+from scripts import gallery_generator
 gallery_generator.main()

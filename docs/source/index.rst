@@ -1,21 +1,19 @@
 =========================================================================
-Welcome to seismic-graph's documentation! 
+Seismic Graph Documentation
 =========================================================================
 
-seismic-graph is a plotting library for SEISMIC output.
-
-.. include:: plots/get_started.rst
+`seismic-graph <https://pypi.org/project/seismic-graph/>`_ is a plotting library for SEISMIC output. It is available as a python package.
+`SEISMICgraph <https://seismicrna.org/>`_ is a webapp that enables researchers to access the functionality of seismic-graph through a website, no coding skills required.
 
 Table of Contents
 =================
 
-.. _plots:
-
 .. toctree::
-   :maxdepth: 3
-   :caption: Plots
+   :maxdepth: 2
+   :caption: Contents
 
-   plots/get_started.rst
-   plots/gallery.rst
-   plots/create_a_plot.rst
-   plots/formats.rst
+   pages/overview.rst
+   pages/seismic_graph_webapp.rst
+   pages/seismic_graph_package.rst
+   pages/gallery.rst
+   pages/input_formats.rst
