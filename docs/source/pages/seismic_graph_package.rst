@@ -1,9 +1,9 @@
-===================================
+===========================================
 seismic-graph: Python Package Documentation
-===================================
+===========================================
 
 Install seismic-graph 
--------------------
+---------------------
 
 Install seismic-graph with pip. **Use Python >= 3.10**
 
@@ -54,12 +54,12 @@ Make a plot
 
 
 .. raw:: html
-    :file: plots_figs/mutation_fraction.html
+    :file: ../plots/mutation_fraction.html
 
 
 .. note::
 
-    We regularly update the list of available plots. Make sure that you have the last version of seismic-graph.
+    We regularly update the list of available plots. Make sure that you have the latest version of seismic-graph.
 
 
 Outlier filtering
