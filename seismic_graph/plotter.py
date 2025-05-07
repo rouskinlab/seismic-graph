@@ -91,6 +91,7 @@ def mutation_fraction(df, show_ci:bool=False)->dict:
     
     # make the background white 
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
+    fig.update_traces(marker_line_width=0)
 
     return {'fig':fig, 'df':mh}
 
@@ -148,7 +149,7 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
 
     fig.update_layout(barmode='stack')
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
-
+    fig.update_traces(marker_line_width=0)
     return {'fig':fig, 'df':df}
 
     
@@ -300,7 +301,7 @@ def mutation_fraction_delta(df, table:LinFitTable, normalize=False, savefile=Non
             autorange=True
     )
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
-
+    fig.update_traces(marker_line_width=0)
     return {'fig':fig, 'df':mh}
 
                
@@ -343,6 +344,7 @@ def mutations_per_read_per_sample(data):
     fig.update_layout(autosize=True, height=len(unique_samples)*500, 
                       title='Number of mutation per read across samples', 
                       plot_bgcolor='white',paper_bgcolor='white')
+    fig.update_traces(marker_line_width=0)
 
     return {
         'fig':fig,
@@ -505,7 +507,8 @@ def mutation_per_read_per_reference(data):
         autorange=True,
     )
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
-
+    fig.update_traces(marker_line_width=0)
+    
     return {
         'fig':fig,
         'data':data
@@ -545,7 +548,7 @@ def base_coverage(data):
         mirror=True,
         autorange=True,
     )
-    
+    fig.update_traces(marker_line_width=0)
     return {'fig':fig, 'data':data}
 
 
