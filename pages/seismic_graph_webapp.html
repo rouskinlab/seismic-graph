@@ -1,0 +1,189 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEISMICgraph: Web App Documentation &mdash; Seismic Graph 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="seismic-graph: Python Package Documentation" href="seismic_graph_package.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Seismic Graph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SEISMICgraph: Web App Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow-for-seismicgraph">Workflow for SEISMICgraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#seismicgraph-step-by-step-walkthrough">SEISMICgraph: Step by Step walkthrough</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#navigate-to-website">Navigate to Website</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#upload-dataset">Upload Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filter-dataset-using-data-selections">Filter Dataset using Data Selections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#make-plot-selections">Make Plot Selections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plot">Plot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seismic_graph_package.html">seismic-graph: Python Package Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_formats.html">Compatible Data Formats</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Seismic Graph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SEISMICgraph: Web App Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pages/seismic_graph_webapp.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="seismicgraph-web-app-documentation">
+<h1>SEISMICgraph: Web App Documentation<a class="headerlink" href="#seismicgraph-web-app-documentation" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://seismicrna.org/"><strong>SEISMICgraph</strong></a> is a webapp that enables researchers to utilize the seismic-graph Python package without learning the requisite coding skills.</p>
+<p>SEISMICgraph accepts mutational profile data from SEISMIC-RNA, ShapeMapper2, or RNA Framework, and generates plots and analysis of that data.</p>
+</section>
+<section id="workflow-for-seismicgraph">
+<h2>Workflow for SEISMICgraph<a class="headerlink" href="#workflow-for-seismicgraph" title="Link to this heading"></a></h2>
+<p>The workflow for SEISMICgraph is as follows:</p>
+<ol class="arabic simple">
+<li><p><strong>Upload a dataset</strong>, or use the sample dataset.</p></li>
+<li><p><strong>Make Data Selections</strong>:</p>
+<ul class="simple">
+<li><p>Filter the data by making selections for which parts of the dataset to use.</p></li>
+<li><p>As you filter the dataset, you will see that the number of <strong>Rows Selected</strong> updates with your adjustments. A row is an entry in the dataset, and it can be uniquely identified by its <strong>Sample</strong>, <strong>Reference</strong>, <strong>Section</strong>, and <strong>Cluster</strong>.</p></li>
+</ul>
+</li>
+<li><p><strong>Plot Selections</strong>:</p>
+<ul class="simple">
+<li><p>Choose what type of plot to generate from the pre-existing plot types.</p></li>
+<li><p>Some plots require a specific number of rows to be selected. For example, <strong>Mutation Fraction</strong> requires a single entry to be selected. To select a single row, choose values for <strong>Sample</strong>, <strong>Reference</strong>, <strong>Section</strong>, and <strong>Cluster</strong> to uniquely identify the row of interest.</p></li>
+<li><p>Some plots have options that are specific to them.</p></li>
+</ul>
+</li>
+<li><p><strong>Plot</strong>:</p>
+<ul class="simple">
+<li><p>The plot will generate. If the plot could not be generated, a message will be displayed indicating why it could not be generated.</p></li>
+</ul>
+</li>
+</ol>
+<p>Let’s go through these steps using the sample dataset as an example.</p>
+</section>
+<section id="seismicgraph-step-by-step-walkthrough">
+<h2>SEISMICgraph: Step by Step walkthrough<a class="headerlink" href="#seismicgraph-step-by-step-walkthrough" title="Link to this heading"></a></h2>
+<section id="navigate-to-website">
+<h3>Navigate to Website<a class="headerlink" href="#navigate-to-website" title="Link to this heading"></a></h3>
+<p>SEISMICgraph is located at <a class="reference external" href="https://seismicrna.org/">seismicrna.org</a>.</p>
+</section>
+<section id="upload-dataset">
+<h3>Upload Dataset<a class="headerlink" href="#upload-dataset" title="Link to this heading"></a></h3>
+<p>In this example, we will use the <strong>Sample Dataset</strong>. In the light blue panel, choose <strong>Use Sample Dataset</strong>. The sample dataset will be loaded into the app. This usually takes about 15 seconds.</p>
+<p>Once the dataset has been loaded, we will see a few changes to the interface: under <strong>Data Selections</strong> we now see <strong>Rows Selected: 1401</strong>, and <strong>Section</strong> and <strong>Cluster</strong> have both been populated with values:</p>
+<ul class="simple">
+<li><p><strong>Section:</strong> 20-151</p></li>
+<li><p><strong>Cluster:</strong> average</p></li>
+</ul>
+</section>
+<section id="filter-dataset-using-data-selections">
+<h3>Filter Dataset using Data Selections<a class="headerlink" href="#filter-dataset-using-data-selections" title="Link to this heading"></a></h3>
+<p>For the filters <strong>Sample</strong>, <strong>Reference</strong>, <strong>Section</strong>, and <strong>Cluster</strong>, if there is only one value for that filter given the other filters, then that value will be automatically selected. For example, this dataset does not have clustering. The only <strong>Cluster</strong> is <strong>average</strong>, indicating the population average mutation rate. Since every selected row has the same value for <strong>Cluster</strong>, that value is displayed as the selection for <strong>Cluster</strong>, to make it clear that all selected rows are using population average.</p>
+<p>For this example, we will generate a plot <strong>Mutation Fraction</strong>. <strong>Mutation Fraction</strong> displays the proportion of reads of a base that were mutations for every base in the reference sequence. It requires a single row to be selected, so we will use <strong>Sample</strong> and <strong>Reference</strong> to uniquely identify the row of interest.</p>
+<p>By selecting the <strong>Reference</strong> of interest and clicking outside of the dropdown menu, the selection is sent, and when the loading indicator goes away, the <strong>Rows Selected</strong> updates to reflect the new selection. Once a <strong>Sample</strong> and <strong>Reference</strong> are selected, we can see that the dataset has been filtered down to one row.</p>
+<p><strong>Note:</strong> Datasets with multiple <strong>Sections</strong> and/or <strong>Clusters</strong> will require selections for those filters as well to uniquely identify a single row.</p>
+</section>
+<section id="make-plot-selections">
+<h3>Make Plot Selections<a class="headerlink" href="#make-plot-selections" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Choose <strong>Mutation Fraction</strong>.</p></li>
+</ul>
+</section>
+<section id="plot">
+<h3>Plot<a class="headerlink" href="#plot" title="Link to this heading"></a></h3>
+<p>Click <strong>Plot</strong>. The plot will be generated in around 15 seconds. More computationally intensive plots like <strong>Number of Aligned Reads per Reference as a Frequency Distribution</strong> will take longer, especially on larger datasets.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="overview.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="seismic_graph_package.html" class="btn btn-neutral float-right" title="seismic-graph: Python Package Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rouskin Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

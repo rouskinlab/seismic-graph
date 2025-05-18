@@ -1,0 +1,155 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seismic Graph Documentation &mdash; Seismic Graph 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="pages/overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Seismic Graph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="pages/seismic_graph_webapp.html">SEISMICgraph: Web App Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/seismic_graph_package.html">seismic-graph: Python Package Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/gallery.html">Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/input_formats.html">Compatible Data Formats</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Seismic Graph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Seismic Graph Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="seismic-graph-documentation">
+<h1>Seismic Graph Documentation<a class="headerlink" href="#seismic-graph-documentation" title="Link to this heading"></a></h1>
+<p><a class="reference external" href="https://pypi.org/project/seismic-graph/"><strong>seismic-graph</strong></a> is a python package that generates plots and analysis from mutational profile data. seismic-graph is built to work with DMS-MaPseq data processed by <a class="reference external" href="https://pypi.org/project/seismic-rna/"><strong>SEISMIC-RNA</strong></a>. seismic-graph also has a built in converter that can read mutational data processed by ShapeMapper2 or RNA Framework.</p>
+<p>We recognize that many users may not have the requisite python skills to use a python package, and for them we have built <a class="reference external" href="https://seismicrna.org/"><strong>SEISMICgraph</strong></a>, a webapp that allows users to take advantage of the features of seismic-graph without writing any code.</p>
+<p>This documentation covers both <strong>seismic-graph</strong> the python package, and <strong>SEISMICgraph</strong> the webapp.</p>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pages/seismic_graph_webapp.html">SEISMICgraph: Web App Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_webapp.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_webapp.html#workflow-for-seismicgraph">Workflow for SEISMICgraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_webapp.html#seismicgraph-step-by-step-walkthrough">SEISMICgraph: Step by Step walkthrough</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pages/seismic_graph_package.html">seismic-graph: Python Package Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_package.html#install-seismic-graph">Install seismic-graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_package.html#import-your-data-into-a-study-object">Import your data into a study object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_package.html#make-a-plot">Make a plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_package.html#outlier-filtering">Outlier filtering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/seismic_graph_package.html#normalize">Normalize</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pages/gallery.html">Gallery</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#base-coverage">Base coverage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#compare-mutation-profiles">Compare mutation profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#correlation-by-refs-between-samples">Correlation by refs between samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#experimental-variable-across-samples">Experimental variable across samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#mutation-fraction">Mutation fraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#mutation-fraction-delta">Mutation fraction delta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#mutation-fraction-identity">Mutation fraction identity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#mutation-per-read-per-reference">Mutation per read per reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#mutations-per-read-per-sample">Mutations per read per sample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/gallery.html#num-aligned-reads-per-reference-frequency-distribution">Num aligned reads per reference frequency distribution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pages/input_formats.html">Compatible Data Formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pages/input_formats.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/input_formats.html#seismic-rna-webapp-json">SEISMIC-RNA webapp json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/input_formats.html#rnaframework">RNAFramework</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pages/input_formats.html#shapemapper2">ShapeMapper2</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pages/overview.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rouskin Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

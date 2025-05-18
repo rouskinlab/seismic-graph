@@ -1,0 +1,134 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compatible Data Formats &mdash; Seismic Graph 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Gallery" href="gallery.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Seismic Graph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="seismic_graph_webapp.html">SEISMICgraph: Web App Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="seismic_graph_package.html">seismic-graph: Python Package Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Compatible Data Formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#seismic-rna-webapp-json">SEISMIC-RNA webapp json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rnaframework">RNAFramework</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shapemapper2">ShapeMapper2</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Seismic Graph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Compatible Data Formats</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pages/input_formats.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="compatible-data-formats">
+<h1>Compatible Data Formats<a class="headerlink" href="#compatible-data-formats" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>seismic-graph works natively with DMS-MaPseq data processed by SEISMIC-RNA. When SEISMIC-RNA is run with with the <code class="code docutils literal notranslate"><span class="pre">--export</span></code> flag, it generates a json file, named &lt;your-sample-name&gt;__webapp.json. This file contains all of the information that seismic-graph needs to generate a variety of graphs.</p>
+<p>seismic-graph is also capable of using data from RNAFramework or ShapeMapper2. RNAFramework and ShapeMapper2 use different data formats that include some but not all of the information that is saved in the SEISMIC-RNA export json. seismic-graph is able to read data from RNAFramework and ShapeMapper2, however, due to the limitations of their export formats, seismic-graph is limited in the graphs it can generate from those sources.</p>
+<p>seismic-graph works with one data format at a time, so all files uploaded together must be processed by the same tool. For example, if you want to work with multiple SEISMIC-RNA webapp.json files at the same time, you can do so, but you cannot  process output from SEISMIC-RNA and RNAFramework in the same session.</p>
+</section>
+<section id="seismic-rna-webapp-json">
+<h2>SEISMIC-RNA webapp json<a class="headerlink" href="#seismic-rna-webapp-json" title="Link to this heading"></a></h2>
+<p>In order to export data from SEISMIC-RNA for use with seismic-graph, just include the <code class="code docutils literal notranslate"><span class="pre">--export</span></code> flag in your SEISMIC-RNA command.</p>
+<p>Documentation for SEISMIC-RNA is available at <a class="reference external" href="https://rouskinlab.github.io/seismic-rna/#">rouskinlab.github.io/seismic-rna</a>.</p>
+</section>
+<section id="rnaframework">
+<h2>RNAFramework<a class="headerlink" href="#rnaframework" title="Link to this heading"></a></h2>
+</section>
+<section id="shapemapper2">
+<h2>ShapeMapper2<a class="headerlink" href="#shapemapper2" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gallery.html" class="btn btn-neutral float-left" title="Gallery" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rouskin Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
