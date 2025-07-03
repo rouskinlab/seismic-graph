@@ -553,7 +553,15 @@ def base_coverage(data):
 
 
 
-def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plots=100, max_axis=None, pearson_filter_gap=None):
+def compare_mutation_profiles(
+        data,
+        table:LinFitTable,
+        normalize=False,
+        max_plots=100,
+        max_axis=None,
+        pearson_filter_gap=None,
+        positions_to_compare=None
+    ):
     if normalize:
         data = table.normalize_df(data, data['sample'].iloc[0])
 
@@ -583,6 +591,17 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
 
     makePlotLabel = lambda x, y: '{} vs {}'.format(x, y)
 
+    # Create position filter mask if positions_to_compare is provided
+    position_mask = None
+    if positions_to_compare is not None and len(positions_to_compare) > 0:
+        # Convert 1-indexed positions to 0-indexed for array indexing
+        positions_0_indexed = [pos - 1 for pos in positions_to_compare if pos > 0]
+        sequence_length = len(data['sequence'].iloc[0])
+        # Create boolean mask for valid positions
+        position_mask = np.zeros(sequence_length, dtype=bool)
+        for pos in positions_0_indexed:
+            if pos < sequence_length:
+                position_mask[pos] = True
 
     if max_axis is not None:
         maxValue = max_axis
@@ -593,14 +612,24 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
                 x, y = row1['sub_rate'], row2['sub_rate']
                 x, y = np.array(x), np.array(y)
                 mask = np.logical_and(~np.isnan(x), ~np.isnan(y))
+                
+                # Apply position filter if specified
+                if position_mask is not None:
+                    mask = np.logical_and(mask, position_mask)
+                    
                 x, y = x[mask], y[mask]
-                maxValue = max(x.max(), y.max(), 0.14, maxValue)
+                if len(x) > 0 and len(y) > 0:  # Check if any data remains after filtering
+                    maxValue = max(x.max(), y.max(), 0.14, maxValue)
     maxValue += 0.01
 
     # Generate identical ticks for both axes
     tick_start = 0.0
     tick_end = np.round(maxValue, 2)
     tick_step = np.round((tick_end - tick_start) / 5, 2)
+    # guard against zero or extremely small step
+    if tick_step <= 0:
+        # if tick_end > 0, spread it evenly in 5 steps; otherwise fall back to 0.01
+        tick_step = (tick_end - tick_start) / 5 if tick_end > tick_start else 0.01
     tick_vals = np.arange(tick_start, tick_end + tick_step, tick_step)
 
     # Index to keep track of annotations
@@ -615,13 +644,25 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
             x, y = np.array(x), np.array(y)
             mask = np.logical_and(np.logical_and(~np.isnan(x), ~np.isnan(y)),
                                   np.logical_and(x != -1000., y != -1000.))
+            
+            # Apply position filter if specified
+            if position_mask is not None:
+                mask = np.logical_and(mask, position_mask)
+                
             x, y = np.round(x[mask], 4), np.round(y[mask], 4)
             xlabel, ylabel = row1['unique_id'], row2['unique_id']
             plotLabel = makePlotLabel(xlabel, ylabel)
 
+            # Skip if no data points remain after filtering
+            if len(x) == 0 or len(y) == 0:
+                continue
+
             text = []
-            for seq_idx in np.where(mask)[0]:
-                text.append(f"position: {seq_idx}<br>base: {data['sequence'].iloc[0][seq_idx]}")
+            filtered_indices = np.where(mask)[0]
+            for seq_idx in filtered_indices:
+                # Convert back to 1-indexed for display
+                display_position = seq_idx + 1
+                text.append(f"position: {display_position}<br>base: {data['sequence'].iloc[0][seq_idx]}")
 
             # Plot x vs y
             fig.add_trace(go.Scatter(
@@ -720,6 +761,11 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
             ]
         ))
 
+    # Handle case where no valid plots were created
+    if len(unique_plots) == 0:
+        print('No valid plots could be created with the given position filter.')
+        return {'fig': go.Figure(), 'data': data}
+
     # Determine the default plot (first plot)
     default_plot = unique_plots[0]
     default_visibility = [traceLabel == default_plot for traceLabel in traceTrack]
@@ -798,7 +844,6 @@ def compare_mutation_profiles(data, table:LinFitTable, normalize=False, max_plot
         fig.data[i].visible = default_visibility[i]
 
     return {'fig': fig, 'data': data}
-
 
 
 def correlation_by_refs_between_samples(df:pd.DataFrame, table:LinFitTable, normalize=False, pearson_filter_gap = None)->dict:
@@ -1317,3 +1362,17 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
     csv_data = results_df.to_csv(index=False)
 
     return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}
+
+def compare_mutation_matt(data):
+    # if data.shape[0] == 0:
+    #     print('No data found for this combination of arguments')
+    #     return {'fig': go.Figure(), 'data': data}
+
+    # if data.shape[0] == 1:
+    #     print('Only one row found for this combination of arguments.')
+    #     return {'fig': go.Figure(), 'data': data}
+    
+    # # Assert sequence is the same for all rows
+    # assert data['sequence'].nunique() == 1, 'Sequence is not the same for all rows. Select a subset of the data that has the same sequence.'
+
+    return {'fig': go.Figure(), 'data': data}

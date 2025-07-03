@@ -373,12 +373,13 @@ class Study(object):
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
-    def compare_mutation_profiles(self, max_plots=100, max_axis=None, **kwargs):
+    def compare_mutation_profiles(self, max_plots=100, max_axis=None, positions_to_compare=None, **kwargs):
         """Plot the mutation fraction of multiple mutation profiles.
 
         Args:
             max_plots: maximum number of plots to show.
             max_axis: maximum value of the x and y axis. If None, the maximum value of the data will be used if above 0.15, otherwise 0.15.
+            positions_to_compare (list, optional): List of 1-indexed positions to compare. If provided, only these positions will be displayed in the graph. Defaults to None.
         """
         kwargs["unique_id"] = True
         kwargs['table'] = self.table
