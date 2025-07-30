@@ -159,3 +159,4 @@ test_demulti_scott.py
 docker-data/*
 update_headers.py
 draw/data/
+sandbox/
