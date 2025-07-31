@@ -1363,16 +1363,8 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
 
     return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}
 
-def compare_mutation_matt(data):
-    # if data.shape[0] == 0:
-    #     print('No data found for this combination of arguments')
-    #     return {'fig': go.Figure(), 'data': data}
 
-    # if data.shape[0] == 1:
-    #     print('Only one row found for this combination of arguments.')
-    #     return {'fig': go.Figure(), 'data': data}
+def binding_affinity(data):
     
-    # # Assert sequence is the same for all rows
-    # assert data['sequence'].nunique() == 1, 'Sequence is not the same for all rows. Select a subset of the data that has the same sequence.'
-
-    return {'fig': go.Figure(), 'data': data}
+    fig = go.Figure()
+    return {'fig':fig, 'data':data}

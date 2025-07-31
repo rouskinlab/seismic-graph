@@ -556,3 +556,31 @@ class Study(object):
         return self.wrap_to_plotter(
             plotter.pearson_correlation_histogram, locals(), kwargs
         )
+    
+
+    binding_affinity_options = [
+        {"value": "placeholder_A", "label": "Placeholder A"},
+        {"value": "placeholder_B", "label": "Placeholder B"},
+        {"value": "placeholder_C", "label": "Placeholder C"}
+    ]
+
+    @classmethod
+    def get_binding_affinity_options(cls):
+        return list(cls.binding_affinity_options)
+    
+    @plot_info(
+        "binding_affinity",
+        "Binding Affinity",
+    )
+    @save_plot
+    @doc_inherit(save_plot, style=style_child_takes_over_parent)
+    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
+    def binding_affinity(
+        self, section=None, **kwargs
+    ) -> dict:
+        """Binding Affinity Plot"""
+        return self.wrap_to_plotter(
+            plotter.binding_affinity,
+            locals(),
+            kwargs,
+        )
