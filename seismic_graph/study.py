@@ -559,6 +559,7 @@ class Study(object):
     
 
     binding_affinity_options = [
+        {"value": "none", "label": "None"},
         {"value": "placeholder_A", "label": "Placeholder A"},
         {"value": "placeholder_B", "label": "Placeholder B"},
         {"value": "placeholder_C", "label": "Placeholder C"}
