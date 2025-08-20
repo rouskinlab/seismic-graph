@@ -154,13 +154,13 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
 
     
     
-def experimental_variable_across_samples(data:pd.DataFrame, experimental_variable:str, table:LinFitTable, models:List[str]=None, normalize=False)->dict:
+def experimental_variable_across_samples(data:pd.DataFrame, experimental_variable:str, table:LinFitTable, normalize=False)->dict:
 
     fig = go.Figure()
     
     assert len(data) > 0, "No data to plot"
     assert experimental_variable in data.columns, "Experimental variable not found in data"
-    assert len(data['sequence'].unique()) == 1, "More than one sequence found in data. CHeck that reference and section are unique"
+    assert len(data['sequence'].unique()) == 1, "More than one sequence found in data. Check that reference and section are unique"
 
     if normalize:
         data = table.normalize_df(data, data['sample'].iloc[0])
