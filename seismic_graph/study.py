@@ -269,7 +269,6 @@ class Study(object):
 
         Args:
             experimental_variable (str): Name of the experimental variable to plot.
-            models (List[str], optional): Models to fit on the data using scipy.optimize.curve_fit. Under the form ``'lambda x, a, b: a*x+b'`` where ``x`` is the variable. Defaults to [].
 
         """
         index_selected = True
