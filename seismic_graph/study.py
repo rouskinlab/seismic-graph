@@ -576,9 +576,16 @@ class Study(object):
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
     def binding_affinity(
-        self, section=None, **kwargs
+        self, experimental_variable, selected_binding_affinity, reference, section, **kwargs
     ) -> dict:
-        """Binding Affinity Plot"""
+        """Binding Affinity Plot
+        
+        Args:
+            experimental_variable (str): Name of the experimental variable to plot.
+            binding_affinity (str)
+        """
+        index_selected = True
+        kwargs['table'] = self.table
         return self.wrap_to_plotter(
             plotter.binding_affinity,
             locals(),

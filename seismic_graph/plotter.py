@@ -23,6 +23,10 @@ from io import StringIO
 import copy
 from scipy.stats import pearsonr
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 cmap = dict(A="#F09869", C="#8875C7", G="#F7ED8F", T="#99C3EB",
                     N="#f0f0f0")
 
@@ -1364,7 +1368,188 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
     return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}
 
 
-def binding_affinity(data):
+def one_site_binding_model(protein_conc, kd):
+    """
+    One-site binding model: Y = [P] / (Kd + [P])
+    
+    Parameters:
+    - protein_conc: Protein concentration [P] (can be a single value or array)
+    - kd: Dissociation constant (Kd)
+    
+    Returns:
+    - Y: Fraction bound (0 to 1)
+    """
+    return protein_conc / (kd + protein_conc)
+
+def fit_binding_curve(exp_var_array, mutation_fraction_array, binding_model):
+    """
+    Fit binding curve to experimental data
+    
+    Parameters:
+    - protein_conc_array: Array of protein concentrations from experimental_variable column
+    - mutation_fraction_array: Array of mutation fractions for a specific nucleotide position
+    - binding_model: String indicating which model to use (currently supports "One site binding")
+    
+    Returns:
+    - Dictionary with fitting results, or None if fitting fails
+    
+    Raises:
+    - ValueError: If there aren't enough data points for curve fitting
+    """
+    from scipy.optimize import curve_fit
+    import numpy as np
+    import warnings
+    
+    # Remove any NaN values
+    mask = ~(np.isnan(exp_var_array) | np.isnan(mutation_fraction_array))
+    protein_clean = exp_var_array[mask]
+    mutation_clean = mutation_fraction_array[mask]
+    
+    # Need at least 3 points to fit
+    if len(protein_clean) < 3:
+        raise ValueError(f"Insufficient data points for curve fitting. Found {len(protein_clean)} valid points, but need at least 3.")
+    
+    # Only handle "One site binding" for now
+    if binding_model != "one_site_binding":
+        return None
+    
+    try:
+        # Initial guess for Kd (use median protein concentration)
+        initial_kd = np.median(protein_clean)
+        
+        # Fit the curve
+        # Note: We fit directly to mutation fraction (inverse relationship with binding)
+        popt, pcov = curve_fit(
+            one_site_binding_model, 
+            protein_clean, 
+            mutation_clean,
+            p0=[initial_kd],
+            bounds=(0, np.inf)  # Kd must be positive
+        )
+        
+        kd_fitted = popt[0]
+        kd_error = np.sqrt(pcov[0, 0])
+        
+        # Calculate R² (goodness of fit)
+        y_predicted = one_site_binding_model(protein_clean, kd_fitted)
+        ss_residual = np.sum((mutation_clean - y_predicted) ** 2)
+        ss_total = np.sum((mutation_clean - np.mean(mutation_clean)) ** 2)
+        r_squared = 1 - (ss_residual / ss_total)
+        
+        return {
+            'kd': kd_fitted,
+            'kd_error': kd_error,
+            'r_squared': r_squared,
+            'fit_success': True,
+            'protein_conc_clean': protein_clean,
+            'mutation_clean': mutation_clean
+        }
+        
+    except Exception as e:
+        warnings.warn(f"Curve fitting failed: {str(e)}")
+        return {
+            'fit_success': False,
+            'error': str(e)
+        }
+
+def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_binding_affinity:str, table:LinFitTable, normalize=False)->dict:
     
     fig = go.Figure()
-    return {'fig':fig, 'data':data}
+    
+    assert len(data) > 0, "No data to plot"
+    assert experimental_variable in data.columns, "Experimental variable not found in data"
+    assert len(data['sequence'].unique()) == 1, "More than one sequence found in data. Check that reference and section are unique"
+
+    if normalize:
+        data = table.normalize_df(data, data['sample'].iloc[0])
+
+    df = pd.DataFrame(
+        np.hstack([np.vstack(data['sub_rate'].values), np.vstack(data[experimental_variable].values)]),
+        index=data[experimental_variable],
+        columns=[c + str(idx+1) for c, idx in zip(data['sequence'].iloc[0], data['index_selected'].iloc[0])] + [experimental_variable]
+        ).sort_index()
+    
+    fitting_results = {}
+
+    for col in df.columns:
+        if col == experimental_variable:
+            continue
+        fig.add_trace(
+            go.Scatter(
+                x = df.index,
+                y = df[col],
+                mode='markers',
+                name=col,
+                text=experimental_variable,
+                hovertemplate = f'<b>{experimental_variable}: %{{x}}<br>Mutation fraction: %{{y}}<extra></extra>',
+            ),
+        )
+
+        if selected_binding_affinity == "one_site_binding":
+            try:
+                logger.info(f"Fitting {col} with exp_var_array: {df.index.values}")
+                logger.info(f"mutation_fraction_array {df[col].values}")
+
+                fit_result = fit_binding_curve(
+                    exp_var_array=df.index.values,
+                    mutation_fraction_array=df[col].values,
+                    binding_model=selected_binding_affinity
+                )
+
+                if fit_result is not None:
+                    fitting_results[col] = fit_result
+                    print(f"Fitted {col}: Kd = {fit_result['kd']:.3f} ± {fit_result['kd_error']:.3f}, R² = {fit_result['r_squared']:.3f}")
+
+                    # Generate smooth x values for the curve
+                    x_smooth = np.linspace(df.index.min(), df.index.max(), 100)
+                    # Calculate y values using the fitted Kd
+                    y_smooth = one_site_binding_model(x_smooth, fit_result['kd'])
+                    
+                    # Add the fitted curve as a line trace
+                    fig.add_trace(
+                        go.Scatter(
+                            x=x_smooth,
+                            y=y_smooth,
+                            mode='lines',
+                            name=f'{col} fit (Kd={fit_result["kd"]:.2f})',
+                            line=dict(dash='dash', width=2),
+                            hovertemplate=f'<b>Fitted curve<br>{experimental_variable}: %{{x}}<br>Predicted: %{{y}}<extra></extra>',
+                            showlegend=True
+                        )
+                    )
+                else:
+                    print(f"No fitting performed for {col} (unsupported model: {selected_binding_affinity})")
+
+            except ValueError as e:
+                print(f"Cannot fit {col}: {e}")
+                fitting_results[col] = {'fit_success': False, 'error': str(e)}
+            except Exception as e:
+                print(f"Unexpected error fitting {col}: {e}")
+                fitting_results[col] = {'fit_success': False, 'error': str(e)}
+        
+        elif selected_binding_affinity != "None":
+            # Handle unsupported binding models
+            print(f"Warning: '{selected_binding_affinity}' is not a supported binding model. No fitting performed.")
+            
+    fig.update_layout(
+        title='Mutation rates across experimental variable - {}'.format(experimental_variable),
+        xaxis_title=experimental_variable,
+        yaxis_title='Mutation fraction',
+    )
+
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+    )
+    fig.update_xaxes(
+        linewidth=1,
+        linecolor='black',
+        mirror=True,
+        autorange=True,
+    )
+
+    fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
+
+    return {'fig':fig, 'data':df}
