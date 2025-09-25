@@ -1368,91 +1368,7 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
     return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}
 
 
-def one_site_binding_model(protein_conc, kd):
-    """
-    One-site binding model: Y = [P] / (Kd + [P])
-    
-    Parameters:
-    - protein_conc: Protein concentration [P] (can be a single value or array)
-    - kd: Dissociation constant (Kd)
-    
-    Returns:
-    - Y: Fraction bound (0 to 1)
-    """
-    return protein_conc / (kd + protein_conc)
-
-def fit_binding_curve(exp_var_array, mutation_fraction_array, binding_model):
-    """
-    Fit binding curve to experimental data
-    
-    Parameters:
-    - protein_conc_array: Array of protein concentrations from experimental_variable column
-    - mutation_fraction_array: Array of mutation fractions for a specific nucleotide position
-    - binding_model: String indicating which model to use (currently supports "One site binding")
-    
-    Returns:
-    - Dictionary with fitting results, or None if fitting fails
-    
-    Raises:
-    - ValueError: If there aren't enough data points for curve fitting
-    """
-    from scipy.optimize import curve_fit
-    import numpy as np
-    import warnings
-    
-    # Remove any NaN values
-    mask = ~(np.isnan(exp_var_array) | np.isnan(mutation_fraction_array))
-    protein_clean = exp_var_array[mask]
-    mutation_clean = mutation_fraction_array[mask]
-    
-    # Need at least 3 points to fit
-    if len(protein_clean) < 3:
-        raise ValueError(f"Insufficient data points for curve fitting. Found {len(protein_clean)} valid points, but need at least 3.")
-    
-    # Only handle "One site binding" for now
-    if binding_model != "one_site_binding":
-        return None
-    
-    try:
-        # Initial guess for Kd (use median protein concentration)
-        initial_kd = np.median(protein_clean)
-        
-        # Fit the curve
-        # Note: We fit directly to mutation fraction (inverse relationship with binding)
-        popt, pcov = curve_fit(
-            one_site_binding_model, 
-            protein_clean, 
-            mutation_clean,
-            p0=[initial_kd],
-            bounds=(0, np.inf)  # Kd must be positive
-        )
-        
-        kd_fitted = popt[0]
-        kd_error = np.sqrt(pcov[0, 0])
-        
-        # Calculate R² (goodness of fit)
-        y_predicted = one_site_binding_model(protein_clean, kd_fitted)
-        ss_residual = np.sum((mutation_clean - y_predicted) ** 2)
-        ss_total = np.sum((mutation_clean - np.mean(mutation_clean)) ** 2)
-        r_squared = 1 - (ss_residual / ss_total)
-        
-        return {
-            'kd': kd_fitted,
-            'kd_error': kd_error,
-            'r_squared': r_squared,
-            'fit_success': True,
-            'protein_conc_clean': protein_clean,
-            'mutation_clean': mutation_clean
-        }
-        
-    except Exception as e:
-        warnings.warn(f"Curve fitting failed: {str(e)}")
-        return {
-            'fit_success': False,
-            'error': str(e)
-        }
-
-def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_binding_affinity:str, table:LinFitTable, normalize=False)->dict:
+def binding_affinity_original(data:pd.DataFrame, experimental_variable:str, selected_binding_affinity:str, table:LinFitTable, normalize=False)->dict:
     
     fig = go.Figure()
     
@@ -1553,3 +1469,285 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_bind
     fig.update_layout(plot_bgcolor='white',paper_bgcolor='white')
 
     return {'fig':fig, 'data':df}
+
+def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_binding_affinity:str, table:LinFitTable, normalize=False)->dict:
+    
+    from scipy.optimize import least_squares
+    import matplotlib.pyplot as plt
+    import re
+
+
+    fig = go.Figure()
+    
+    assert len(data) > 0, "No data to plot"
+    assert experimental_variable in data.columns, "Experimental variable not found in data"
+    assert len(data['sequence'].unique()) == 1, "More than one sequence found in data. Check that reference and section are unique"
+
+    if normalize:
+        raise NotImplementedError("Normalization is not yet implemented")
+    
+    # ============================== CONFIG =======================================
+    REF_DIR  = "reference-pBADupdate"
+    OUT_ROOT = "/Users/casper/Local/TAMU/Code/Chris"
+    EPS = 1e-12
+    H_BOUNDS = (0.2, 4.0)               # Hill slope bounds
+    EC50_MIN = 1e-9                     # μM
+    
+    def extract_position_series(sub_rate_array):
+        """Convert sub_rate array to position-indexed Series"""
+        
+        start_position=1
+        # Create position index (assuming 1-indexed genomic positions)
+        positions = range(start_position, start_position + len(sub_rate_array))
+        
+        # Create series and drop NaN values
+        series = pd.Series(sub_rate_array, index=positions)
+        return series
+
+    def group_by_concentration(df, exp_var):
+        """Group DataFrame by concentration and extract mutation series for each group"""
+        series_by_conc = {}
+        
+        for conc in df[exp_var].unique():
+            conc_mask = df[exp_var] == conc
+            conc_rows = df[conc_mask]
+            
+            # For now, just take the first row if multiple (we'll handle replicates later)
+            if len(conc_rows) > 1:
+                print(f"Warning: {len(conc_rows)} rows found for concentration {conc}, using first")
+            
+            first_row = conc_rows.iloc[0]
+            mutation_series = extract_position_series(first_row['sub_rate'])
+            series_by_conc[conc] = mutation_series
+        
+        return series_by_conc
+
+    def create_labels_and_identify_control(series_by_conc, control_label="0.000 μM"):
+        """Create μM labels and identify control data"""
+        
+        # Convert concentrations to labels
+        labels_map = {}
+        for conc in series_by_conc.keys():
+            if conc == 0.0:
+                labels_map[conc] = control_label
+            else:
+                labels_map[conc] = f"{conc:.3g} μM"
+        
+        # Check control exists
+        control_conc = None
+        for conc, label in labels_map.items():
+            if label == control_label:
+                control_conc = conc
+                break
+        
+        if control_conc is None:
+            raise ValueError(f"Control label '{control_label}' not found")
+        
+        return labels_map, control_conc
+
+
+    def build_dataframes_from_series(series_by_conc, labels_map, control_conc, control_label="0.000 μM"):
+        """Build eff_df and raw_df from concentration-grouped series"""
+        
+        # Get all unique positions
+        all_positions = sorted(set().union(*[s.index for s in series_by_conc.values()]))
+        
+        # Get control data
+        control_series = series_by_conc[control_conc].reindex(all_positions)
+        
+        # Initialize DataFrames
+        eff_df = pd.DataFrame(index=all_positions, dtype=float)
+        raw_df = pd.DataFrame(index=all_positions, dtype=float)
+        
+        # Process each non-control concentration
+        for conc, series in series_by_conc.items():
+            if conc == control_conc:
+                continue
+                
+            label = labels_map[conc]
+            treated_series = series.reindex(all_positions)
+            
+            # Calculate effect (matching original logic)
+            aligned = pd.DataFrame({"x": control_series, "y": treated_series}).dropna()
+            if aligned.empty:
+                eff_df[label] = np.nan
+            else:
+                EPS = 1e-12
+                eff_vals = np.abs(aligned["y"] - aligned["x"]) / np.sqrt(
+                    np.clip(aligned["x"], 0, None) + np.clip(aligned["y"], 0, None) + EPS
+                )
+                eff_df[label] = eff_vals.reindex(all_positions)
+            
+            # Raw data
+            raw_df[label] = treated_series
+        
+        return eff_df, raw_df
+
+    def new_build_all_positions_tables(df, exp_var, control_label="0.000 μM"):
+        """New version adapted for DataFrame input"""
+        # Combine all previous steps
+        series_by_conc = group_by_concentration(df, exp_var)
+        labels_map, control_conc = create_labels_and_identify_control(series_by_conc, control_label)
+        eff_df, raw_df = build_dataframes_from_series(series_by_conc, labels_map, control_conc, control_label)
+        
+        # series_by_conc is returned here just for testing purposes
+        return eff_df, raw_df
+    
+    def _hill_model_inc(x, Emax, EC50, h, baseline):
+        x = np.clip(np.asarray(x, float), EC50_MIN, np.inf)
+        return baseline + (Emax * (x**h) / (EC50**h + x**h))
+
+    def _hill_model_dec(x, Emax, EC50, h, baseline):
+        # decreases from (baseline + Emax) at low x to baseline at high x (Emax ≥ 0)
+        x = np.clip(np.asarray(x, float), EC50_MIN, np.inf)
+        return baseline + (Emax * (EC50**h / (EC50**h + x**h)))
+
+    # This code will need to be used
+    def fit_hill_per_position(df: pd.DataFrame,
+                            min_points: int = 3,
+                            metric_name: str = "eff",
+                            direction: str = "auto_prefer_decreasing") -> pd.DataFrame:
+        """
+        Fit a Hill curve per position. If direction is 'auto' or 'auto_prefer_decreasing',
+        fit both increasing and decreasing models and choose the one with lower RSS.
+        """
+
+        cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
+        doses = np.array([_parse_um_from_label(c) for c in cols], dtype=float)
+        order = np.argsort(doses)
+
+        # cols is now all the column headings that represent valid concentrations, ordered
+        cols = [cols[i] for i in order]
+
+        # x_all is now the values of the column headings that represent valid concentrations, ordered
+        x_all = doses[order]
+
+        def _fit_with_model(x, y, model):
+            # init/bounds from data
+            y_lo, y_hi = np.nanpercentile(y, [10, 90])
+            baseline0 = max(0.0, y_lo)
+            Emax0 = max(1e-6, abs(y_hi - baseline0))
+            EC500 = np.median(x[x > 0]) if np.any(x > 0) else 1.0
+            p0 = np.array([Emax0, EC500, 1.0, baseline0], float)
+            lb = [0.0, EC50_MIN, H_BOUNDS[0], 0.0]
+            ub = [np.inf, max(np.max(x), EC50_MIN)*1e3, H_BOUNDS[1], np.inf]
+
+            def resid(p): return model(x, *p) - y
+            res = least_squares(resid, p0, bounds=(lb, ub), loss="soft_l1", f_scale=0.5)
+            p = res.x
+            yhat = model(x, *p)
+            rss = float(np.sum((yhat - y)**2))
+            sst = float(np.sum((y - np.mean(y))**2))
+            r2  = 1.0 - (rss/sst) if sst > 0 else np.nan
+            return res.success, p, rss, r2
+
+        records = []
+        for pos, row in df.iterrows():
+            y = row[cols].to_numpy(dtype=float)
+            m = np.isfinite(x_all) & np.isfinite(y)
+            x = x_all[m]; y = y[m]
+            n = x.size
+            if n < min_points:
+                records.append({"Position": pos, "Emax": np.nan, "EC50_uM": np.nan, "h": np.nan,
+                                "baseline": np.nan, "r2": np.nan, "n_points": n,
+                                "success": False, "metric": metric_name,
+                                "direction": np.nan, "rss_inc": np.nan, "rss_dec": np.nan})
+                continue
+
+            if direction == "increasing":
+                ok, p, rss, r2 = _fit_with_model(x, y, _hill_model_inc)
+                picked = "increasing"; rss_inc, rss_dec = rss, np.nan
+            elif direction == "decreasing":
+                ok, p, rss, r2 = _fit_with_model(x, y, _hill_model_dec)
+                picked = "decreasing"; rss_inc, rss_dec = np.nan, rss
+            else:
+                # fits both and picks best fit
+                ok_i, p_i, rss_i, r2_i = _fit_with_model(x, y, _hill_model_inc)
+                ok_d, p_d, rss_d, r2_d = _fit_with_model(x, y, _hill_model_dec)
+
+                # choose by smaller RSS
+                prefer_dec = (direction == "auto_prefer_decreasing")
+                if np.isfinite(rss_i) and np.isfinite(rss_d):
+                    if (rss_d < rss_i) or (prefer_dec and np.isclose(rss_d, rss_i, rtol=0.05, atol=0)):
+                        ok, p, rss, r2, picked = ok_d, p_d, rss_d, r2_d, "decreasing"
+                    else:
+                        ok, p, rss, r2, picked = ok_i, p_i, rss_i, r2_i, "increasing"
+                elif np.isfinite(rss_d):
+                    ok, p, rss, r2, picked = ok_d, p_d, rss_d, r2_d, "decreasing"
+                else:
+                    ok, p, rss, r2, picked = ok_i, p_i, rss_i, r2_i, "increasing"
+
+                rss_inc, rss_dec = rss_i, rss_d
+
+            records.append({"Position": pos,
+                            "Emax": (p[0] if ok else np.nan),
+                            "EC50_uM": (p[1] if ok else np.nan),
+                            "h": (p[2] if ok else np.nan),
+                            "baseline": (p[3] if ok else np.nan),
+                            "r2": (r2 if ok else np.nan),
+                            "n_points": n,
+                            "success": bool(ok),
+                            "metric": metric_name,
+                            "direction": picked,
+                            "rss_inc": rss_inc, "rss_dec": rss_dec})
+
+        return (pd.DataFrame.from_records(records)
+                .sort_values(["success", "r2"], ascending=[False, False]))
+    
+    def plot_positions(df, params_df, positions, x_label="ASO concentration (μM)", title_prefix=""):
+        cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
+        x_all = np.array([_parse_um_from_label(c) for c in cols], dtype=float)
+        order = np.argsort(x_all); cols = [cols[i] for i in order]; x_all = x_all[order]
+
+        for pos in positions:
+            if pos not in df.index: 
+                print(f"Position {pos} not in dataframe."); continue
+            row = df.loc[pos, cols].to_numpy(float)
+            m = np.isfinite(x_all) & np.isfinite(row)
+            x = x_all[m]; y = row[m]
+            if x.size < 2: 
+                print(f"Position {pos} has <2 points to plot."); continue
+
+            rec = params_df.query("Position == @pos and success")
+            if rec.empty:
+                print(f"Position {pos} had no successful fit."); continue
+
+            Emax, EC50, h, baseline = rec.iloc[0][["Emax","EC50_uM","h","baseline"]]
+            use_dec = (rec.iloc[0]["direction"] == "decreasing")
+            xp = np.logspace(np.log10(max(np.min(x[x>0]), EC50_MIN)), np.log10(np.max(x)), 400)
+            model = _hill_model_dec if use_dec else _hill_model_inc
+            yhat = model(xp, Emax, EC50, h, baseline)
+
+            plt.figure(figsize=(6,4.5))
+            plt.plot(x, y, 'o', label=f"pos {pos}")
+            label = ("inhibitory fit" if use_dec else "activating fit") + f" EC50≈{EC50:.3g} μM, h={h:.2g}"
+            plt.plot(xp, yhat, '-', label=label)
+            plt.xscale('log'); plt.xlabel(x_label); plt.ylabel("Response")
+            plt.title(f"{title_prefix} Position {pos}")
+            plt.grid(True, which='both', ls='--', alpha=0.5)
+            plt.legend(); plt.tight_layout(); plt.show()
+
+
+    # ============================== HELPERS ======================================
+
+    def _parse_um_from_label(label: str) -> float:
+        """
+        Parse '12.3 μM' or '12.3 uM' (with optional '(repN)' suffix) -> 12.3 (float μM).
+        Returns np.nan if not parseable.
+        """
+        m = re.search(r'([0-9]*\.?[0-9]+)\s*[μu]M', label, flags=re.I)
+        return float(m.group(1)) if m else np.nan
+
+
+    eff_df, raw_df = new_build_all_positions_tables(data, experimental_variable)
+
+    eff_params = fit_hill_per_position(eff_df, min_points=3,
+                                metric_name="effect",
+                                direction="auto")  # effect should rise
+
+    raw_params = fit_hill_per_position(raw_df, min_points=3,
+                                metric_name="raw",
+                                direction="auto_prefer_decreasing")
+
+    good = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
+    plot_positions(eff_df, eff_params, positions=good, title_prefix="Effect - ")
