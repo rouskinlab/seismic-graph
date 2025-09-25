@@ -1475,9 +1475,6 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_bind
     from scipy.optimize import least_squares
     import matplotlib.pyplot as plt
     import re
-
-
-    fig = go.Figure()
     
     assert len(data) > 0, "No data to plot"
     assert experimental_variable in data.columns, "Experimental variable not found in data"
@@ -1487,8 +1484,6 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_bind
         raise NotImplementedError("Normalization is not yet implemented")
     
     # ============================== CONFIG =======================================
-    REF_DIR  = "reference-pBADupdate"
-    OUT_ROOT = "/Users/casper/Local/TAMU/Code/Chris"
     EPS = 1e-12
     H_BOUNDS = (0.2, 4.0)               # Hill slope bounds
     EC50_MIN = 1e-9                     # μM
