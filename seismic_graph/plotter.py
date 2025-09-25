@@ -1470,7 +1470,7 @@ def binding_affinity_original(data:pd.DataFrame, experimental_variable:str, sele
 
     return {'fig':fig, 'data':df}
 
-def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_binding_affinity:str, table:LinFitTable, normalize=False)->dict:
+def binding_affinity(data:pd.DataFrame, experimental_variable:str, normalize=False)->dict:
     
     from scipy.optimize import least_squares
     import matplotlib.pyplot as plt
@@ -1689,7 +1689,7 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_bind
         return (pd.DataFrame.from_records(records)
                 .sort_values(["success", "r2"], ascending=[False, False]))
     
-    def plot_positions(df, params_df, positions, x_label="ASO concentration (μM)", title_prefix=""):
+    def plot_positions(df, params_df, positions, x_label, title_prefix=""):
         cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
         x_all = np.array([_parse_um_from_label(c) for c in cols], dtype=float)
         order = np.argsort(x_all); cols = [cols[i] for i in order]; x_all = x_all[order]
@@ -1721,7 +1721,7 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_bind
             plt.title(f"{title_prefix} Position {pos}")
             plt.grid(True, which='both', ls='--', alpha=0.5)
             plt.legend(); plt.tight_layout(); plt.show()
-
+ 
 
     # ============================== HELPERS ======================================
 
@@ -1745,4 +1745,4 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, selected_bind
                                 direction="auto_prefer_decreasing")
 
     good = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
-    plot_positions(eff_df, eff_params, positions=good, title_prefix="Effect - ")
+    plot_positions(eff_df, eff_params, positions=good, x_label=experimental_variable, title_prefix="Effect - ")
