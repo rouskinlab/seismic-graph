@@ -576,13 +576,14 @@ class Study(object):
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
     def binding_affinity(
-        self, experimental_variable, selected_binding_affinity, reference, section, **kwargs
+        self, experimental_variable, selected_binding_affinity, reference, section, positions_to_plot=None, **kwargs
     ) -> dict:
         """Binding Affinity Plot
-        
+
         Args:
             experimental_variable (str): Name of the experimental variable to plot.
             binding_affinity (str)
+            positions_to_plot (list, optional): List of 1-indexed positions to plot. If provided, only these positions will be displayed in the graph. If None, the top 5 positions with best fits (R² > 0.6) will be automatically selected. Defaults to None.
         """
         index_selected = True
         kwargs['table'] = self.table

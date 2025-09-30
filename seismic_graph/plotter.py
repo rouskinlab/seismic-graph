@@ -1470,7 +1470,7 @@ def binding_affinity_original(data:pd.DataFrame, experimental_variable:str, sele
 
     return {'fig':fig, 'data':df}
 
-def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=False) -> dict:
+def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=False, positions_to_plot=None) -> dict:
     
     from scipy.optimize import least_squares
     import plotly.graph_objects as go
@@ -1710,15 +1710,31 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                                 metric_name="raw",
                                 direction="auto_prefer_decreasing")
 
-    # Get top 5 positions with good fits for plotting
-    good_eff = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
-    good_raw = raw_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
-    
+    # Get positions for plotting - either user-specified or top 5 with good fits
+    if positions_to_plot is not None and len(positions_to_plot) > 0:
+        # User specified positions - filter to those with successful fits
+        good_eff = [pos for pos in positions_to_plot if pos in eff_params.query("success")["Position"].values]
+        good_raw = [pos for pos in positions_to_plot if pos in raw_params.query("success")["Position"].values]
+
+        # Warn if any requested positions don't have successful fits
+        all_requested = set(positions_to_plot)
+        all_available = set(good_eff + good_raw)
+        missing = all_requested - all_available
+        if missing:
+            print(f"Warning: The following positions do not have successful fits and will be skipped: {sorted(missing)}")
+    else:
+        # Auto-select top 5 positions with good fits (r2 > 0.6)
+        good_eff = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
+        good_raw = raw_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
+
     # Combine and deduplicate positions for plotting
     all_good_positions = list(set(good_eff + good_raw))
-    
+
     if not all_good_positions:
-        print("No positions with good fits found (r2 > 0.6)")
+        if positions_to_plot is not None:
+            print(f"None of the requested positions {positions_to_plot} have successful fits")
+        else:
+            print("No positions with good fits found (r2 > 0.6)")
         return {'fig': go.Figure(), 'data': data}
 
     # ============================== PLOTLY VISUALIZATION =======================
