@@ -1470,10 +1470,11 @@ def binding_affinity_original(data:pd.DataFrame, experimental_variable:str, sele
 
     return {'fig':fig, 'data':df}
 
-def binding_affinity(data:pd.DataFrame, experimental_variable:str, normalize=False)->dict:
+def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=False) -> dict:
     
     from scipy.optimize import least_squares
-    import matplotlib.pyplot as plt
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
     import re
     
     assert len(data) > 0, "No data to plot"
@@ -1540,7 +1541,6 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, normalize=Fal
         
         return labels_map, control_conc
 
-
     def build_dataframes_from_series(series_by_conc, labels_map, control_conc, control_label="0.000 μM"):
         """Build eff_df and raw_df from concentration-grouped series"""
         
@@ -1597,7 +1597,6 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, normalize=Fal
         x = np.clip(np.asarray(x, float), EC50_MIN, np.inf)
         return baseline + (Emax * (EC50**h / (EC50**h + x**h)))
 
-    # This code will need to be used
     def fit_hill_per_position(df: pd.DataFrame,
                             min_points: int = 3,
                             metric_name: str = "eff",
@@ -1688,40 +1687,6 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, normalize=Fal
 
         return (pd.DataFrame.from_records(records)
                 .sort_values(["success", "r2"], ascending=[False, False]))
-    
-    def plot_positions(df, params_df, positions, x_label, title_prefix=""):
-        cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
-        x_all = np.array([_parse_um_from_label(c) for c in cols], dtype=float)
-        order = np.argsort(x_all); cols = [cols[i] for i in order]; x_all = x_all[order]
-
-        for pos in positions:
-            if pos not in df.index: 
-                print(f"Position {pos} not in dataframe."); continue
-            row = df.loc[pos, cols].to_numpy(float)
-            m = np.isfinite(x_all) & np.isfinite(row)
-            x = x_all[m]; y = row[m]
-            if x.size < 2: 
-                print(f"Position {pos} has <2 points to plot."); continue
-
-            rec = params_df.query("Position == @pos and success")
-            if rec.empty:
-                print(f"Position {pos} had no successful fit."); continue
-
-            Emax, EC50, h, baseline = rec.iloc[0][["Emax","EC50_uM","h","baseline"]]
-            use_dec = (rec.iloc[0]["direction"] == "decreasing")
-            xp = np.logspace(np.log10(max(np.min(x[x>0]), EC50_MIN)), np.log10(np.max(x)), 400)
-            model = _hill_model_dec if use_dec else _hill_model_inc
-            yhat = model(xp, Emax, EC50, h, baseline)
-
-            plt.figure(figsize=(6,4.5))
-            plt.plot(x, y, 'o', label=f"pos {pos}")
-            label = ("inhibitory fit" if use_dec else "activating fit") + f" EC50≈{EC50:.3g} μM, h={h:.2g}"
-            plt.plot(xp, yhat, '-', label=label)
-            plt.xscale('log'); plt.xlabel(x_label); plt.ylabel("Response")
-            plt.title(f"{title_prefix} Position {pos}")
-            plt.grid(True, which='both', ls='--', alpha=0.5)
-            plt.legend(); plt.tight_layout(); plt.show()
- 
 
     # ============================== HELPERS ======================================
 
@@ -1733,7 +1698,8 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, normalize=Fal
         m = re.search(r'([0-9]*\.?[0-9]+)\s*[μu]M', label, flags=re.I)
         return float(m.group(1)) if m else np.nan
 
-
+    # ============================== MAIN PROCESSING ==============================
+    
     eff_df, raw_df = new_build_all_positions_tables(data, experimental_variable)
 
     eff_params = fit_hill_per_position(eff_df, min_points=3,
@@ -1744,5 +1710,189 @@ def binding_affinity(data:pd.DataFrame, experimental_variable:str, normalize=Fal
                                 metric_name="raw",
                                 direction="auto_prefer_decreasing")
 
-    good = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
-    plot_positions(eff_df, eff_params, positions=good, x_label=experimental_variable, title_prefix="Effect - ")
+    # Get top 5 positions with good fits for plotting
+    good_eff = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
+    good_raw = raw_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
+    
+    # Combine and deduplicate positions for plotting
+    all_good_positions = list(set(good_eff + good_raw))
+    
+    if not all_good_positions:
+        print("No positions with good fits found (r2 > 0.6)")
+        return {'fig': go.Figure(), 'data': data}
+
+    # ============================== PLOTLY VISUALIZATION =======================
+    
+    def create_plotly_plots(df, params_df, positions, x_label, title_prefix=""):
+        """Create plotly plots for given positions"""
+        cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
+        x_all = np.array([_parse_um_from_label(c) for c in cols], dtype=float)
+        order = np.argsort(x_all)
+        cols = [cols[i] for i in order]
+        x_all = x_all[order]
+        
+        fig = go.Figure()
+        trace_labels = []
+        
+        for i, pos in enumerate(positions):
+            if pos not in df.index:
+                print(f"Position {pos} not in dataframe.")
+                continue
+                
+            row = df.loc[pos, cols].to_numpy(float)
+            m = np.isfinite(x_all) & np.isfinite(row)
+            x = x_all[m]
+            y = row[m]
+            
+            if x.size < 2:
+                print(f"Position {pos} has <2 points to plot.")
+                continue
+            
+            rec = params_df.query("Position == @pos and success")
+            if rec.empty:
+                print(f"Position {pos} had no successful fit.")
+                continue
+            
+            Emax, EC50, h, baseline = rec.iloc[0][["Emax", "EC50_uM", "h", "baseline"]]
+            r2 = rec.iloc[0]["r2"]
+            use_dec = (rec.iloc[0]["direction"] == "decreasing")
+            
+            # Data points
+            fig.add_trace(go.Scatter(
+                x=x, y=y, 
+                mode='markers', 
+                name=f'Position {pos} data',
+                visible=(i == 0),  # Only first plot visible by default
+                marker=dict(size=8),
+                hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
+            ))
+            trace_labels.append(f"Position {pos}")
+            
+            # Hill curve fit
+            xp = np.logspace(np.log10(max(np.min(x[x > 0]), EC50_MIN)), 
+                           np.log10(np.max(x)), 400)
+            model = _hill_model_dec if use_dec else _hill_model_inc
+            yhat = model(xp, Emax, EC50, h, baseline)
+            
+            fit_type = "inhibitory" if use_dec else "activating"
+            fit_label = f"{fit_type} fit (EC50≈{EC50:.3g} μM, h={h:.2g}, R²={r2:.3f})"
+            
+            fig.add_trace(go.Scatter(
+                x=xp, y=yhat,
+                mode='lines',
+                name=fit_label,
+                visible=(i == 0),  # Only first plot visible by default
+                line=dict(color='red', width=2),
+                hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
+            ))
+            trace_labels.append(f"Position {pos}")
+        
+        return fig, trace_labels
+    
+    # Create plots for both effect and raw data
+    eff_fig, eff_trace_labels = create_plotly_plots(
+        eff_df, eff_params, good_eff, experimental_variable, "Effect - "
+    )
+    raw_fig, raw_trace_labels = create_plotly_plots(
+        raw_df, raw_params, good_raw, experimental_variable, "Raw - "
+    )
+    
+    # Combine figures - we'll create dropdown to switch between effect and raw plots
+    fig = go.Figure()
+    
+    # Add all traces from both figures
+    all_traces = []
+    all_trace_labels = []
+    plot_types = []
+    
+    # Effect traces
+    for trace in eff_fig.data:
+        fig.add_trace(trace)
+        all_traces.append(trace)
+        plot_types.append("effect")
+    
+    # Raw traces  
+    for trace in raw_fig.data:
+        trace.visible = False  # Start with effect plots visible
+        fig.add_trace(trace)
+        all_traces.append(trace)
+        plot_types.append("raw")
+    
+    all_trace_labels = eff_trace_labels + raw_trace_labels
+    
+    # Create dropdown buttons for plot type selection
+    buttons = []
+    
+    # Effect button
+    effect_visibility = ["effect" in pt for pt in plot_types]
+    buttons.append(dict(
+        label="Effect Plots",
+        method="update",
+        args=[
+            {"visible": effect_visibility},
+            {"title": "Binding Affinity - Effect Data",
+             "xaxis.title": experimental_variable,
+             "yaxis.title": "Effect"}
+        ]
+    ))
+    
+    # Raw button
+    raw_visibility = ["raw" in pt for pt in plot_types]
+    buttons.append(dict(
+        label="Raw Data Plots", 
+        method="update",
+        args=[
+            {"visible": raw_visibility},
+            {"title": "Binding Affinity - Raw Data",
+             "xaxis.title": experimental_variable, 
+             "yaxis.title": "Raw Response"}
+        ]
+    ))
+    
+    # Update layout following compare_mutation_profiles style
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                active=0,
+                buttons=buttons,
+                x=0.5,
+                y=-0.15,
+                xanchor='center',
+                yanchor='top',
+                direction='up'
+            )
+        ],
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        width=1000,
+        height=800,
+        xaxis=dict(
+            type='log',
+            showgrid=True,
+            gridcolor='lightgray',
+            ticks='outside',
+            showline=True,
+            linecolor='black',
+            mirror=True,
+            title=experimental_variable
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgray', 
+            ticks='outside',
+            showline=True,
+            linecolor='black',
+            mirror=True,
+            title="Effect"
+        ),
+        title="Binding Affinity - Effect Data",
+        showlegend=True,
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="left", 
+            x=0.01
+        )
+    )
+    
+    return {'fig': fig, 'data': data}
