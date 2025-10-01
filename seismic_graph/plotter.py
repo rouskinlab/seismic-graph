@@ -1775,29 +1775,29 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             
             # Data points
             fig.add_trace(go.Scatter(
-                x=x, y=y, 
-                mode='markers', 
+                x=x, y=y,
+                mode='markers',
                 name=f'Position {pos} data',
-                visible=(i == 0),  # Only first plot visible by default
+                visible=False,  # Will be set to visible by dropdown logic
                 marker=dict(size=8),
                 hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
             ))
             trace_labels.append(f"Position {pos}")
-            
+
             # Hill curve fit
-            xp = np.logspace(np.log10(max(np.min(x[x > 0]), EC50_MIN)), 
+            xp = np.logspace(np.log10(max(np.min(x[x > 0]), EC50_MIN)),
                            np.log10(np.max(x)), 400)
             model = _hill_model_dec if use_dec else _hill_model_inc
             yhat = model(xp, Emax, EC50, h, baseline)
-            
+
             fit_type = "inhibitory" if use_dec else "activating"
             fit_label = f"{fit_type} fit (EC50≈{EC50:.3g} μM, h={h:.2g}, R²={r2:.3f})"
-            
+
             fig.add_trace(go.Scatter(
                 x=xp, y=yhat,
                 mode='lines',
                 name=fit_label,
-                visible=(i == 0),  # Only first plot visible by default
+                visible=False,  # Will be set to visible by dropdown logic
                 line=dict(color='red', width=2),
                 hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
             ))
@@ -1813,58 +1813,86 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         raw_df, raw_params, good_raw, experimental_variable, "Raw - "
     )
     
-    # Combine figures - we'll create dropdown to switch between effect and raw plots
+    # Combine figures - create dropdown for each position-type combination
     fig = go.Figure()
-    
-    # Add all traces from both figures
-    all_traces = []
-    all_trace_labels = []
-    plot_types = []
-    
-    # Effect traces
+
+    # Track position and type for each trace
+    trace_info = []  # Each entry: {"position": int, "type": str}
+
+    # Effect traces (2 traces per position: scatter + curve)
+    for i, pos in enumerate(good_eff):
+        # Add both traces from this position
+        trace_info.append({"position": pos, "type": "effect"})  # scatter
+        trace_info.append({"position": pos, "type": "effect"})  # curve
+
+    # Raw traces (2 traces per position: scatter + curve)
+    for i, pos in enumerate(good_raw):
+        trace_info.append({"position": pos, "type": "raw"})  # scatter
+        trace_info.append({"position": pos, "type": "raw"})  # curve
+
+    # Add all traces from both figures to combined figure
     for trace in eff_fig.data:
         fig.add_trace(trace)
-        all_traces.append(trace)
-        plot_types.append("effect")
-    
-    # Raw traces  
     for trace in raw_fig.data:
-        trace.visible = False  # Start with effect plots visible
         fig.add_trace(trace)
-        all_traces.append(trace)
-        plot_types.append("raw")
-    
-    all_trace_labels = eff_trace_labels + raw_trace_labels
-    
-    # Create dropdown buttons for plot type selection
+
+    # Generate unique position-type combinations for dropdown
+    unique_combos = []
+    seen = set()
+    for info in trace_info:
+        key = (info["position"], info["type"])
+        if key not in seen:
+            unique_combos.append(info)
+            seen.add(key)
+    # Sort: by position first, then effect before raw
+    unique_combos.sort(key=lambda x: (x["position"], x["type"] != "effect"))
+
+    # Create dropdown buttons for each position-type combination
     buttons = []
-    
-    # Effect button
-    effect_visibility = ["effect" in pt for pt in plot_types]
-    buttons.append(dict(
-        label="Effect Plots",
-        method="update",
-        args=[
-            {"visible": effect_visibility},
-            {"title": "Binding Affinity - Effect Data",
-             "xaxis.title": experimental_variable,
-             "yaxis.title": "Effect"}
+    for idx, combo in enumerate(unique_combos):
+        pos = combo["position"]
+        data_type = combo["type"]
+
+        # Determine visibility for this button (show only traces matching this position AND type)
+        visibility = [
+            info["position"] == pos and info["type"] == data_type
+            for info in trace_info
         ]
-    ))
-    
-    # Raw button
-    raw_visibility = ["raw" in pt for pt in plot_types]
-    buttons.append(dict(
-        label="Raw Data Plots", 
-        method="update",
-        args=[
-            {"visible": raw_visibility},
-            {"title": "Binding Affinity - Raw Data",
-             "xaxis.title": experimental_variable, 
-             "yaxis.title": "Raw Response"}
-        ]
-    ))
-    
+
+        # Button label and layout updates
+        type_label = "Effect" if data_type == "effect" else "Raw Data"
+        y_label = "Effect" if data_type == "effect" else "Raw Response"
+
+        buttons.append(dict(
+            label=f"Position {pos} - {type_label}",
+            method="update",
+            args=[
+                {"visible": visibility},
+                {
+                    "title": f"Position {pos} - {type_label}",
+                    "xaxis.title": experimental_variable,
+                    "yaxis.title": y_label
+                }
+            ]
+        ))
+
+    # Set default visibility for first combination
+    if len(unique_combos) > 0:
+        first_pos = unique_combos[0]["position"]
+        first_type = unique_combos[0]["type"]
+        for i, info in enumerate(trace_info):
+            if info["position"] == first_pos and info["type"] == first_type:
+                fig.data[i].visible = True
+
+        # Set default title and y-axis based on first combo
+        default_type_label = "Effect" if first_type == "effect" else "Raw Data"
+        default_y_label = "Effect" if first_type == "effect" else "Raw Response"
+        default_title = f"Position {first_pos} - {default_type_label}"
+    else:
+        # Fallback if no combinations (shouldn't happen given earlier checks)
+        default_title = "Binding Affinity"
+        default_y_label = "Response"
+
     # Update layout following compare_mutation_profiles style
     fig.update_layout(
         updatemenus=[
@@ -1894,21 +1922,21 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         ),
         yaxis=dict(
             showgrid=True,
-            gridcolor='lightgray', 
+            gridcolor='lightgray',
             ticks='outside',
             showline=True,
             linecolor='black',
             mirror=True,
-            title="Effect"
+            title=default_y_label
         ),
-        title="Binding Affinity - Effect Data",
+        title=default_title,
         showlegend=True,
         legend=dict(
             yanchor="top",
             y=0.99,
-            xanchor="left", 
+            xanchor="left",
             x=0.01
         )
     )
-    
+
     return {'fig': fig, 'data': data}
