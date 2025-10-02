@@ -1500,22 +1500,43 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         series = pd.Series(sub_rate_array, index=positions)
         return series
 
-    def group_by_concentration(df, exp_var):
-        """Group DataFrame by concentration and extract mutation series for each group"""
+    def group_by_concentration_with_replicates(df, exp_var):
+        """Group by concentration, keeping all replicates.
+
+        Returns:
+            dict: {
+                conc: {
+                    "series_list": [Series, Series, ...],  # One per replicate
+                    "sample_names": [str, str, ...],        # Corresponding sample names
+                    "n_replicates": int
+                }
+            }
+        """
         series_by_conc = {}
-        
+
         for conc in df[exp_var].unique():
             conc_mask = df[exp_var] == conc
             conc_rows = df[conc_mask]
-            
-            # For now, just take the first row if multiple (we'll handle replicates later)
-            if len(conc_rows) > 1:
-                print(f"Warning: {len(conc_rows)} rows found for concentration {conc}, using first")
-            
-            first_row = conc_rows.iloc[0]
-            mutation_series = extract_position_series(first_row['sub_rate'])
-            series_by_conc[conc] = mutation_series
-        
+
+            # Extract mutation series for ALL replicates at this concentration
+            replicate_series_list = []
+            sample_names = []
+
+            for idx, row in conc_rows.iterrows():
+                replicate_series_list.append(extract_position_series(row['sub_rate']))
+                # Create unique identifier for this row using sample name
+                sample_id = f"{row['sample']}"
+                sample_names.append(sample_id)
+
+            series_by_conc[conc] = {
+                "series_list": replicate_series_list,
+                "sample_names": sample_names,
+                "n_replicates": len(replicate_series_list)
+            }
+
+            if len(replicate_series_list) > 1:
+                print(f"Concentration {conc} μM: {len(replicate_series_list)} replicates ({', '.join(sample_names)})")
+
         return series_by_conc
 
     def create_labels_and_identify_control(series_by_conc, control_label="0.000 μM"):
@@ -1541,51 +1562,76 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         
         return labels_map, control_conc
 
-    def build_dataframes_from_series(series_by_conc, labels_map, control_conc, control_label="0.000 μM"):
-        """Build eff_df and raw_df from concentration-grouped series"""
-        
+    def build_dataframes_from_replicates(series_by_conc, labels_map, control_conc, control_label="0.000 μM"):
+        """Build eff_df and raw_df with separate columns for each replicate.
+
+        Column naming: "{conc_label} (rep{i})" or "{conc_label} ({sample_name})"
+        """
+
         # Get all unique positions
-        all_positions = sorted(set().union(*[s.index for s in series_by_conc.values()]))
-        
-        # Get control data
-        control_series = series_by_conc[control_conc].reindex(all_positions)
-        
+        all_series = []
+        for conc_data in series_by_conc.values():
+            all_series.extend(conc_data["series_list"])
+        all_positions = sorted(set().union(*[s.index for s in all_series]))
+
         # Initialize DataFrames
         eff_df = pd.DataFrame(index=all_positions, dtype=float)
         raw_df = pd.DataFrame(index=all_positions, dtype=float)
-        
+
+        # Get control replicate data
+        control_data = series_by_conc[control_conc]
+        control_series_list = [s.reindex(all_positions) for s in control_data["series_list"]]
+
+        # If multiple control replicates, use their mean for effect calculation
+        # (Effect compares treated vs control, so we need a single control reference)
+        if len(control_series_list) > 1:
+            control_series = pd.concat(control_series_list, axis=1).mean(axis=1)
+        else:
+            control_series = control_series_list[0]
+
         # Process each non-control concentration
-        for conc, series in series_by_conc.items():
+        for conc, conc_data in series_by_conc.items():
             if conc == control_conc:
                 continue
-                
-            label = labels_map[conc]
-            treated_series = series.reindex(all_positions)
-            
-            # Calculate effect (matching original logic)
-            aligned = pd.DataFrame({"x": control_series, "y": treated_series}).dropna()
-            if aligned.empty:
-                eff_df[label] = np.nan
-            else:
-                EPS = 1e-12
-                eff_vals = np.abs(aligned["y"] - aligned["x"]) / np.sqrt(
-                    np.clip(aligned["x"], 0, None) + np.clip(aligned["y"], 0, None) + EPS
-                )
-                eff_df[label] = eff_vals.reindex(all_positions)
-            
-            # Raw data
-            raw_df[label] = treated_series
-        
+
+            base_label = labels_map[conc]
+            replicate_series_list = conc_data["series_list"]
+            sample_names = conc_data["sample_names"]
+            n_reps = conc_data["n_replicates"]
+
+            # Create a column for EACH replicate
+            for rep_idx, (rep_series, sample_name) in enumerate(zip(replicate_series_list, sample_names)):
+                # Column label distinguishes replicates
+                if n_reps > 1:
+                    col_label = f"{base_label} ({sample_name})"
+                else:
+                    col_label = base_label  # No need to distinguish if only one replicate
+
+                treated_series = rep_series.reindex(all_positions)
+
+                # Calculate effect for this replicate
+                aligned = pd.DataFrame({"x": control_series, "y": treated_series}).dropna()
+                if aligned.empty:
+                    eff_df[col_label] = np.nan
+                else:
+                    EPS = 1e-12
+                    eff_vals = np.abs(aligned["y"] - aligned["x"]) / np.sqrt(
+                        np.clip(aligned["x"], 0, None) + np.clip(aligned["y"], 0, None) + EPS
+                    )
+                    eff_df[col_label] = eff_vals.reindex(all_positions)
+
+                # Raw data for this replicate
+                raw_df[col_label] = treated_series
+
         return eff_df, raw_df
 
     def new_build_all_positions_tables(df, exp_var, control_label="0.000 μM"):
-        """New version adapted for DataFrame input"""
-        # Combine all previous steps
-        series_by_conc = group_by_concentration(df, exp_var)
+        """Build tables with all replicates as separate columns"""
+        series_by_conc = group_by_concentration_with_replicates(df, exp_var)
         labels_map, control_conc = create_labels_and_identify_control(series_by_conc, control_label)
-        eff_df, raw_df = build_dataframes_from_series(series_by_conc, labels_map, control_conc, control_label)
-        
-        # series_by_conc is returned here just for testing purposes
+        eff_df, raw_df = build_dataframes_from_replicates(
+            series_by_conc, labels_map, control_conc, control_label
+        )
         return eff_df, raw_df
     
     def _hill_model_inc(x, Emax, EC50, h, baseline):
@@ -1692,10 +1738,17 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
     def _parse_um_from_label(label: str) -> float:
         """
-        Parse '12.3 μM' or '12.3 uM' (with optional '(repN)' suffix) -> 12.3 (float μM).
+        Parse concentration from labels like:
+        - '12.3 μM' → 12.3
+        - '12.3 μM (sample_name)' → 12.3
+        - '12.3 uM' → 12.3
         Returns np.nan if not parseable.
         """
-        m = re.search(r'([0-9]*\.?[0-9]+)\s*[μu]M', label, flags=re.I)
+        # Extract the part before any parentheses
+        label_base = label.split('(')[0].strip()
+
+        # Match concentration value
+        m = re.search(r'([0-9]*\.?[0-9]+)\s*[μu]M', label_base, flags=re.I)
         return float(m.group(1)) if m else np.nan
 
     # ============================== MAIN PROCESSING ==============================
@@ -1740,53 +1793,82 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
     # ============================== PLOTLY VISUALIZATION =======================
     
     def create_plotly_plots(df, params_df, positions, x_label, title_prefix=""):
-        """Create plotly plots for given positions"""
+        """Create plotly plots for given positions, showing all replicates"""
+
+        # Parse concentrations from column labels
         cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
-        x_all = np.array([_parse_um_from_label(c) for c in cols], dtype=float)
-        order = np.argsort(x_all)
-        cols = [cols[i] for i in order]
-        x_all = x_all[order]
-        
+
+        # Build mapping: concentration → list of column labels
+        conc_to_cols = {}
+        for col in cols:
+            conc = _parse_um_from_label(col)
+            if conc not in conc_to_cols:
+                conc_to_cols[conc] = []
+            conc_to_cols[conc].append(col)
+
+        # Sort concentrations
+        sorted_concs = sorted(conc_to_cols.keys())
+
         fig = go.Figure()
         trace_labels = []
-        
+
         for i, pos in enumerate(positions):
             if pos not in df.index:
                 print(f"Position {pos} not in dataframe.")
                 continue
-                
-            row = df.loc[pos, cols].to_numpy(float)
-            m = np.isfinite(x_all) & np.isfinite(row)
-            x = x_all[m]
-            y = row[m]
-            
-            if x.size < 2:
+
+            # Collect all x, y pairs for this position (across all replicates)
+            x_all = []
+            y_all = []
+            hover_text_all = []
+
+            for conc in sorted_concs:
+                col_list = conc_to_cols[conc]
+                for col in col_list:
+                    y_val = df.loc[pos, col]
+                    if np.isfinite(y_val):
+                        x_all.append(conc)
+                        y_all.append(y_val)
+                        # Extract sample name from column label if present
+                        if '(' in col:
+                            sample_name = col.split('(')[1].rstrip(')')
+                            hover_text_all.append(f"{x_label}: {conc} μM<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
+                        else:
+                            hover_text_all.append(f"{x_label}: {conc} μM<br>Response: {y_val:.4f}")
+
+            x_all = np.array(x_all)
+            y_all = np.array(y_all)
+
+            if len(x_all) < 2:
                 print(f"Position {pos} has <2 points to plot.")
                 continue
-            
+
+            # Check for fitted parameters
             rec = params_df.query("Position == @pos and success")
             if rec.empty:
                 print(f"Position {pos} had no successful fit.")
                 continue
-            
+
             Emax, EC50, h, baseline = rec.iloc[0][["Emax", "EC50_uM", "h", "baseline"]]
             r2 = rec.iloc[0]["r2"]
             use_dec = (rec.iloc[0]["direction"] == "decreasing")
-            
-            # Data points
+
+            # Data points (all replicates)
             fig.add_trace(go.Scatter(
-                x=x, y=y,
+                x=x_all,
+                y=y_all,
                 mode='markers',
                 name=f'Position {pos} data',
                 visible=False,  # Will be set to visible by dropdown logic
-                marker=dict(size=8),
-                hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
+                marker=dict(size=8, color='blue'),
+                text=hover_text_all,
+                hovertemplate='%{text}<extra></extra>'
             ))
             trace_labels.append(f"Position {pos}")
 
             # Hill curve fit
-            xp = np.logspace(np.log10(max(np.min(x[x > 0]), EC50_MIN)),
-                           np.log10(np.max(x)), 400)
+            xp = np.logspace(np.log10(max(np.min(x_all[x_all > 0]), EC50_MIN)),
+                           np.log10(np.max(x_all)), 400)
             model = _hill_model_dec if use_dec else _hill_model_inc
             yhat = model(xp, Emax, EC50, h, baseline)
 
