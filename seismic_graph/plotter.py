@@ -1471,18 +1471,20 @@ def binding_affinity_original(data:pd.DataFrame, experimental_variable:str, sele
     return {'fig':fig, 'data':df}
 
 def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=False, positions_to_plot=None) -> dict:
-    
+
     from scipy.optimize import least_squares
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
     import re
-    
+
     assert len(data) > 0, "No data to plot"
     assert experimental_variable in data.columns, "Experimental variable not found in data"
     assert len(data['sequence'].unique()) == 1, "More than one sequence found in data. Check that reference and section are unique"
 
     if normalize:
         raise NotImplementedError("Normalization is not yet implemented")
+
+
     
     # ============================== CONFIG =======================================
     EPS = 1e-12
@@ -1500,78 +1502,84 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         series = pd.Series(sub_rate_array, index=positions)
         return series
 
-    def group_by_concentration_with_replicates(df, exp_var):
-        """Group by concentration, keeping all replicates.
+    def group_by_exp_var_with_replicates(df, exp_var, var_info):
+        """Group by experimental variable value, keeping all replicates.
 
         Returns:
             dict: {
-                conc: {
+                exp_value: {
                     "series_list": [Series, Series, ...],  # One per replicate
                     "sample_names": [str, str, ...],        # Corresponding sample names
                     "n_replicates": int
                 }
             }
         """
-        series_by_conc = {}
+        series_by_value = {}
 
-        for conc in df[exp_var].unique():
-            conc_mask = df[exp_var] == conc
-            conc_rows = df[conc_mask]
+        for exp_value in df[exp_var].unique():
+            value_mask = df[exp_var] == exp_value
+            value_rows = df[value_mask]
 
-            # Extract mutation series for ALL replicates at this concentration
+            # Extract mutation series for ALL replicates at this experimental variable value
             replicate_series_list = []
             sample_names = []
 
-            for idx, row in conc_rows.iterrows():
+            for idx, row in value_rows.iterrows():
                 replicate_series_list.append(extract_position_series(row['sub_rate']))
                 # Create unique identifier for this row using sample name
                 sample_id = f"{row['sample']}"
                 sample_names.append(sample_id)
 
-            series_by_conc[conc] = {
+            series_by_value[exp_value] = {
                 "series_list": replicate_series_list,
                 "sample_names": sample_names,
                 "n_replicates": len(replicate_series_list)
             }
 
             if len(replicate_series_list) > 1:
-                print(f"Concentration {conc} μM: {len(replicate_series_list)} replicates ({', '.join(sample_names)})")
+                unit_str = f" {var_info['unit']}" if var_info['has_unit'] else ""
+                print(f"{var_info['name']} = {exp_value}{unit_str}: {len(replicate_series_list)} replicates ({', '.join(sample_names)})")
 
-        return series_by_conc
+        return series_by_value
 
-    def create_labels_and_identify_control(series_by_conc, control_label="0.000 μM"):
-        """Create μM labels and identify control data"""
-        
-        # Convert concentrations to labels
+    def create_labels_and_identify_control(series_by_value, var_info, control_value=None):
+        """Create labels and identify control data (typically the minimum value).
+
+        Args:
+            series_by_value: dict mapping exp_var values to replicate data
+            var_info: dict from _extract_variable_info
+            control_value: specific control value, or None to use minimum value
+
+        Returns:
+            tuple: (labels_map, control_value)
+        """
+
+        # Create labels with units
         labels_map = {}
-        for conc in series_by_conc.keys():
-            if conc == 0.0:
-                labels_map[conc] = control_label
-            else:
-                labels_map[conc] = f"{conc:.3g} μM"
-        
-        # Check control exists
-        control_conc = None
-        for conc, label in labels_map.items():
-            if label == control_label:
-                control_conc = conc
-                break
-        
-        if control_conc is None:
-            raise ValueError(f"Control label '{control_label}' not found")
-        
-        return labels_map, control_conc
+        unit_str = f" {var_info['unit']}" if var_info['has_unit'] else ""
 
-    def build_dataframes_from_replicates(series_by_conc, labels_map, control_conc, control_label="0.000 μM"):
+        for value in series_by_value.keys():
+            labels_map[value] = f"{value:.3g}{unit_str}"
+
+        # Identify control value (default to minimum if not specified)
+        if control_value is None:
+            control_value = min(series_by_value.keys())
+
+        if control_value not in series_by_value:
+            raise ValueError(f"Control value {control_value} not found in data")
+
+        return labels_map, control_value
+
+    def build_dataframes_from_replicates(series_by_value, labels_map, control_value):
         """Build eff_df and raw_df with separate columns for each replicate.
 
-        Column naming: "{conc_label} (rep{i})" or "{conc_label} ({sample_name})"
+        Column naming: "{value_label} (rep{i})" or "{value_label} ({sample_name})"
         """
 
         # Get all unique positions
         all_series = []
-        for conc_data in series_by_conc.values():
-            all_series.extend(conc_data["series_list"])
+        for value_data in series_by_value.values():
+            all_series.extend(value_data["series_list"])
         all_positions = sorted(set().union(*[s.index for s in all_series]))
 
         # Initialize DataFrames
@@ -1579,7 +1587,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         raw_df = pd.DataFrame(index=all_positions, dtype=float)
 
         # Get control replicate data
-        control_data = series_by_conc[control_conc]
+        control_data = series_by_value[control_value]
         control_series_list = [s.reindex(all_positions) for s in control_data["series_list"]]
 
         # If multiple control replicates, use their mean for effect calculation
@@ -1589,15 +1597,15 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         else:
             control_series = control_series_list[0]
 
-        # Process each non-control concentration
-        for conc, conc_data in series_by_conc.items():
-            if conc == control_conc:
+        # Process each non-control experimental variable value
+        for exp_value, value_data in series_by_value.items():
+            if exp_value == control_value:
                 continue
 
-            base_label = labels_map[conc]
-            replicate_series_list = conc_data["series_list"]
-            sample_names = conc_data["sample_names"]
-            n_reps = conc_data["n_replicates"]
+            base_label = labels_map[exp_value]
+            replicate_series_list = value_data["series_list"]
+            sample_names = value_data["sample_names"]
+            n_reps = value_data["n_replicates"]
 
             # Create a column for EACH replicate
             for rep_idx, (rep_series, sample_name) in enumerate(zip(replicate_series_list, sample_names)):
@@ -1625,12 +1633,12 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
         return eff_df, raw_df
 
-    def new_build_all_positions_tables(df, exp_var, control_label="0.000 μM"):
+    def new_build_all_positions_tables(df, exp_var, var_info, control_value=None):
         """Build tables with all replicates as separate columns"""
-        series_by_conc = group_by_concentration_with_replicates(df, exp_var)
-        labels_map, control_conc = create_labels_and_identify_control(series_by_conc, control_label)
+        series_by_value = group_by_exp_var_with_replicates(df, exp_var, var_info)
+        labels_map, control_value = create_labels_and_identify_control(series_by_value, var_info, control_value)
         eff_df, raw_df = build_dataframes_from_replicates(
-            series_by_conc, labels_map, control_conc, control_label
+            series_by_value, labels_map, control_value
         )
         return eff_df, raw_df
     
@@ -1652,15 +1660,15 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         fit both increasing and decreasing models and choose the one with lower RSS.
         """
 
-        cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
-        doses = np.array([_parse_um_from_label(c) for c in cols], dtype=float)
-        order = np.argsort(doses)
+        cols = [c for c in df.columns if np.isfinite(_parse_value_from_label(c))]
+        values = np.array([_parse_value_from_label(c) for c in cols], dtype=float)
+        order = np.argsort(values)
 
-        # cols is now all the column headings that represent valid concentrations, ordered
+        # cols is now all the column headings that represent valid experimental variable values, ordered
         cols = [cols[i] for i in order]
 
-        # x_all is now the values of the column headings that represent valid concentrations, ordered
-        x_all = doses[order]
+        # x_all is now the values of the column headings that represent valid exp var values, ordered
+        x_all = values[order]
 
         def _fit_with_model(x, y, model):
             # init/bounds from data
@@ -1688,7 +1696,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             x = x_all[m]; y = y[m]
             n = x.size
             if n < min_points:
-                records.append({"Position": pos, "Emax": np.nan, "EC50_uM": np.nan, "h": np.nan,
+                records.append({"Position": pos, "Emax": np.nan, "EC50": np.nan, "h": np.nan,
                                 "baseline": np.nan, "r2": np.nan, "n_points": n,
                                 "success": False, "metric": metric_name,
                                 "direction": np.nan, "rss_inc": np.nan, "rss_dec": np.nan})
@@ -1721,7 +1729,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
             records.append({"Position": pos,
                             "Emax": (p[0] if ok else np.nan),
-                            "EC50_uM": (p[1] if ok else np.nan),
+                            "EC50": (p[1] if ok else np.nan),
                             "h": (p[2] if ok else np.nan),
                             "baseline": (p[3] if ok else np.nan),
                             "r2": (r2 if ok else np.nan),
@@ -1736,24 +1744,58 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
     # ============================== HELPERS ======================================
 
-    def _parse_um_from_label(label: str) -> float:
+    def _parse_value_from_label(label: str) -> float:
         """
-        Parse concentration from labels like:
+        Parse experimental variable value from labels like:
         - '12.3 μM' → 12.3
         - '12.3 μM (sample_name)' → 12.3
-        - '12.3 uM' → 12.3
+        - '37.5 °C' → 37.5
+        - '100' → 100.0
+        - '0.5 mg/kg (sample1)' → 0.5
+
+        Extracts the first numeric value found before any parentheses.
         Returns np.nan if not parseable.
         """
         # Extract the part before any parentheses
         label_base = label.split('(')[0].strip()
 
-        # Match concentration value
-        m = re.search(r'([0-9]*\.?[0-9]+)\s*[μu]M', label_base, flags=re.I)
+        # Match any numeric value (including scientific notation)
+        m = re.search(r'([+-]?[0-9]*\.?[0-9]+(?:[eE][+-]?[0-9]+)?)', label_base)
         return float(m.group(1)) if m else np.nan
 
+    def _extract_variable_info(exp_var_name: str) -> dict:
+        """Extract unit information from experimental variable name.
+
+        Examples:
+            'ASO_conc ("µM")' → {"name": "ASO_conc", "unit": "µM", "has_unit": True}
+            'temperature ("°C")' → {"name": "temperature", "unit": "°C", "has_unit": True}
+            'pH' → {"name": "pH", "unit": "", "has_unit": False}
+            'dose (mg/kg)' → {"name": "dose", "unit": "mg/kg", "has_unit": True}
+
+        Returns:
+            dict with keys: "name" (str), "unit" (str), "has_unit" (bool)
+        """
+        # Check for pattern: name ("unit") or name (unit)
+        match = re.match(r'^(.+?)\s*\(\s*["\']?(.+?)["\']?\s*\)$', exp_var_name)
+        if match:
+            return {
+                "name": match.group(1).strip(),
+                "unit": match.group(2).strip(),
+                "has_unit": True
+            }
+        else:
+            return {
+                "name": exp_var_name,
+                "unit": "",
+                "has_unit": False
+            }
+
     # ============================== MAIN PROCESSING ==============================
-    
-    eff_df, raw_df = new_build_all_positions_tables(data, experimental_variable)
+
+    # Extract variable info (name and unit) from experimental variable
+    var_info = _extract_variable_info(experimental_variable)
+
+    eff_df, raw_df = new_build_all_positions_tables(data, experimental_variable, var_info)
 
     eff_params = fit_hill_per_position(eff_df, min_points=3,
                                 metric_name="effect",
@@ -1792,22 +1834,22 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
     # ============================== PLOTLY VISUALIZATION =======================
     
-    def create_plotly_plots(df, params_df, positions, x_label, title_prefix=""):
+    def create_plotly_plots(df, params_df, positions, x_label, var_info, title_prefix=""):
         """Create plotly plots for given positions, showing all replicates"""
 
-        # Parse concentrations from column labels
-        cols = [c for c in df.columns if np.isfinite(_parse_um_from_label(c))]
+        # Parse experimental variable values from column labels
+        cols = [c for c in df.columns if np.isfinite(_parse_value_from_label(c))]
 
-        # Build mapping: concentration → list of column labels
-        conc_to_cols = {}
+        # Build mapping: exp_var_value → list of column labels
+        value_to_cols = {}
         for col in cols:
-            conc = _parse_um_from_label(col)
-            if conc not in conc_to_cols:
-                conc_to_cols[conc] = []
-            conc_to_cols[conc].append(col)
+            exp_value = _parse_value_from_label(col)
+            if exp_value not in value_to_cols:
+                value_to_cols[exp_value] = []
+            value_to_cols[exp_value].append(col)
 
-        # Sort concentrations
-        sorted_concs = sorted(conc_to_cols.keys())
+        # Sort experimental variable values
+        sorted_values = sorted(value_to_cols.keys())
 
         fig = go.Figure()
         trace_labels = []
@@ -1822,19 +1864,21 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             y_all = []
             hover_text_all = []
 
-            for conc in sorted_concs:
-                col_list = conc_to_cols[conc]
+            unit_str = f" {var_info['unit']}" if var_info['has_unit'] else ""
+
+            for exp_value in sorted_values:
+                col_list = value_to_cols[exp_value]
                 for col in col_list:
                     y_val = df.loc[pos, col]
                     if np.isfinite(y_val):
-                        x_all.append(conc)
+                        x_all.append(exp_value)
                         y_all.append(y_val)
                         # Extract sample name from column label if present
                         if '(' in col:
                             sample_name = col.split('(')[1].rstrip(')')
-                            hover_text_all.append(f"{x_label}: {conc} μM<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
+                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
                         else:
-                            hover_text_all.append(f"{x_label}: {conc} μM<br>Response: {y_val:.4f}")
+                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Response: {y_val:.4f}")
 
             x_all = np.array(x_all)
             y_all = np.array(y_all)
@@ -1849,7 +1893,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                 print(f"Position {pos} had no successful fit.")
                 continue
 
-            Emax, EC50, h, baseline = rec.iloc[0][["Emax", "EC50_uM", "h", "baseline"]]
+            Emax, EC50, h, baseline = rec.iloc[0][["Emax", "EC50", "h", "baseline"]]
             r2 = rec.iloc[0]["r2"]
             use_dec = (rec.iloc[0]["direction"] == "decreasing")
 
@@ -1873,7 +1917,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             yhat = model(xp, Emax, EC50, h, baseline)
 
             fit_type = "inhibitory" if use_dec else "activating"
-            fit_label = f"{fit_type} fit (EC50≈{EC50:.3g} μM, h={h:.2g}, R²={r2:.3f})"
+            fit_label = f"{fit_type} fit (EC50≈{EC50:.3g}{unit_str}, h={h:.2g}, R²={r2:.3f})"
 
             fig.add_trace(go.Scatter(
                 x=xp, y=yhat,
@@ -1889,10 +1933,10 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
     
     # Create plots for both effect and raw data
     eff_fig, eff_trace_labels = create_plotly_plots(
-        eff_df, eff_params, good_eff, experimental_variable, "Effect - "
+        eff_df, eff_params, good_eff, experimental_variable, var_info, "Effect - "
     )
     raw_fig, raw_trace_labels = create_plotly_plots(
-        raw_df, raw_params, good_raw, experimental_variable, "Raw - "
+        raw_df, raw_params, good_raw, experimental_variable, var_info, "Raw - "
     )
     
     # Combine figures - create dropdown for each position-type combination
