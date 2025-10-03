@@ -1368,8 +1368,19 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
     return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}
 
 
-def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=False, positions_to_plot=None) -> dict:
+def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=False, positions_to_plot=None, fit_curves=True) -> dict:
+    """Generate binding affinity plots with optional curve fitting.
 
+    Args:
+        data: DataFrame with mutation profile data
+        experimental_variable: Name of the experimental variable column
+        normalize: Whether to normalize data (not yet implemented)
+        positions_to_plot: Optional list of 1-indexed positions to plot
+        fit_curves: If True, fit Hill curves. If False, show scatterplot only.
+
+    Returns:
+        dict with 'fig' (Plotly figure) and 'data' (DataFrame)
+    """
     from scipy.optimize import least_squares
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
@@ -1723,6 +1734,39 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                 "has_unit": False
             }
 
+    def select_top_positions_by_variance(df, n=5):
+        """Select top N positions by variance across experimental variable values.
+
+        Used when fit_curves=False and positions_to_plot=None to auto-select
+        positions that show the most change across experimental variable values.
+
+        Args:
+            df: DataFrame with positions as index and exp var values as columns
+            n: Number of top positions to select
+
+        Returns:
+            list of position indices
+        """
+        # Parse experimental variable values from column labels
+        cols = [c for c in df.columns if np.isfinite(_parse_value_from_label(c))]
+
+        if not cols:
+            return []
+
+        # Calculate variance for each position across experimental variable values
+        variances = []
+        for pos in df.index:
+            values = df.loc[pos, cols].to_numpy(dtype=float)
+            valid_values = values[np.isfinite(values)]
+            if len(valid_values) >= 2:
+                variances.append((pos, np.var(valid_values)))
+            else:
+                variances.append((pos, 0.0))
+
+        # Sort by variance (descending) and take top N
+        variances.sort(key=lambda x: x[1], reverse=True)
+        return [pos for pos, var in variances[:n]]
+
     # ============================== MAIN PROCESSING ==============================
 
     # Extract variable info (name and unit) from experimental variable
@@ -1732,46 +1776,149 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
     eff_df, raw_df = build_all_positions_tables(data, experimental_variable, var_info,
                                                   control_value=None, positions_to_plot=positions_to_plot)
 
-    # Fit Hill curves, optionally only for positions_to_plot
-    eff_params = fit_hill_per_position(eff_df, min_points=3,
-                                metric_name="effect",
-                                direction="auto",  # effect should rise
-                                positions_to_fit=positions_to_plot)
+    if fit_curves:
+        # ==================== MODE: HILL CURVE FITTING ====================
+        # Fit Hill curves, optionally only for positions_to_plot
+        eff_params = fit_hill_per_position(eff_df, min_points=3,
+                                    metric_name="effect",
+                                    direction="auto",  # effect should rise
+                                    positions_to_fit=positions_to_plot)
 
-    raw_params = fit_hill_per_position(raw_df, min_points=3,
-                                metric_name="raw",
-                                direction="auto_prefer_decreasing",
-                                positions_to_fit=positions_to_plot)
+        raw_params = fit_hill_per_position(raw_df, min_points=3,
+                                    metric_name="raw",
+                                    direction="auto_prefer_decreasing",
+                                    positions_to_fit=positions_to_plot)
 
-    # Get positions for plotting - either user-specified or top 5 with good fits
-    if positions_to_plot is not None and len(positions_to_plot) > 0:
-        # User specified positions - filter to those with successful fits
-        good_eff = [pos for pos in positions_to_plot if pos in eff_params.query("success")["Position"].values]
-        good_raw = [pos for pos in positions_to_plot if pos in raw_params.query("success")["Position"].values]
+        # Get positions for plotting - either user-specified or top 5 with good fits
+        if positions_to_plot is not None and len(positions_to_plot) > 0:
+            # User specified positions - filter to those with successful fits
+            good_eff = [pos for pos in positions_to_plot if pos in eff_params.query("success")["Position"].values]
+            good_raw = [pos for pos in positions_to_plot if pos in raw_params.query("success")["Position"].values]
 
-        # Warn if any requested positions don't have successful fits
-        all_requested = set(positions_to_plot)
-        all_available = set(good_eff + good_raw)
-        missing = all_requested - all_available
-        if missing:
-            print(f"Warning: The following positions do not have successful fits and will be skipped: {sorted(missing)}")
-    else:
-        # Auto-select top 5 positions with good fits (r2 > 0.6)
-        good_eff = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
-        good_raw = raw_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
-
-    # Combine and deduplicate positions for plotting
-    all_good_positions = list(set(good_eff + good_raw))
-
-    if not all_good_positions:
-        if positions_to_plot is not None:
-            print(f"None of the requested positions {positions_to_plot} have successful fits")
+            # Warn if any requested positions don't have successful fits
+            all_requested = set(positions_to_plot)
+            all_available = set(good_eff + good_raw)
+            missing = all_requested - all_available
+            if missing:
+                print(f"Warning: The following positions do not have successful fits and will be skipped: {sorted(missing)}")
         else:
-            print("No positions with good fits found (r2 > 0.6)")
-        return {'fig': go.Figure(), 'data': data}
+            # Auto-select top 5 positions with good fits (r2 > 0.6)
+            good_eff = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
+            good_raw = raw_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
+
+        # Combine and deduplicate positions for plotting
+        all_good_positions = list(set(good_eff + good_raw))
+
+        if not all_good_positions:
+            if positions_to_plot is not None:
+                print(f"None of the requested positions {positions_to_plot} have successful fits")
+            else:
+                print("No positions with good fits found (r2 > 0.6)")
+            return {'fig': go.Figure(), 'data': data}
+
+    else:
+        # ==================== MODE: SCATTERPLOT ONLY (NO FITTING) ====================
+        # Get positions for plotting - either user-specified or top 5 by variance
+        if positions_to_plot is not None and len(positions_to_plot) > 0:
+            # User specified positions - use directly
+            good_eff = [pos for pos in positions_to_plot if pos in eff_df.index]
+            good_raw = [pos for pos in positions_to_plot if pos in raw_df.index]
+        else:
+            # Auto-select top 5 positions by variance (shows most change)
+            good_eff = select_top_positions_by_variance(eff_df, n=5)
+            good_raw = select_top_positions_by_variance(raw_df, n=5)
+
+        # Combine and deduplicate positions for plotting
+        all_good_positions = list(set(good_eff + good_raw))
+
+        if not all_good_positions:
+            print("No positions available for plotting")
+            return {'fig': go.Figure(), 'data': data}
+
+        # No params_df needed for scatterplot-only mode
+        eff_params = None
+        raw_params = None
 
     # ============================== PLOTLY VISUALIZATION =======================
-    
+
+    def create_plotly_plots_scatter_only(df, positions, x_label, var_info, title_prefix=""):
+        """Create plotly scatterplots for given positions (no curve fitting).
+
+        Args:
+            df: DataFrame with positions as index and exp var values as columns
+            positions: List of positions to plot
+            x_label: Label for x-axis (experimental variable name)
+            var_info: Dict from _extract_variable_info
+            title_prefix: Prefix for plot titles (e.g., "Effect - " or "Raw - ")
+
+        Returns:
+            tuple: (fig, trace_labels) where fig is plotly Figure and trace_labels tracks positions
+        """
+        # Parse experimental variable values from column labels
+        cols = [c for c in df.columns if np.isfinite(_parse_value_from_label(c))]
+
+        # Build mapping: exp_var_value → list of column labels
+        value_to_cols = {}
+        for col in cols:
+            exp_value = _parse_value_from_label(col)
+            if exp_value not in value_to_cols:
+                value_to_cols[exp_value] = []
+            value_to_cols[exp_value].append(col)
+
+        # Sort experimental variable values
+        sorted_values = sorted(value_to_cols.keys())
+
+        fig = go.Figure()
+        trace_labels = []
+
+        for i, pos in enumerate(positions):
+            if pos not in df.index:
+                print(f"Position {pos} not in dataframe.")
+                continue
+
+            # Collect all x, y pairs for this position (across all replicates)
+            x_all = []
+            y_all = []
+            hover_text_all = []
+
+            unit_str = f" {var_info['unit']}" if var_info['has_unit'] else ""
+
+            for exp_value in sorted_values:
+                col_list = value_to_cols[exp_value]
+                for col in col_list:
+                    y_val = df.loc[pos, col]
+                    if np.isfinite(y_val):
+                        x_all.append(exp_value)
+                        y_all.append(y_val)
+                        # Extract sample name from column label if present
+                        if '(' in col:
+                            sample_name = col.split('(')[1].rstrip(')')
+                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
+                        else:
+                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Response: {y_val:.4f}")
+
+            x_all = np.array(x_all)
+            y_all = np.array(y_all)
+
+            if len(x_all) < 1:
+                print(f"Position {pos} has no valid points to plot.")
+                continue
+
+            # Data points (all replicates) - no curve fitting
+            fig.add_trace(go.Scatter(
+                x=x_all,
+                y=y_all,
+                mode='markers',
+                name=f'Position {pos} data',
+                visible=False,  # Will be set to visible by dropdown logic
+                marker=dict(size=8, color='blue'),
+                text=hover_text_all,
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            trace_labels.append(f"Position {pos}")
+
+        return fig, trace_labels
+
     def create_plotly_plots(df, params_df, positions, x_label, var_info, title_prefix=""):
         """Create plotly plots for given positions, showing all replicates"""
 
@@ -1870,29 +2017,46 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         return fig, trace_labels
     
     # Create plots for both effect and raw data
-    eff_fig, eff_trace_labels = create_plotly_plots(
-        eff_df, eff_params, good_eff, experimental_variable, var_info, "Effect - "
-    )
-    raw_fig, raw_trace_labels = create_plotly_plots(
-        raw_df, raw_params, good_raw, experimental_variable, var_info, "Raw - "
-    )
-    
+    if fit_curves:
+        # With Hill curve fitting
+        eff_fig, eff_trace_labels = create_plotly_plots(
+            eff_df, eff_params, good_eff, experimental_variable, var_info, "Effect - "
+        )
+        raw_fig, raw_trace_labels = create_plotly_plots(
+            raw_df, raw_params, good_raw, experimental_variable, var_info, "Raw - "
+        )
+    else:
+        # Scatterplot only (no curve fitting)
+        eff_fig, eff_trace_labels = create_plotly_plots_scatter_only(
+            eff_df, good_eff, experimental_variable, var_info, "Effect - "
+        )
+        raw_fig, raw_trace_labels = create_plotly_plots_scatter_only(
+            raw_df, good_raw, experimental_variable, var_info, "Raw - "
+        )
+
     # Combine figures - create dropdown for each position-type combination
     fig = go.Figure()
 
     # Track position and type for each trace
     trace_info = []  # Each entry: {"position": int, "type": str}
 
-    # Effect traces (2 traces per position: scatter + curve)
-    for i, pos in enumerate(good_eff):
-        # Add both traces from this position
-        trace_info.append({"position": pos, "type": "effect"})  # scatter
-        trace_info.append({"position": pos, "type": "effect"})  # curve
+    if fit_curves:
+        # Effect traces (2 traces per position: scatter + curve)
+        for i, pos in enumerate(good_eff):
+            trace_info.append({"position": pos, "type": "effect"})  # scatter
+            trace_info.append({"position": pos, "type": "effect"})  # curve
 
-    # Raw traces (2 traces per position: scatter + curve)
-    for i, pos in enumerate(good_raw):
-        trace_info.append({"position": pos, "type": "raw"})  # scatter
-        trace_info.append({"position": pos, "type": "raw"})  # curve
+        # Raw traces (2 traces per position: scatter + curve)
+        for i, pos in enumerate(good_raw):
+            trace_info.append({"position": pos, "type": "raw"})  # scatter
+            trace_info.append({"position": pos, "type": "raw"})  # curve
+    else:
+        # Scatterplot only: 1 trace per position
+        for i, pos in enumerate(good_eff):
+            trace_info.append({"position": pos, "type": "effect"})  # scatter only
+
+        for i, pos in enumerate(good_raw):
+            trace_info.append({"position": pos, "type": "raw"})  # scatter only
 
     # Add all traces from both figures to combined figure
     for trace in eff_fig.data:

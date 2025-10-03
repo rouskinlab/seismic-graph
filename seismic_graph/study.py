@@ -558,10 +558,8 @@ class Study(object):
     
 
     binding_affinity_options = [
-        {"value": "none", "label": "None"},
-        {"value": "placeholder_A", "label": "Placeholder A"},
-        {"value": "placeholder_B", "label": "Placeholder B"},
-        {"value": "placeholder_C", "label": "Placeholder C"}
+        {"value": "none", "label": "None (scatterplot only)"},
+        {"value": "hill", "label": "Hill Equation Fit"}
     ]
 
     @classmethod
@@ -582,11 +580,12 @@ class Study(object):
 
         Args:
             experimental_variable (str): Name of the experimental variable to plot.
-            binding_affinity (str)
-            positions_to_plot (list, optional): List of 1-indexed positions to plot. If provided, only these positions will be displayed in the graph. If None, the top 5 positions with best fits (R² > 0.6) will be automatically selected. Defaults to None.
+            selected_binding_affinity (str): Type of fit to apply. "hill" for Hill equation curve fitting, "none" for scatterplot only.
+            positions_to_plot (list, optional): List of 1-indexed positions to plot. If provided, only these positions will be displayed in the graph. If None, the top 5 positions will be automatically selected. Defaults to None.
         """
         index_selected = True
         kwargs['table'] = self.table
+        kwargs['fit_curves'] = (selected_binding_affinity == "hill")
         return self.wrap_to_plotter(
             plotter.binding_affinity,
             locals(),
