@@ -1570,17 +1570,29 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
         return labels_map, control_value
 
-    def build_dataframes_from_replicates(series_by_value, labels_map, control_value):
+    def build_dataframes_from_replicates(series_by_value, labels_map, control_value, positions_to_plot=None):
         """Build eff_df and raw_df with separate columns for each replicate.
 
         Column naming: "{value_label} (rep{i})" or "{value_label} ({sample_name})"
+
+        Args:
+            series_by_value: dict mapping exp_var values to replicate data
+            labels_map: dict mapping exp_var values to display labels
+            control_value: the control experimental variable value
+            positions_to_plot: optional list of positions to include (for optimization)
         """
 
-        # Get all unique positions
+        # Get all unique positions, optionally filtered to positions_to_plot
         all_series = []
         for value_data in series_by_value.values():
             all_series.extend(value_data["series_list"])
-        all_positions = sorted(set().union(*[s.index for s in all_series]))
+
+        if positions_to_plot is not None and len(positions_to_plot) > 0:
+            # Only include user-specified positions
+            all_positions = sorted(positions_to_plot)
+        else:
+            # Include all positions found in the data
+            all_positions = sorted(set().union(*[s.index for s in all_series]))
 
         # Initialize DataFrames
         eff_df = pd.DataFrame(index=all_positions, dtype=float)
@@ -1633,12 +1645,20 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
         return eff_df, raw_df
 
-    def new_build_all_positions_tables(df, exp_var, var_info, control_value=None):
-        """Build tables with all replicates as separate columns"""
+    def build_all_positions_tables(df, exp_var, var_info, control_value=None, positions_to_plot=None):
+        """Build tables with all replicates as separate columns
+
+        Args:
+            df: input DataFrame
+            exp_var: name of experimental variable column
+            var_info: dict from _extract_variable_info
+            control_value: specific control value, or None to use minimum
+            positions_to_plot: optional list of positions to include (for optimization)
+        """
         series_by_value = group_by_exp_var_with_replicates(df, exp_var, var_info)
         labels_map, control_value = create_labels_and_identify_control(series_by_value, var_info, control_value)
         eff_df, raw_df = build_dataframes_from_replicates(
-            series_by_value, labels_map, control_value
+            series_by_value, labels_map, control_value, positions_to_plot
         )
         return eff_df, raw_df
     
@@ -1654,10 +1674,18 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
     def fit_hill_per_position(df: pd.DataFrame,
                             min_points: int = 3,
                             metric_name: str = "eff",
-                            direction: str = "auto_prefer_decreasing") -> pd.DataFrame:
+                            direction: str = "auto_prefer_decreasing",
+                            positions_to_fit=None) -> pd.DataFrame:
         """
         Fit a Hill curve per position. If direction is 'auto' or 'auto_prefer_decreasing',
         fit both increasing and decreasing models and choose the one with lower RSS.
+
+        Args:
+            df: DataFrame with positions as index and experimental variable values as columns
+            min_points: minimum number of points required to attempt a fit
+            metric_name: name of the metric being fit (for record keeping)
+            direction: 'increasing', 'decreasing', 'auto', or 'auto_prefer_decreasing'
+            positions_to_fit: optional list of positions to fit (for optimization). If None, fits all positions in df.
         """
 
         cols = [c for c in df.columns if np.isfinite(_parse_value_from_label(c))]
@@ -1669,6 +1697,12 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
         # x_all is now the values of the column headings that represent valid exp var values, ordered
         x_all = values[order]
+
+        # Determine which positions to fit
+        if positions_to_fit is not None:
+            positions_iter = [pos for pos in positions_to_fit if pos in df.index]
+        else:
+            positions_iter = df.index
 
         def _fit_with_model(x, y, model):
             # init/bounds from data
@@ -1690,7 +1724,8 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             return res.success, p, rss, r2
 
         records = []
-        for pos, row in df.iterrows():
+        for pos in positions_iter:
+            row = df.loc[pos]
             y = row[cols].to_numpy(dtype=float)
             m = np.isfinite(x_all) & np.isfinite(y)
             x = x_all[m]; y = y[m]
@@ -1795,15 +1830,20 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
     # Extract variable info (name and unit) from experimental variable
     var_info = _extract_variable_info(experimental_variable)
 
-    eff_df, raw_df = new_build_all_positions_tables(data, experimental_variable, var_info)
+    # Build DataFrames, optionally filtered to positions_to_plot
+    eff_df, raw_df = build_all_positions_tables(data, experimental_variable, var_info,
+                                                  control_value=None, positions_to_plot=positions_to_plot)
 
+    # Fit Hill curves, optionally only for positions_to_plot
     eff_params = fit_hill_per_position(eff_df, min_points=3,
                                 metric_name="effect",
-                                direction="auto")  # effect should rise
+                                direction="auto",  # effect should rise
+                                positions_to_fit=positions_to_plot)
 
     raw_params = fit_hill_per_position(raw_df, min_points=3,
                                 metric_name="raw",
-                                direction="auto_prefer_decreasing")
+                                direction="auto_prefer_decreasing",
+                                positions_to_fit=positions_to_plot)
 
     # Get positions for plotting - either user-specified or top 5 with good fits
     if positions_to_plot is not None and len(positions_to_plot) > 0:
