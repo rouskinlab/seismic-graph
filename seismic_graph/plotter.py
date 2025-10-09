@@ -1586,6 +1586,15 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         else:
             control_series = control_series_list[0]
 
+        # Add control data to raw_df (so it appears in scatterplots)
+        # Note: eff_df intentionally excludes control because "effect" measures
+        # deviation from baseline. raw_df includes control so users can see all
+        # raw data points.
+        control_base_label = labels_map[control_value]
+        for rep_series, sample_name in zip(control_data["series_list"], control_data["sample_names"]):
+            control_col_label = f"{control_base_label} ({sample_name})"
+            raw_df[control_col_label] = rep_series.reindex(all_positions)
+
         # Process each non-control experimental variable value
         for exp_value, value_data in series_by_value.items():
             if exp_value == control_value:
@@ -1594,15 +1603,11 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             base_label = labels_map[exp_value]
             replicate_series_list = value_data["series_list"]
             sample_names = value_data["sample_names"]
-            n_reps = value_data["n_replicates"]
 
             # Create a column for EACH replicate
             for rep_idx, (rep_series, sample_name) in enumerate(zip(replicate_series_list, sample_names)):
-                # Column label distinguishes replicates
-                if n_reps > 1:
-                    col_label = f"{base_label} ({sample_name})"
-                else:
-                    col_label = base_label  # No need to distinguish if only one replicate
+                # Column label always includes sample name for hover text
+                col_label = f"{base_label} ({sample_name})"
 
                 treated_series = rep_series.reindex(all_positions)
 
@@ -1958,12 +1963,9 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                     if np.isfinite(y_val):
                         x_all.append(exp_value)
                         y_all.append(y_val)
-                        # Extract sample name from column label if present
-                        if '(' in col:
-                            sample_name = col.split('(')[1].rstrip(')')
-                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
-                        else:
-                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Response: {y_val:.4f}")
+                        # Extract sample name from column label (always present in format "value (sample_name)")
+                        sample_name = col.split('(')[1].rstrip(')')
+                        hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
 
             x_all = np.array(x_all)
             y_all = np.array(y_all)
@@ -2026,12 +2028,9 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                     if np.isfinite(y_val):
                         x_all.append(exp_value)
                         y_all.append(y_val)
-                        # Extract sample name from column label if present
-                        if '(' in col:
-                            sample_name = col.split('(')[1].rstrip(')')
-                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
-                        else:
-                            hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Response: {y_val:.4f}")
+                        # Extract sample name from column label (always present in format "value (sample_name)")
+                        sample_name = col.split('(')[1].rstrip(')')
+                        hover_text_all.append(f"{x_label}: {exp_value}{unit_str}<br>Sample: {sample_name}<br>Response: {y_val:.4f}")
 
             x_all = np.array(x_all)
             y_all = np.array(y_all)
