@@ -10,13 +10,13 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), '..', 'fixtures')
 
 # Test data files (Temperature experiment data)
 TEST_DATA_FILES = [
-    os.path.join(FIXTURES_DIR, 'test/fixtures/GFPIVDPOS109_05x_S34_L001__webapp.json'),
-    os.path.join(FIXTURES_DIR, 'test/fixtures/GFPIVDPOS109_7x_S38_L001__webapp.json'),
-    os.path.join(FIXTURES_DIR, 'test/fixtures/POS109_0x_S6_L001__webapp.json'),
-    os.path.join(FIXTURES_DIR, 'test/fixtures/POS109_02x_S28_L001__webapp.json'),
-    os.path.join(FIXTURES_DIR, 'test/fixtures/POS109_005x_S22_L001__webapp.json'),
-    os.path.join(FIXTURES_DIR, 'test/fixtures/POS109_007x_S23_L001__webapp.json'),
-    os.path.join(FIXTURES_DIR, 'test/fixtures/POS109_035x_S25_L001__webapp.json'),
+    os.path.join(FIXTURES_DIR, 'GFPIVDPOS109_05x_S34_L001__webapp.json'),
+    os.path.join(FIXTURES_DIR, 'GFPIVDPOS109_7x_S38_L001__webapp.json'),
+    os.path.join(FIXTURES_DIR, 'POS109_0x_S6_L001__webapp.json'),
+    os.path.join(FIXTURES_DIR, 'POS109_02x_S28_L001__webapp.json'),
+    os.path.join(FIXTURES_DIR, 'POS109_005x_S22_L001__webapp.json'),
+    os.path.join(FIXTURES_DIR, 'POS109_007x_S23_L001__webapp.json'),
+    os.path.join(FIXTURES_DIR, 'POS109_035x_S25_L001__webapp.json'),
 ]
 
 # Plot test configurations
@@ -72,16 +72,16 @@ PLOT_TESTS = [
         'base_coverage_all_positions'
     ),
 
-    # Experimental variable across samples (Temperature) - multi-sample
+    # Experimental variable across samples (ASO_conc ("µM")) - multi-sample
     (
         'experimental_variable_across_samples',
         {
-            'experimental_variable': 'Temperature',
+            'experimental_variable': 'ASO_conc ("µM")',
             'reference': ['reference-pBADupdate'],
             'section': ['full'],
             'cluster': ['average']
         },
-        'exp_var_temperature'
+        'exp_var_aso_conc'
     ),
 
     # Compare mutation profiles - specific positions (multi-sample)
@@ -123,6 +123,8 @@ PLOT_TESTS = [
     (
         'binding_affinity',
         {
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
             'experimental_variable': 'ASO_conc ("µM")',
             'selected_binding_affinity': 'none',
         },
@@ -133,6 +135,8 @@ PLOT_TESTS = [
     (
         'binding_affinity',
         {
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
             'experimental_variable': 'ASO_conc ("µM")',
             'selected_binding_affinity': 'hill',
         },
@@ -143,6 +147,8 @@ PLOT_TESTS = [
     (
         'binding_affinity',
         {
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
             'experimental_variable': 'ASO_conc ("µM")',
             'selected_binding_affinity': 'hill',
             'positions_to_plot': [175, 208, 800],
@@ -154,6 +160,8 @@ PLOT_TESTS = [
     (
         'binding_affinity',
         {
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
             'experimental_variable': 'ASO_conc ("µM")',
             'selected_binding_affinity': 'none',
             'positions_to_plot': [175, 208, 800],
