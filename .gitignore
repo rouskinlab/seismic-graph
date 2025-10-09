@@ -160,3 +160,6 @@ docker-data/*
 update_headers.py
 draw/data/
 sandbox/
+
+# Visual regression testing - ignore current test outputs
+test/visual_regression/current/
