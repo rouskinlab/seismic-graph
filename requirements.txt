@@ -1,4 +1,4 @@
-plotly
+plotly~=5.23.0
 numpy 
 pandas
 scipy
@@ -21,4 +21,4 @@ sphinx_panels
 sphinx_click
 xmltodict
 pytest
-kaleido
+kaleido<1
