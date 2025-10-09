@@ -6,6 +6,28 @@ import plotly.graph_objects as go
 def __find_base_in_sequence(sequence, base_type):
     return [i for i, base in enumerate(sequence) if base in base_type]
 
+def _mask_positions(array, index_selected, is_string=False):
+    """Mask array to only include selected positions, replacing others with NaN or keeping original.
+
+    Args:
+        array: Array-like object to mask (list, np.array, or string)
+        index_selected: List of 0-indexed positions to keep
+        is_string: If True, return original string (for sequence/structure reference)
+
+    Returns:
+        For numeric arrays: np.array with NaN at unselected positions
+        For strings: original string unchanged (provides full context)
+    """
+    if is_string:
+        # Keep full string for reference (sequence, structure)
+        return array
+
+    # For numeric arrays, create mask with NaN at unselected positions
+    array_np = np.array(array, dtype=float)
+    result = np.full(len(array_np), np.nan, dtype=float)
+    result[index_selected] = array_np[index_selected]
+    return result
+
 def __index_selected(row, base_index, base_type, base_pairing, RNAstructure_use_DMS, RNAstructure_use_temp):
     index = list(range(len(row['sequence'])))
     if base_index != None:
@@ -95,17 +117,22 @@ def get_df(df, sample=None, reference=None, section=None, cluster=None, min_cov=
         base_pairing is not None or \
         index_selected:
             
-        df['index_selected'] = pd.Series([[]]*df.shape[0], index=df.index)    
+        df['index_selected'] = pd.Series([[]]*df.shape[0], index=df.index)
         df.loc[:,'index_selected'] = df.apply(lambda row: __index_selected(row, base_index, base_type, base_pairing, RNAstructure_use_DMS, RNAstructure_use_temp), axis=1)
         df = df.loc[df.index_selected.apply(lambda x: len(x) > 0),:]
         bp_attr = ['sequence', 'sub_A','sub_C','sub_G','sub_T', 'sub_N', 'info','del','ins','cov','sub_rate'] + \
             [c for c in df.columns.tolist() if (c.startswith('structure') or c.startswith('mod_bases'))]
-            
+
+        # Attributes that should remain as full strings for context
+        string_attrs = ['sequence'] + [c for c in df.columns.tolist() if c.startswith('structure')]
+
         for attr in bp_attr:
             # filter only if the attribute is an iterable
             if df[attr].apply(lambda x: hasattr(x, '__iter__')).all():
-                filtered_cells = df.apply(lambda row: [row[attr][i] for i in row['index_selected']], axis=1)
-                df.loc[:, attr] = filtered_cells.apply(lambda x: ''.join(x) if isinstance(x[0], str) else x)
+                is_string = attr in string_attrs
+                # Mask positions instead of truncating - preserves original indices
+                masked_cells = df.apply(lambda row: _mask_positions(row[attr], row['index_selected'], is_string=is_string), axis=1)
+                df.loc[:, attr] = masked_cells
 
     if df.empty:
         return df

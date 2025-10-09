@@ -36,10 +36,26 @@ LIST_COLORS = ['red','green','blue','orange','purple','black','yellow','pink','b
 def mutation_fraction(df, show_ci:bool=False)->dict:
     assert len(df) == 1, "df must have only one row"
     mh = df.iloc[0].copy()
-    
+
     traces, layouts = [], []
-    mh['index_selected'] = [i+1 for i in range(len(mh['sequence']))] #TODO[i + 1 for i in mh.index_selected] # index starts at 1
-    mh_unrolled = pd.DataFrame({'mut_rate':list(mh.sub_rate), 'base':list(mh.sequence), 'index_reset':list(range(1, 1+len(mh.index_selected))),'index_selected':mh.index_selected})
+    # Use actual 1-indexed genomic positions for x-axis
+    actual_positions = [i+1 for i in range(len(mh['sequence']))]
+
+    # Create unrolled DataFrame with actual positions, filtering out NaN values
+    sub_rate_array = np.array(mh.sub_rate)
+    sequence_str = str(mh.sequence)
+
+    # Build lists filtering out positions with NaN mutation rates
+    valid_data = []
+    for i, (pos, base, rate) in enumerate(zip(actual_positions, sequence_str, sub_rate_array)):
+        if not np.isnan(rate):
+            valid_data.append({'position': pos, 'base': base, 'mut_rate': rate, 'array_index': i})
+
+    mh_unrolled = pd.DataFrame(valid_data)
+
+    if len(mh_unrolled) == 0:
+        # No valid data to plot
+        return {'fig': go.Figure(), 'df': mh}
 
     err_min, err_max= dms_ci(mh['sub_rate'], len(mh['sub_rate'])*[mh['num_aligned']])
     mr = np.array(mh['sub_rate'])
@@ -50,10 +66,10 @@ def mutation_fraction(df, show_ci:bool=False)->dict:
             continue
 
         hover_attr = pd.DataFrame({'mut_rate':list(df_loc.mut_rate),
-                                        'base':list(df_loc.base), 
-                                        'index': df_loc['index_selected']})
+                                        'base':list(df_loc.base),
+                                        'index': df_loc['position']})
         traces.append(go.Bar(
-            x= np.array(df_loc['index_reset']),
+            x= np.array(df_loc['position']),  # Use actual genomic positions
             y= np.array(df_loc['mut_rate']),
             name=bt,
             marker_color=cmap[bt],
@@ -61,7 +77,8 @@ def mutation_fraction(df, show_ci:bool=False)->dict:
             hovertemplate = ''.join(["<b>"+ha+": %{text["+str(i)+"]}<br>" for i, ha in enumerate(hover_attr)]),
             ))
         if show_ci:
-            idx = [i for i, s in enumerate(mh['sequence']) if s == bt]
+            # Get array indices for this base type from the valid data
+            idx = df_loc['array_index'].tolist()
             traces[-1].update(
                         error_y=dict(
                             type='data',
@@ -105,23 +122,50 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
     assert len(data) > 0, "The combination of sample, reference and section does not exist in the dataframe"
     assert len(data) == 1, "The combination of sample, reference and section is not unique in the dataframe"
     data = data.iloc[0].copy()
-    
-    df = pd.DataFrame(index = list(data['sequence']))
+
+    sequence_str = str(data['sequence'])
+    df = pd.DataFrame(index = list(sequence_str))
     fig = go.Figure()
 
-    data['err_min'] = [dms_ci(p, data['num_aligned'])[0] for p in data['sub_rate']]
-    data['err_max'] = [dms_ci(p, data['num_aligned'])[1] for p in data['sub_rate']]
+    # Identify valid (non-NaN) positions
+    sub_rate_array = np.array(data['sub_rate'])
+    valid_mask = ~np.isnan(sub_rate_array)
+    positions = np.arange(1, 1+len(sequence_str))
+    valid_positions = positions[valid_mask]
+
+    # Calculate error bars only for valid positions
+    err_min_all = [dms_ci(p, data['num_aligned'])[0] if not np.isnan(p) else np.nan for p in data['sub_rate']]
+    err_max_all = [dms_ci(p, data['num_aligned'])[1] if not np.isnan(p) else np.nan for p in data['sub_rate']]
+    data['err_min'] = err_min_all
+    data['err_max'] = err_max_all
 
     for base in ['A','C','G','T']:
-        df[base] = np.array(data['sub_'+base])/np.array(data['info'])
-        fig.add_trace( go.Bar(x=np.arange(1, 1+len(data['sequence'])), y=list(df[base]), marker_color=cmap[base], showlegend=True, name=base) )
-    
+        info_array = np.array(data['info'])
+        sub_base_array = np.array(data['sub_'+base])
+
+        # Calculate mutation fraction, handling division by zero
+        with np.errstate(divide='ignore', invalid='ignore'):
+            mut_frac = sub_base_array / info_array
+
+        df[base] = mut_frac
+
+        # Filter to only valid positions for plotting
+        fig.add_trace( go.Bar(
+            x=valid_positions,
+            y=mut_frac[valid_mask],
+            marker_color=cmap[base],
+            showlegend=True,
+            name=base
+        ) )
+
     # add error bars to stacked_bar[-1]
     if show_ci:
+        err_max_valid = [data['err_max'][i]-data['sub_rate'][i] for i in range(len(sequence_str)) if valid_mask[i]]
+        err_min_valid = [data['sub_rate'][i]-data['err_min'][i] for i in range(len(sequence_str)) if valid_mask[i]]
         fig.data[-1].error_y=dict(
                 type='data',
-                array= [data['err_max'][i]-data['sub_rate'][i] for i in range(len(data['sequence']))],
-                arrayminus = [data['sub_rate'][i]-data['err_min'][i] for i in range(len(data['sequence']))],
+                array=err_max_valid,
+                arrayminus=err_min_valid,
                 visible=True,
                 symmetric=False,
                 width=2,
@@ -161,7 +205,7 @@ def mutation_fraction_identity(data, show_ci:bool=False)->dict:
 def experimental_variable_across_samples(data:pd.DataFrame, experimental_variable:str, table:LinFitTable, normalize=False)->dict:
 
     fig = go.Figure()
-    
+
     assert len(data) > 0, "No data to plot"
     assert experimental_variable in data.columns, "Experimental variable not found in data"
     assert len(data['sequence'].unique()) == 1, "More than one sequence found in data. Check that reference and section are unique"
@@ -169,10 +213,29 @@ def experimental_variable_across_samples(data:pd.DataFrame, experimental_variabl
     if normalize:
         data = table.normalize_df(data, data['sample'].iloc[0])
 
+    # Build column names using actual genomic positions (1-indexed)
+    sequence_str = str(data['sequence'].iloc[0])
+    sub_rate_first = np.array(data['sub_rate'].iloc[0])
+
+    # Identify non-NaN positions
+    valid_mask = ~np.isnan(sub_rate_first)
+    valid_indices = np.where(valid_mask)[0]
+
+    # Generate column names for non-NaN positions only
+    position_columns = []
+    for i in valid_indices:
+        position_columns.append(f"{sequence_str[i]}{i+1}")  # e.g., "A1", "C9", "G10"
+
+    # Filter sub_rate arrays to only include non-NaN positions
+    filtered_sub_rates = []
+    for _, row in data.iterrows():
+        sub_rate_array = np.array(row['sub_rate'])
+        filtered_sub_rates.append(sub_rate_array[valid_mask])
+
     df = pd.DataFrame(
-        np.hstack([np.vstack(data['sub_rate'].values), np.vstack(data[experimental_variable].values)]),
+        np.hstack([np.vstack(filtered_sub_rates), np.vstack(data[experimental_variable].values)]),
         index=data[experimental_variable],
-        columns=[c + str(idx+1) for c, idx in zip(data['sequence'].iloc[0], data['index_selected'].iloc[0])] + [experimental_variable]
+        columns=position_columns + [experimental_variable]
         ).sort_index()
     
     for col in df.columns:
@@ -521,14 +584,19 @@ def mutation_per_read_per_reference(data):
 
 
 def base_coverage(data):
-    
+
     assert_only_one_row(data)
     data = data.iloc[0]
-    
+
+    # Filter out NaN positions
+    cov_array = np.array(data['cov'])
+    positions = np.arange(1, 1+len(cov_array))
+    valid_mask = ~np.isnan(cov_array)
+
     fig = go.Figure(
         go.Bar(
-            x=np.arange(1, 1+len(data['cov'])),
-            y=data['cov'],
+            x=positions[valid_mask],
+            y=cov_array[valid_mask],
             showlegend=False,
             marker_color='indianred',
             ),
