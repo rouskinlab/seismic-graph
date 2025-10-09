@@ -180,6 +180,73 @@ Key columns in Study.df:
 - `num_aligned`: Total aligned reads
 - `min_cov`: Minimum coverage across positions (for filtering)
 
+## Input Data Format
+
+### JSON File Structure
+
+seismic-graph processes JSON files formatted as `*__webapp.json` containing mutation profile data from SEISMIC-RNA experiments.
+
+#### Hierarchical Data Organization
+
+Data is nested using four levels: **Sample → Reference → Section → Cluster**
+
+```
+{
+  "#sample": "sample_name",           # Top-level metadata
+  "#User": "initials",
+  "#Date": "YYYY-MM-DD",
+  ... (other metadata keys starting with #)
+
+  "reference_name_1": {               # Reference level (e.g., "C5", "C10")
+    "#sequence": "ACGT...",
+    "#num_aligned": 6026,
+
+    "section_name": {                 # Section level (typically "full")
+      "#section_start": 1,
+      "#section_end": 67,
+      "#positions": [1, 2, 3, ...],   # For backwards compatibility
+
+      "cluster_name": {               # Cluster level (typically "average")
+        "sub_rate": [...],            # Core data: mutation rates per position
+        "cov": [...],                 # Core data: coverage per position
+        "sub_hist": [1146, 1712, 805],
+        "sub_N": [...],
+        "sub_A": [...],
+        "sub_C": [...],
+        "sub_G": [...],
+        "sub_T": [...],
+        "del": [...],
+        "ins": [...]
+      }
+    }
+  },
+
+  "reference_name_2": { ... }
+}
+```
+
+#### Key Structure Rules
+
+1. **Metadata Keys**: All keys starting with `#` are metadata
+2. **Reference Names**: Any top-level key without `#` is a reference name
+3. **Guaranteed Levels**: At minimum, expect section `"full"` and cluster `"average"`
+4. **Multiple Entities**: One file = one sample; may contain multiple references, sections per reference, and clusters per section
+
+#### Core Data Fields (used by seismic-graph)
+
+- `sub_rate`: Array of mutation rates per position (primary analysis data)
+- `cov`: Array of read coverage per position
+- `#num_aligned`: Total number of aligned reads (reference level)
+- `#sequence`: RNA sequence string (reference level)
+- `#positions`: List from `range(#section_start, #section_end+1)` - for backwards compatibility
+
+#### Position Indexing in JSON
+
+- `#section_start` and `#section_end` use 1-indexed positions (genomic convention)
+- `#positions` array contains 1-indexed positions
+- Data arrays (`sub_rate`, `cov`, etc.) use 0-indexed Python arrays
+- User-facing APIs convert from 1-indexed to 0-indexed internally
+
 ## Webapp Integration
 
 The separate Flask webapp (`/Users/casper/Local/HMS/Code/draw-app-5/`) uses this library:
