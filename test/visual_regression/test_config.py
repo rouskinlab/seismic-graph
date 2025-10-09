@@ -32,7 +32,7 @@ PLOT_TESTS = [
             'section': ['full'],
             'cluster': ['average']
         },
-        'mutation_fraction_basic'
+        'mutation_fraction_basic' 
     ),
 
     # Mutation fraction identity (single sample)
@@ -45,6 +45,70 @@ PLOT_TESTS = [
             'cluster': ['average']
         },
         'mutation_fraction_identity_basic'
+    ),
+
+    # Experimental variable across samples (ASO_conc ("µM")) - multi-sample
+    (
+        'experimental_variable_across_samples',
+        {
+            'experimental_variable': 'ASO_conc ("µM")',
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
+            'cluster': ['average']
+        },
+        'exp_var_aso_conc'
+    ),
+
+    # Mutation Fraction Delta
+    (
+        'mutation_fraction_delta',
+        {
+            'sample' : ['GFPIVDFR_rep0x_S9_L001', 'POS418_0x_S21_L001'],
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
+            'cluster': ['average']
+        },
+        'mutation_fraction_delta_2x'
+    ),
+
+    
+
+    # Mutations per Read per Sample
+    (
+        'mutations_per_read_per_sample',
+        {
+            'sample' : ['GFPIVDFR_rep0x_S9_L001'],
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
+            'cluster': ['average']
+        },
+        'mutations_per_read_per_sample'
+    ),
+
+
+    # distribution of aligned reads per reference for each sample and all samples combined
+    (
+        'num_aligned_reads_per_reference_frequency_distribution',
+        {
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
+            'cluster': ['average']
+        },
+        'num_aligned_reads_per_reference_frequency_distribution'
+    ),
+
+    
+
+        # Mutations per Read per Reference
+    (
+        'mutation_per_read_per_reference',
+        {
+            'sample' : ['GFPIVDFR_rep0x_S9_L001'],
+            'reference': ['reference-pBADupdate'],
+            'section': ['full'],
+            'cluster': ['average']
+        },
+        'mutation_per_read_per_reference'
     ),
 
     # Base coverage with specific positions (single sample)
@@ -72,17 +136,7 @@ PLOT_TESTS = [
         'base_coverage_all_positions'
     ),
 
-    # Experimental variable across samples (ASO_conc ("µM")) - multi-sample
-    (
-        'experimental_variable_across_samples',
-        {
-            'experimental_variable': 'ASO_conc ("µM")',
-            'reference': ['reference-pBADupdate'],
-            'section': ['full'],
-            'cluster': ['average']
-        },
-        'exp_var_aso_conc'
-    ),
+
 
     # Compare mutation profiles - specific positions (multi-sample)
     (
@@ -96,7 +150,20 @@ PLOT_TESTS = [
         'compare_profiles_positions_38_61'
     ),
 
-    # Compare mutation profiles - all positions (may be slow, multi-sample)
+    # Correlation by refs between samples
+    (
+        'correlation_by_refs_between_samples',
+        {
+            'sample': ['GFPIVDFR_rep0x_S9_L001', 'POS418_0x_S21_L001'],
+            'section': ['full'],
+            'cluster': ['average']
+        },
+        'correlation_by_refs_between_samples'
+    ),
+
+
+
+        # Compare mutation profiles - all positions (may be slow, multi-sample)
     (
         'compare_mutation_profiles',
         {
