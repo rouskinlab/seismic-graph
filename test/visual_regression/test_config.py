@@ -161,9 +161,19 @@ PLOT_TESTS = [
         'correlation_by_refs_between_samples'
     ),
 
+    # Distribution of Sequence Lengths
+    (
+        'dist_of_seq_lengths',
+        {
+            'sample': ['GFPIVDFR_rep0x_S9_L001', 'POS418_0x_S21_L001'],
+            'section': ['full'],
+            'cluster': ['average']
+        },
+        'dist_of_seq_lengths'
+    ),
 
 
-        # Compare mutation profiles - all positions (may be slow, multi-sample)
+    # Compare mutation profiles - all positions (may be slow, multi-sample)
     (
         'compare_mutation_profiles',
         {
