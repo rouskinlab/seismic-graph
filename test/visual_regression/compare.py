@@ -124,19 +124,77 @@ def extract_plot_json(html_file):
         content = f.read()
 
     # Find the Plotly.newPlot call and extract JSON
-    # This is a simple extraction - may need refinement
     import re
-    match = re.search(r'Plotly\.newPlot\([^,]+,\s*(\[.*?\]),\s*(\{.*?\})', content, re.DOTALL)
 
-    if match:
-        try:
-            data = json.loads(match.group(1))
-            layout = json.loads(match.group(2))
-            return {'data': data, 'layout': layout}
-        except json.JSONDecodeError:
-            return None
+    # Helper function to extract balanced brackets/braces
+    def extract_balanced_structure(text, start_pos, start_char):
+        """Extract a balanced JSON structure starting at start_pos."""
+        end_char = ']' if start_char == '[' else '}'
+        count = 0
+        in_string = False
+        escape = False
 
-    return None
+        for i in range(start_pos, len(text)):
+            char = text[i]
+
+            # Handle string literals (to ignore brackets inside strings)
+            if char == '"' and not escape:
+                in_string = not in_string
+            elif char == '\\' and not escape:
+                escape = True
+                continue
+
+            if not in_string:
+                if char == start_char:
+                    count += 1
+                elif char == end_char:
+                    count -= 1
+                    if count == 0:
+                        # Found matching bracket, try to parse JSON
+                        json_str = text[start_pos:i+1]
+                        try:
+                            return json.loads(json_str), i+1
+                        except json.JSONDecodeError as e:
+                            return None, -1
+
+            escape = False
+
+        return None, -1
+
+    # Look for Plotly.newPlot with the pattern:
+    # Plotly.newPlot("div-id", [data], {layout}, {config})
+    match = re.search(r'Plotly\.newPlot\s*\(\s*"[^"]*"\s*,\s*', content)
+    if not match:
+        return None
+
+    # Position after the div ID and comma
+    pos = match.end()
+
+    # Extract data array
+    # Skip whitespace to find the opening bracket
+    while pos < len(content) and content[pos] in ' \t\n\r':
+        pos += 1
+
+    if pos >= len(content) or content[pos] != '[':
+        return None
+
+    data, pos = extract_balanced_structure(content, pos, '[')
+    if data is None:
+        return None
+
+    # Skip whitespace and comma to find layout
+    while pos < len(content) and content[pos] in ' \t\n\r,':
+        pos += 1
+
+    if pos >= len(content) or content[pos] != '{':
+        # No layout found, just return data
+        return {'data': data, 'layout': {}}
+
+    layout, _ = extract_balanced_structure(content, pos, '{')
+    if layout is None:
+        return {'data': data, 'layout': {}}
+
+    return {'data': data, 'layout': layout}
 
 
 def diff_plots(baseline_dir, current_dir):
@@ -203,13 +261,22 @@ def approve_current(baseline_dir, current_dir):
     """Promote current outputs to baseline (after manual review)."""
     files = get_test_files(baseline_dir, current_dir)
 
-    if not files['common']:
+    total_files = len(files['common']) + len(files['new_in_current'])
+
+    if total_files == 0:
         print("No current files to approve.")
         return
 
     print("=== Approve Current as New Baseline ===")
-    print(f"This will replace {len(files['common'])} baseline files with current versions.")
-    print("Make sure you have manually reviewed the current outputs!")
+    print(f"This will update {len(files['common'])} existing baseline files")
+    print(f"and add {len(files['new_in_current'])} new baseline files.")
+
+    if files['new_in_current']:
+        print("\nNew files to be added:")
+        for filename in files['new_in_current']:
+            print(f"  + {filename}")
+
+    print("\nMake sure you have manually reviewed the current outputs!")
     print()
 
     response = input("Continue? [y/N]: ")
@@ -220,17 +287,24 @@ def approve_current(baseline_dir, current_dir):
     baseline_path = Path(baseline_dir)
     current_path = Path(current_dir)
 
+    import shutil
+
+    # Update existing baseline files
     for filename in files['common']:
         current_file = current_path / filename
         baseline_file = baseline_path / filename
-
-        # Copy current to baseline
-        import shutil
         shutil.copy2(current_file, baseline_file)
         print(f"✓ Updated {filename}")
 
+    # Add new baseline files
+    for filename in files['new_in_current']:
+        current_file = current_path / filename
+        baseline_file = baseline_path / filename
+        shutil.copy2(current_file, baseline_file)
+        print(f"✓ Added {filename}")
+
     print()
-    print(f"Successfully updated {len(files['common'])} baseline files!")
+    print(f"Successfully updated {len(files['common'])} and added {len(files['new_in_current'])} baseline files!")
     print("You can now commit the updated baseline files to git.")
 
 

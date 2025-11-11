@@ -63,7 +63,7 @@ PLOT_TESTS = [
     (
         'mutation_fraction_delta',
         {
-            'sample' : ['GFPIVDFR_rep0x_S9_L001', 'POS418_0x_S21_L001'],
+            'sample' : ['GFPIVDPOS109_05x_S34_L001', 'GFPIVDPOS109_7x_S38_L001'],
             'reference': ['reference-pBADupdate'],
             'section': ['full'],
             'cluster': ['average']
@@ -77,7 +77,7 @@ PLOT_TESTS = [
     (
         'mutations_per_read_per_sample',
         {
-            'sample' : ['GFPIVDFR_rep0x_S9_L001'],
+            'sample' : ['GFPIVDPOS109_05x_S34_L001'],
             'reference': ['reference-pBADupdate'],
             'section': ['full'],
             'cluster': ['average']
@@ -103,7 +103,7 @@ PLOT_TESTS = [
     (
         'mutation_per_read_per_reference',
         {
-            'sample' : ['GFPIVDFR_rep0x_S9_L001'],
+            'sample' : ['GFPIVDPOS109_05x_S34_L001'],
             'reference': ['reference-pBADupdate'],
             'section': ['full'],
             'cluster': ['average']
@@ -154,7 +154,7 @@ PLOT_TESTS = [
     (
         'correlation_by_refs_between_samples',
         {
-            'sample': ['GFPIVDFR_rep0x_S9_L001', 'POS418_0x_S21_L001'],
+            'sample': ['GFPIVDPOS109_05x_S34_L001', 'GFPIVDPOS109_7x_S38_L001'],
             'section': ['full'],
             'cluster': ['average']
         },
@@ -165,7 +165,7 @@ PLOT_TESTS = [
     (
         'dist_of_seq_lengths',
         {
-            'sample': ['GFPIVDFR_rep0x_S9_L001', 'POS418_0x_S21_L001'],
+            'sample': ['GFPIVDPOS109_05x_S34_L001', 'GFPIVDPOS109_7x_S38_L001'],
             'section': ['full'],
             'cluster': ['average']
         },
@@ -243,6 +243,16 @@ PLOT_TESTS = [
             'selected_binding_affinity': 'none',
             'positions_to_plot': [175, 208, 800],
         },
-        'binding_affinity_no_fit'
+        'binding_affinity_no_fit_selected_positions'
+    ),
+
+        # Pearson Correlation Histogram
+    (
+        'pearson_correlation_histogram',
+        {
+            'sample': ['GFPIVDPOS109_05x_S34_L001', 'GFPIVDPOS109_7x_S38_L001'],
+            'section': ['full'],
+        },
+        'pearson_correlation_histogram'
     ),
 ]
