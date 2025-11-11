@@ -1864,16 +1864,20 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
         # Get positions for plotting - either user-specified or top 5 with good fits
         if positions_to_plot is not None and len(positions_to_plot) > 0:
-            # User specified positions - filter to those with successful fits
-            good_eff = [pos for pos in positions_to_plot if pos in eff_params.query("success")["Position"].values]
-            good_raw = [pos for pos in positions_to_plot if pos in raw_params.query("success")["Position"].values]
+            # User specified positions - include ALL requested positions (with or without successful fits)
+            good_eff = [pos for pos in positions_to_plot if pos in eff_df.index]
+            good_raw = [pos for pos in positions_to_plot if pos in raw_df.index]
 
-            # Warn if any requested positions don't have successful fits
-            all_requested = set(positions_to_plot)
-            all_available = set(good_eff + good_raw)
-            missing = all_requested - all_available
-            if missing:
-                print(f"Warning: The following positions do not have successful fits and will be skipped: {sorted(missing)}")
+            # Identify which positions have successful fits and which don't
+            eff_fitted = set(eff_params.query("success")["Position"].values)
+            raw_fitted = set(raw_params.query("success")["Position"].values)
+            eff_no_fit = [pos for pos in good_eff if pos not in eff_fitted]
+            raw_no_fit = [pos for pos in good_raw if pos not in raw_fitted]
+
+            # Warn about positions that will be shown as scatterplot only
+            all_no_fit = set(eff_no_fit + raw_no_fit)
+            if all_no_fit:
+                print(f"Warning: Binding affinities could not be fit to the following positions. These positions will be shown as scatterplot only: {sorted(all_no_fit)}")
         else:
             # Auto-select top 5 positions with good fits (r2 > 0.6)
             good_eff = eff_params.query("success & r2 > 0.6").head(5)["Position"].tolist()
@@ -1990,7 +1994,17 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         return fig, trace_labels
 
     def create_plotly_plots(df, params_df, positions, x_label, var_info, title_prefix=""):
-        """Create plotly plots for given positions, showing all replicates"""
+        """Create plotly plots for given positions, showing all replicates.
+
+        For positions with successful fits: creates scatter + curve (2 traces).
+        For positions without successful fits: creates scatter only (1 trace).
+
+        Returns:
+            tuple: (fig, trace_labels, failure_info)
+                - fig: Plotly figure with traces
+                - trace_labels: List of position labels for each trace
+                - failure_info: Dict mapping position → failure reason for failed fits
+        """
 
         # Parse experimental variable values from column labels
         cols = [c for c in df.columns if np.isfinite(_parse_value_from_label(c))]
@@ -2008,8 +2022,9 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
 
         fig = go.Figure()
         trace_labels = []
+        failure_info = {}  # Track positions that failed to fit with reason
 
-        for i, pos in enumerate(positions):
+        for pos in positions:
             if pos not in df.index:
                 print(f"Position {pos} not in dataframe.")
                 continue
@@ -2035,21 +2050,27 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             x_all = np.array(x_all)
             y_all = np.array(y_all)
 
-            if len(x_all) < 2:
-                print(f"Position {pos} has <2 points to plot.")
+            if len(x_all) < 1:
+                print(f"Position {pos} has no valid points to plot.")
                 continue
 
             # Check for fitted parameters
             rec = params_df.query("Position == @pos and success")
-            if rec.empty:
-                print(f"Position {pos} had no successful fit.")
-                continue
+            has_fit = not rec.empty
 
-            Emax, EC50, h, baseline = rec.iloc[0][["Emax", "EC50", "h", "baseline"]]
-            r2 = rec.iloc[0]["r2"]
-            use_dec = (rec.iloc[0]["direction"] == "decreasing")
+            # If fit failed, determine the reason
+            if not has_fit:
+                failed_rec = params_df.query("Position == @pos")
+                if not failed_rec.empty:
+                    n_points = failed_rec.iloc[0]['n_points']
+                    if n_points < 3:
+                        failure_info[pos] = f"Insufficient data points, 3 minimum required)"
+                    else:
+                        failure_info[pos] = "Curve fitting optimization failed to converge"
+                else:
+                    failure_info[pos] = "Position not found in fit results"
 
-            # Data points (all replicates)
+            # ALWAYS add data points (scatter trace)
             fig.add_trace(go.Scatter(
                 x=x_all,
                 y=y_all,
@@ -2062,36 +2083,45 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             ))
             trace_labels.append(f"Position {pos}")
 
-            # Hill curve fit
-            xp = np.logspace(np.log10(max(np.min(x_all[x_all > 0]), EC50_MIN)),
-                           np.log10(np.max(x_all)), 400)
-            model = _hill_model_dec if use_dec else _hill_model_inc
-            yhat = model(xp, Emax, EC50, h, baseline)
+            # ONLY add Hill curve if fit was successful
+            if has_fit:
+                Emax, EC50, h, baseline = rec.iloc[0][["Emax", "EC50", "h", "baseline"]]
+                r2 = rec.iloc[0]["r2"]
+                use_dec = (rec.iloc[0]["direction"] == "decreasing")
 
-            fit_type = "inhibitory" if use_dec else "activating"
-            fit_label = f"{fit_type} fit (EC50≈{EC50:.3g}{unit_str}, h={h:.2g}, R²={r2:.3f})"
+                # Hill curve fit
+                xp = np.logspace(np.log10(max(np.min(x_all[x_all > 0]), EC50_MIN)),
+                               np.log10(np.max(x_all)), 400)
+                model = _hill_model_dec if use_dec else _hill_model_inc
+                yhat = model(xp, Emax, EC50, h, baseline)
 
-            fig.add_trace(go.Scatter(
-                x=xp, y=yhat,
-                mode='lines',
-                name=fit_label,
-                visible=False,  # Will be set to visible by dropdown logic
-                line=dict(color='red', width=2),
-                hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
-            ))
-            trace_labels.append(f"Position {pos}")
-        
-        return fig, trace_labels
+                fit_type = "inhibitory" if use_dec else "activating"
+                fit_label = f"{fit_type} fit (EC50≈{EC50:.3g}{unit_str}, h={h:.2g}, R²={r2:.3f})"
+
+                fig.add_trace(go.Scatter(
+                    x=xp, y=yhat,
+                    mode='lines',
+                    name=fit_label,
+                    visible=False,  # Will be set to visible by dropdown logic
+                    line=dict(color='red', width=2),
+                    hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
+                ))
+                trace_labels.append(f"Position {pos}")
+
+        return fig, trace_labels, failure_info
     
     # Create plots for both effect and raw data
     if fit_curves:
-        # With Hill curve fitting
-        eff_fig, eff_trace_labels = create_plotly_plots(
+        # With Hill curve fitting (or scatterplot fallback for failed fits)
+        eff_fig, eff_trace_labels, eff_failures = create_plotly_plots(
             eff_df, eff_params, good_eff, experimental_variable, var_info, "Effect - "
         )
-        raw_fig, raw_trace_labels = create_plotly_plots(
+        raw_fig, raw_trace_labels, raw_failures = create_plotly_plots(
             raw_df, raw_params, good_raw, experimental_variable, var_info, "Raw - "
         )
+
+        # Keep failures separate - DON'T combine them
+        # A position may fail for effect but succeed for raw (or vice versa)
     else:
         # Scatterplot only (no curve fitting)
         eff_fig, eff_trace_labels = create_plotly_plots_scatter_only(
@@ -2100,6 +2130,8 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         raw_fig, raw_trace_labels = create_plotly_plots_scatter_only(
             raw_df, good_raw, experimental_variable, var_info, "Raw - "
         )
+        eff_failures = {}
+        raw_failures = {}
 
     # Combine figures - create dropdown for each position-type combination
     fig = go.Figure()
@@ -2108,15 +2140,20 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
     trace_info = []  # Each entry: {"position": int, "type": str}
 
     if fit_curves:
-        # Effect traces (2 traces per position: scatter + curve)
-        for i, pos in enumerate(good_eff):
-            trace_info.append({"position": pos, "type": "effect"})  # scatter
-            trace_info.append({"position": pos, "type": "effect"})  # curve
+        # Build trace_info by examining the actual traces created
+        # eff_trace_labels and raw_trace_labels contain position labels for each trace
 
-        # Raw traces (2 traces per position: scatter + curve)
-        for i, pos in enumerate(good_raw):
-            trace_info.append({"position": pos, "type": "raw"})  # scatter
-            trace_info.append({"position": pos, "type": "raw"})  # curve
+        # Process effect traces
+        for label in eff_trace_labels:
+            # Extract position from label (format: "Position {pos}")
+            pos = int(label.split()[1])
+            trace_info.append({"position": pos, "type": "effect"})
+
+        # Process raw traces
+        for label in raw_trace_labels:
+            # Extract position from label (format: "Position {pos}")
+            pos = int(label.split()[1])
+            trace_info.append({"position": pos, "type": "raw"})
     else:
         # Scatterplot only: 1 trace per position
         for i, pos in enumerate(good_eff):
@@ -2130,6 +2167,25 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         fig.add_trace(trace)
     for trace in raw_fig.data:
         fig.add_trace(trace)
+
+    # Store warning information for positions with failed fits
+    # Track effect and raw failures separately since a position may fail for one but not the other
+    warning_info = {}
+    if fit_curves:
+        # Process all positions that appear in either good_eff or good_raw
+        all_positions = set(good_eff) | set(good_raw)
+
+        for pos in all_positions:
+            eff_failed = pos in eff_failures
+            raw_failed = pos in raw_failures
+
+            if eff_failed or raw_failed:
+                warning_info[pos] = {
+                    "eff_reason": eff_failures.get(pos, None),
+                    "raw_reason": raw_failures.get(pos, None),
+                    "eff_failed": eff_failed,
+                    "raw_failed": raw_failed
+                }
 
     # Generate unique position-type combinations for dropdown
     unique_combos = []
@@ -2158,6 +2214,46 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         type_label = "Effect" if data_type == "effect" else "Raw Data"
         y_label = "Effect" if data_type == "effect" else "Raw Response"
 
+        # Check if this position has a warning annotation for this specific data type
+        annotations = []
+        if pos in warning_info:
+            warning_data = warning_info[pos]
+            # Check if THIS specific data type failed (not the other one)
+            if data_type == "effect" and warning_data["eff_failed"]:
+                reason = warning_data["eff_reason"]
+                annotations.append(dict(
+                    x=0.88,
+                    y=0.95,
+                    xref='paper',
+                    yref='paper',
+                    text=f"⚠ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
+                    showarrow=False,
+                    font=dict(size=14, color='darkred', family='Arial Black'),
+                    bgcolor='rgba(255, 107, 107, 0.8)',
+                    bordercolor='darkred',
+                    borderwidth=2,
+                    borderpad=8,
+                    xanchor='right',
+                    yanchor='top'
+                ))
+            elif data_type == "raw" and warning_data["raw_failed"]:
+                reason = warning_data["raw_reason"]
+                annotations.append(dict(
+                    x=0.88,
+                    y=0.95,
+                    xref='paper',
+                    yref='paper',
+                    text=f"⚠ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
+                    showarrow=False,
+                    font=dict(size=14, color='darkred', family='Arial Black'),
+                    bgcolor='rgba(255, 107, 107, 0.8)',
+                    bordercolor='darkred',
+                    borderwidth=2,
+                    borderpad=8,
+                    xanchor='right',
+                    yanchor='top'
+                ))
+
         buttons.append(dict(
             label=f"Position {pos} - {type_label}",
             method="update",
@@ -2166,12 +2262,14 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                 {
                     "title": f"Position {pos} - {type_label}",
                     "xaxis.title": experimental_variable,
-                    "yaxis.title": y_label
+                    "yaxis.title": y_label,
+                    "annotations": annotations
                 }
             ]
         ))
 
     # Set default visibility for first combination
+    default_annotations = []
     if len(unique_combos) > 0:
         first_pos = unique_combos[0]["position"]
         first_type = unique_combos[0]["type"]
@@ -2183,6 +2281,45 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         default_type_label = "Effect" if first_type == "effect" else "Raw Data"
         default_y_label = "Effect" if first_type == "effect" else "Raw Response"
         default_title = f"Position {first_pos} - {default_type_label}"
+
+        # Check if first position has a warning for the specific data type being shown
+        if first_pos in warning_info:
+            warning_data = warning_info[first_pos]
+            # Only show warning if THIS specific data type failed
+            if first_type == "effect" and warning_data["eff_failed"]:
+                reason = warning_data["eff_reason"]
+                default_annotations.append(dict(
+                    x=0.88,
+                    y=0.95,
+                    xref='paper',
+                    yref='paper',
+                    text=f"⚠ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
+                    showarrow=False,
+                    font=dict(size=14, color='darkred', family='Arial Black'),
+                    bgcolor='rgba(255, 107, 107, 0.8)',
+                    bordercolor='darkred',
+                    borderwidth=2,
+                    borderpad=8,
+                    xanchor='right',
+                    yanchor='top'
+                ))
+            elif first_type == "raw" and warning_data["raw_failed"]:
+                reason = warning_data["raw_reason"]
+                default_annotations.append(dict(
+                    x=0.88,
+                    y=0.95,
+                    xref='paper',
+                    yref='paper',
+                    text=f"⚠ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
+                    showarrow=False,
+                    font=dict(size=14, color='darkred', family='Arial Black'),
+                    bgcolor='rgba(255, 107, 107, 0.8)',
+                    bordercolor='darkred',
+                    borderwidth=2,
+                    borderpad=8,
+                    xanchor='right',
+                    yanchor='top'
+                ))
     else:
         # Fallback if no combinations (shouldn't happen given earlier checks)
         default_title = "Binding Affinity"
@@ -2201,6 +2338,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                 direction='up'
             )
         ],
+        annotations=default_annotations,
         plot_bgcolor='white',
         paper_bgcolor='white',
         width=1000,
