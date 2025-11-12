@@ -2070,20 +2070,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                 else:
                     failure_info[pos] = "Position not found in fit results"
 
-            # ALWAYS add data points (scatter trace)
-            fig.add_trace(go.Scatter(
-                x=x_all,
-                y=y_all,
-                mode='markers',
-                name=f'Position {pos} data',
-                visible=False,  # Will be set to visible by dropdown logic
-                marker=dict(size=8, color='blue'),
-                text=hover_text_all,
-                hovertemplate='%{text}<extra></extra>'
-            ))
-            trace_labels.append(f"Position {pos}")
-
-            # ONLY add Hill curve if fit was successful
+            # Add Hill curve FIRST (if fit was successful) so it appears behind scatter points
             if has_fit:
                 Emax, EC50, h, baseline = rec.iloc[0][["Emax", "EC50", "h", "baseline"]]
                 r2 = rec.iloc[0]["r2"]
@@ -2107,6 +2094,19 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                     hovertemplate=f'{x_label}: %{{x}}<br>Response: %{{y}}<extra></extra>'
                 ))
                 trace_labels.append(f"Position {pos}")
+
+            # Add data points AFTER curve so they appear on top
+            fig.add_trace(go.Scatter(
+                x=x_all,
+                y=y_all,
+                mode='markers',
+                name=f'Position {pos} data',
+                visible=False,  # Will be set to visible by dropdown logic
+                marker=dict(size=8, color='blue'),
+                text=hover_text_all,
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            trace_labels.append(f"Position {pos}")
 
         return fig, trace_labels, failure_info
     
@@ -2365,10 +2365,14 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
         title=default_title,
         showlegend=True,
         legend=dict(
+            orientation="v",
             yanchor="top",
-            y=0.99,
-            xanchor="left",
-            x=0.01
+            y=1.1,
+            xanchor="right",
+            x=1,
+            bgcolor='rgba(255, 255, 255, 0.8)',  # Semi-transparent white background
+            bordercolor='lightgray',
+            borderwidth=1
         )
     )
 
