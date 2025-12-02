@@ -1450,7 +1450,7 @@ def _create_curve_fit_warning_annotation(reason: str) -> dict:
         y=0.95,
         xref='paper',
         yref='paper',
-        text=f"⚠️ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
+        text=f"⚠️ Curve Fit Failed<br>{reason}<br>Displaying Scatterplot Only",
         showarrow=False,
         font=dict(size=14, color='darkred', family='Arial Black'),
         bgcolor='rgba(255, 107, 107, 0.8)',
@@ -2090,7 +2090,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
                 if not failed_rec.empty:
                     n_points = failed_rec.iloc[0]['n_points']
                     if n_points < 3:
-                        failure_info[pos] = f"Insufficient data points, 3 minimum required)"
+                        failure_info[pos] = "Insufficient data points, 3 minimum required"
                     else:
                         failure_info[pos] = "Curve fitting optimization failed to converge"
                 else:
