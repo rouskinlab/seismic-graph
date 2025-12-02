@@ -1436,6 +1436,32 @@ def pearson_correlation_histogram(df: pd.DataFrame) -> dict:
     return {'fig': fig, 'data': results_df, 'scores_csv': csv_data}
 
 
+def _create_curve_fit_warning_annotation(reason: str) -> dict:
+    """Create a warning annotation for failed curve fitting.
+
+    Args:
+        reason: Description of why the curve fit failed
+
+    Returns:
+        dict: Plotly annotation object for display in figure
+    """
+    return dict(
+        x=0.88,
+        y=0.95,
+        xref='paper',
+        yref='paper',
+        text=f"⚠️ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
+        showarrow=False,
+        font=dict(size=14, color='darkred', family='Arial Black'),
+        bgcolor='rgba(255, 107, 107, 0.8)',
+        bordercolor='darkred',
+        borderwidth=2,
+        borderpad=8,
+        xanchor='right',
+        yanchor='top'
+    )
+
+
 def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=False, positions_to_plot=None, fit_curves=True) -> dict:
     """Generate binding affinity plots with optional curve fitting.
 
@@ -2221,38 +2247,10 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             # Check if THIS specific data type failed (not the other one)
             if data_type == "effect" and warning_data["eff_failed"]:
                 reason = warning_data["eff_reason"]
-                annotations.append(dict(
-                    x=0.88,
-                    y=0.95,
-                    xref='paper',
-                    yref='paper',
-                    text=f"⚠️️️ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
-                    showarrow=False,
-                    font=dict(size=14, color='darkred', family='Arial Black'),
-                    bgcolor='rgba(255, 107, 107, 0.8)',
-                    bordercolor='darkred',
-                    borderwidth=2,
-                    borderpad=8,
-                    xanchor='right',
-                    yanchor='top'
-                ))
+                annotations.append(_create_curve_fit_warning_annotation(reason))
             elif data_type == "raw" and warning_data["raw_failed"]:
                 reason = warning_data["raw_reason"]
-                annotations.append(dict(
-                    x=0.88,
-                    y=0.95,
-                    xref='paper',
-                    yref='paper',
-                    text=f"⚠️️ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
-                    showarrow=False,
-                    font=dict(size=14, color='darkred', family='Arial Black'),
-                    bgcolor='rgba(255, 107, 107, 0.8)',
-                    bordercolor='darkred',
-                    borderwidth=2,
-                    borderpad=8,
-                    xanchor='right',
-                    yanchor='top'
-                ))
+                annotations.append(_create_curve_fit_warning_annotation(reason))
 
         buttons.append(dict(
             label=f"Position {pos} - {type_label}",
@@ -2288,38 +2286,10 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             # Only show warning if THIS specific data type failed
             if first_type == "effect" and warning_data["eff_failed"]:
                 reason = warning_data["eff_reason"]
-                default_annotations.append(dict(
-                    x=0.88,
-                    y=0.95,
-                    xref='paper',
-                    yref='paper',
-                    text=f"⚠️ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
-                    showarrow=False,
-                    font=dict(size=14, color='darkred', family='Arial Black'),
-                    bgcolor='rgba(255, 107, 107, 0.8)',
-                    bordercolor='darkred',
-                    borderwidth=2,
-                    borderpad=8,
-                    xanchor='right',
-                    yanchor='top'
-                ))
+                default_annotations.append(_create_curve_fit_warning_annotation(reason))
             elif first_type == "raw" and warning_data["raw_failed"]:
                 reason = warning_data["raw_reason"]
-                default_annotations.append(dict(
-                    x=0.88,
-                    y=0.95,
-                    xref='paper',
-                    yref='paper',
-                    text=f"⚠️ Curve Fit Failed<br>Reason: {reason.replace(' ', '<br>', 1)}<br>Displaying Scatterplot Only",
-                    showarrow=False,
-                    font=dict(size=14, color='darkred', family='Arial Black'),
-                    bgcolor='rgba(255, 107, 107, 0.8)',
-                    bordercolor='darkred',
-                    borderwidth=2,
-                    borderpad=8,
-                    xanchor='right',
-                    yanchor='top'
-                ))
+                default_annotations.append(_create_curve_fit_warning_annotation(reason))
     else:
         # Fallback if no combinations (shouldn't happen given earlier checks)
         default_title = "Binding Affinity"
