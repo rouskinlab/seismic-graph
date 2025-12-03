@@ -2332,7 +2332,13 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             mirror=True,
             title=default_y_label
         ),
-        title=default_title,
+        title=dict(
+            text=default_title,
+            y=0.92,
+            yanchor='middle',
+            x=0.16,
+            xanchor='center'
+        ),
         showlegend=True,
         legend=dict(
             orientation="v",
