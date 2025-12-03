@@ -2332,6 +2332,7 @@ def binding_affinity(data: pd.DataFrame, experimental_variable: str, normalize=F
             mirror=True,
             title=default_y_label
         ),
+        # As far as I can tell, Title and Legend position cannot be made dependent on each other, so this is my best attempt to get them to line up manually. Not perfect.
         title=dict(
             text=default_title,
             y=0.92,
