@@ -156,12 +156,13 @@ class Study(object):
             **{k: v for k, v in kwargs.items() if k in extract_args(func)}
         )
 
-    def plot_info(name, display_name):
+    def plot_info(name, display_name, requirements=None):
         def decorator(func):
             func.plot_info = {
                 "value": name,
                 "label": display_name,
                 "description": func.__doc__,
+                "requirements": requirements or {},
             }
             return func
 
@@ -223,7 +224,8 @@ class Study(object):
     # Plot functions                                                                                           #
     ############################################################################################################
 
-    @plot_info("mutation_fraction", "Mutation Fraction")
+    @plot_info("mutation_fraction", "Mutation Fraction",
+               requirements={"rows": {"min": 1, "max": 1}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -238,7 +240,8 @@ class Study(object):
         """
         return self.wrap_to_plotter(plotter.mutation_fraction, locals(), kwargs)
 
-    @plot_info("mutation_fraction_identity", "Mutation Fraction Identity")
+    @plot_info("mutation_fraction_identity", "Mutation Fraction Identity",
+               requirements={"rows": {"min": 1, "max": 1}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -257,7 +260,8 @@ class Study(object):
 
 
     @plot_info(
-        "experimental_variable_across_samples", "Experimental Variable Across Samples"
+        "experimental_variable_across_samples", "Experimental Variable Across Samples",
+        requirements={"rows": {"min": 1}, "references": {"min": 1, "max": 1}, "columns": ["experimental_variable"]}
     )
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
@@ -294,6 +298,7 @@ class Study(object):
     @plot_info(
         "num_aligned_reads_per_reference_frequency_distribution",
         "# Aligned Reads / Reference as Freq. Dist.",
+        requirements={"rows": {"min": 1}}
     )
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
@@ -308,7 +313,8 @@ class Study(object):
             kwargs,
         )
 
-    @plot_info("mutation_fraction_delta", "Mutation Fraction Delta")
+    @plot_info("mutation_fraction_delta", "Mutation Fraction Delta",
+               requirements={"samples": {"min": 2, "max": 2}, "references": {"min": 1, "max": 1}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     def mutation_fraction_delta(self, **kwargs) -> dict:
@@ -338,7 +344,8 @@ class Study(object):
             }
         )
 
-    @plot_info("mutations_per_read_per_sample", "Mutations per Read per Sample")
+    @plot_info("mutations_per_read_per_sample", "Mutations per Read per Sample",
+               requirements={"rows": {"min": 1}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -348,7 +355,8 @@ class Study(object):
             plotter.mutations_per_read_per_sample, locals(), kwargs
         )
 
-    @plot_info("base_coverage", "Base Coverage")
+    @plot_info("base_coverage", "Base Coverage",
+               requirements={"rows": {"min": 1, "max": 1}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -356,7 +364,8 @@ class Study(object):
         """Plot the base coverage of a single row of your dataframe."""
         return self.wrap_to_plotter(plotter.base_coverage, locals(), kwargs)
 
-    @plot_info("mutation_per_read_per_reference", "Mutation per Read per Reference")
+    @plot_info("mutation_per_read_per_reference", "Mutation per Read per Reference",
+               requirements={"rows": {"min": 1, "max": 1}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -368,7 +377,8 @@ class Study(object):
             plotter.mutation_per_read_per_reference, locals(), kwargs
         )
 
-    @plot_info("compare_mutation_profiles", "Compare Mutation Profiles")
+    @plot_info("compare_mutation_profiles", "Compare Mutation Profiles",
+               requirements={"rows": {"min": 2, "max": 14}, "references": {"min": 1, "max": 1}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -386,7 +396,8 @@ class Study(object):
         return self.wrap_to_plotter(plotter.compare_mutation_profiles, locals(), kwargs)
 
     @plot_info(
-        "correlation_by_refs_between_samples", "Correlation by Refs. Between Samples"
+        "correlation_by_refs_between_samples", "Correlation by Refs. Between Samples",
+        requirements={"rows": {"min": 1}, "samples": {"min": 2, "max": 2}}
     )
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
@@ -403,7 +414,8 @@ class Study(object):
             plotter.correlation_by_refs_between_samples, locals(), kwargs
         )
         
-    @plot_info('one_pager', 'One Pager')
+    @plot_info('one_pager', 'One Pager',
+               requirements={"rows": {"min": 1, "max": 1}})
     # @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_single_row, style=style_child_takes_over_parent)
@@ -542,7 +554,8 @@ class Study(object):
 
         return self.wrap_to_plotter(plotter.compare_mutation_profiles_2, locals(), kwargs)
     
-    @plot_info("pearson_correlation_histogram", "Pearson Correlation Histogram")
+    @plot_info("pearson_correlation_histogram", "Pearson Correlation Histogram",
+               requirements={"rows": {"min": 1}, "samples": {"min": 2, "max": 2}})
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
     @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
@@ -569,6 +582,7 @@ class Study(object):
     @plot_info(
         "binding_affinity",
         "Binding Affinity",
+        requirements={"rows": {"min": 1}, "references": {"min": 1, "max": 1}, "columns": ["experimental_variable"]}
     )
     @save_plot
     @doc_inherit(save_plot, style=style_child_takes_over_parent)
