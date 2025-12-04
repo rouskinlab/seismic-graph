@@ -110,7 +110,8 @@ This pattern allows Study methods to:
 Plot functions in Study class use `@plot_info` decorator for webapp integration:
 
 ```python
-@plot_info("binding_affinity", "Binding Affinity")
+@plot_info("binding_affinity", "Binding Affinity",
+           requirements={"rows": {"min": 1}, "references": {"min": 1, "max": 1}, "columns": ["experimental_variable"]})
 @save_plot
 @doc_inherit(...)
 def binding_affinity(self, experimental_variable, selected_binding_affinity, ...):
@@ -119,6 +120,69 @@ def binding_affinity(self, experimental_variable, selected_binding_affinity, ...
 ```
 
 The webapp queries `Study.get_plots_list()` to build its UI dynamically.
+
+### Plot Requirements System
+
+Each plot can specify **data selection requirements** that must be met before the plot can be generated. Requirements are defined in the `@plot_info` decorator and automatically:
+- Sent to the webapp in the `plot_options` API response
+- Displayed in the webapp's "Choose Plot Type" panel with visual indicators (✓/✗)
+- Used to enable/disable the Plot button based on current data selections
+
+#### Requirements Data Structure
+
+```python
+requirements={
+    "rows": {"min": 1, "max": 1},           # Number of DataFrame rows required
+    "samples": {"min": 2, "max": 2},        # Number of unique samples required
+    "references": {"min": 1, "max": 1},     # Number of unique references required
+    "columns": ["experimental_variable"]     # Required columns in the data
+}
+```
+
+**Constraint Format:**
+- `{"min": 1, "max": 1}` - exactly one
+- `{"min": 2, "max": 2}` - exactly two
+- `{"min": 1}` or `{"min": 1, "max": None}` - one or more (unbounded)
+- `{"min": 2, "max": 14}` - between 2 and 14 inclusive
+
+#### Complete Requirements Reference
+
+| Plot Function | Rows | Samples | References | Columns |
+|--------------|------|---------|------------|---------|
+| mutation_fraction | min:1, max:1 | - | - | - |
+| mutation_fraction_identity | min:1, max:1 | - | - | - |
+| mutation_fraction_delta | - | min:2, max:2 | min:1, max:1 | - |
+| base_coverage | min:1, max:1 | - | - | - |
+| mutation_per_read_per_reference | min:1, max:1 | - | - | - |
+| one_pager | min:1, max:1 | - | - | - |
+| correlation_by_refs_between_samples | min:1 | min:2, max:2 | - | - |
+| pearson_correlation_histogram | min:1 | min:2, max:2 | - | - |
+| experimental_variable_across_samples | min:1 | - | min:1, max:1 | experimental_variable |
+| binding_affinity | min:1 | - | min:1, max:1 | experimental_variable |
+| compare_mutation_profiles | min:2, max:14 | - | min:1, max:1 | - |
+| mutations_per_read_per_sample | min:1 | - | - | - |
+| num_aligned_reads_per_reference_frequency_distribution | min:1 | - | - | - |
+
+**Key Design Principles:**
+- **Rows**: Number of rows after filtering (each row = unique sample/reference/section/cluster combo)
+- **Samples**: Number of unique sample values in the filtered data
+- **References**: Number of unique reference values (reference = unique RNA sequence)
+- **Columns**: Required columns like `experimental_variable` that must exist in the data
+- **Empty requirements `{}`**: No constraints, plot always valid (if requirements parameter omitted)
+
+#### Frontend Validation (Webapp)
+
+The webapp frontend performs client-side validation using simple range checking:
+```javascript
+// Check if current value meets requirement
+const isValid = (currentValue >= min) && (currentValue <= max);
+```
+
+This enables the webapp to:
+- Disable the Plot button when requirements aren't met
+- Show real-time visual feedback (green ✓ or black ✗) for each requirement
+- Display current vs. expected values (e.g., "Exactly 2 (current: 1)")
+- Prevent invalid plot requests from reaching the backend
 
 ## Adding a New Plot Function
 
@@ -131,9 +195,10 @@ The webapp queries `Study.get_plots_list()` to build its UI dynamically.
        return {'fig': fig, 'data': data}
    ```
 
-2. **Add wrapper method to Study class**:
+2. **Add wrapper method to Study class with requirements**:
    ```python
-   @plot_info("my_new_plot", "My New Plot")
+   @plot_info("my_new_plot", "My New Plot",
+              requirements={"rows": {"min": 1}, "references": {"min": 1, "max": 1}})
    @save_plot
    @doc_inherit(default_arguments_multi_rows, style=style_child_takes_over_parent)
    def my_new_plot(self, param1, param2, **kwargs) -> dict:
@@ -141,7 +206,13 @@ The webapp queries `Study.get_plots_list()` to build its UI dynamically.
        return self.wrap_to_plotter(plotter.my_new_plot, locals(), kwargs)
    ```
 
-3. **Webapp automatically discovers** the new plot via `get_plots_list()`
+3. **Determine requirements**:
+   - Look for validation assertions in the plotter function (e.g., `assert len(df) == 1`)
+   - Consider what data structure the plot logically needs
+   - Use min/max format: `{"min": 1, "max": 1}` for exactly one, `{"min": 1}` for one or more
+   - Add `columns` requirement if plot needs specific columns like `experimental_variable`
+
+4. **Webapp automatically discovers** the new plot and its requirements via `get_plots_list()`
 
 ## Important Implementation Details
 
